@@ -8,6 +8,7 @@
   },
   "scripts": {
     "start": "bun run --preload ./stubs/globals.ts ./src/entrypoints/cli.tsx",
+    "setup-chrome": "bash ./scripts/setup-chrome.sh",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

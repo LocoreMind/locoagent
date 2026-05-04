@@ -65,6 +65,7 @@ A comprehensive architecture analysis of the Locoremind Social Agent project, an
   - [5.4 Add a New Slash Command](#54-add-a-new-slash-command)
   - [5.5 Enable a Feature Flag](#55-enable-a-feature-flag)
   - [5.6 Social Agent: agent-browser Integration](#56-social-agent-agent-browser-integration)
+  - [5.7 Social Agent: Chrome CDP Pre-launch Setup](#57-social-agent-chrome-cdp-pre-launch-setup)
 - [6. Deep Dive: query.ts — The Agentic Loop Engine](#6-deep-dive-queryts--the-agentic-loop-engine)
   - [6.1 Architecture Overview](#61-architecture-overview)
   - [6.2 Key Types](#62-key-types)
@@ -128,10 +129,13 @@ bun run typecheck
 
 ```env
 CLAUDE_CODE_USE_OPENAI=1
+SKIP_PERMISSIONS=1
 OPENAI_API_KEY=sk-or-v1-...
 OPENAI_BASE_URL=https://openrouter.ai/api/v1
 OPENAI_MODEL=anthropic/claude-sonnet-4.5
 ```
+
+`SKIP_PERMISSIONS=1` bypasses all tool permission prompts — required for non-interactive `--print` mode (e.g. automated social agent tasks). Remove or set to `0` to restore interactive confirmation.
 
 For direct Anthropic API access, set `ANTHROPIC_API_KEY` instead (and omit `CLAUDE_CODE_USE_OPENAI`).
 
@@ -192,10 +196,11 @@ Two key configuration mechanisms:
 
 **1. MACRO globals + .env loader** (`stubs/globals.ts`):
 
-This file is the first code executed (via `bunfig.toml` preload). It does two things:
+This file is the first code executed (via `bunfig.toml` preload). It does three things:
 
 1. **Loads `.env`** from the project root into `process.env` (keys already set in the environment are not overridden)
 2. **Injects MACRO globals** used throughout the codebase
+3. **Injects `--dangerously-skip-permissions` into `process.argv`** when `SKIP_PERMISSIONS=1` is set — enabling fully non-interactive operation for automated social agent tasks
 
 | Macro | Default | Purpose |
 |-------|---------|---------|
@@ -272,6 +277,7 @@ All variables can be set in the project root `.env` file (automatically loaded a
 
 | Variable | Purpose |
 |----------|---------|
+| `SKIP_PERMISSIONS` | Set to `1` to inject `--dangerously-skip-permissions` at startup — bypasses all tool permission prompts for non-interactive/automated use |
 | `CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY` | Max parallel tool executions (default: 10) |
 | `CLAUDE_CODE_DISABLE_CLAUDE_MDS` | Disable CLAUDE.md loading |
 | `CLAUDE_CODE_REMOTE` | Mark as remote session |
@@ -1962,6 +1968,72 @@ agent-browser --session-name twitter fill @e3 "..."  # act with session persiste
 agent-browser click @e5
 agent-browser screenshot result.png
 ```
+
+---
+
+## 5.7 Social Agent: Chrome CDP Pre-launch Setup
+
+To operate real social accounts (e.g. X/Twitter), `agent-browser` needs to connect to a Chrome instance that already holds the user's login session. This requires a one-time pre-launch setup before starting the agent.
+
+### Why This Is Necessary
+
+`agent-browser` by default launches a fresh headless Chrome with no cookies or login state. To operate authenticated social accounts, it must connect via CDP to a Chrome instance launched from a copy of the user's real Chrome profile (which already contains session cookies).
+
+### Setup Flow
+
+```
+scripts/setup-chrome.sh
+  1. killall "Google Chrome"               # clean slate
+  2. cp ~/Library/.../Chrome/Default  →  /tmp/social-agent-chrome-profile/Default
+     cp ~/Library/.../Chrome/Local State → /tmp/social-agent-chrome-profile/
+  3. Launch Chrome --remote-debugging-port=9222 --user-data-dir=/tmp/social-agent-chrome-profile
+  4. Wait for http://127.0.0.1:9222/json/version to respond
+  5. agent-browser connect 9222            # register CDP session
+```
+
+After setup, all subsequent `agent-browser` commands reuse the connected Chrome session with full login state.
+
+### Usage
+
+```bash
+# 1. (One-time) configure profile paths in .env if non-default:
+# CHROME_SOURCE_PROFILE=/Users/you/Library/Application Support/Google/Chrome/Default
+# CHROME_WORK_PROFILE=/tmp/social-agent-chrome-profile
+# CHROME_DEBUG_PORT=9222
+
+# 2. Run setup (do this before bun run start for social tasks)
+bun run setup-chrome
+
+# 3. Start the agent
+bun run start
+```
+
+### Configuration Variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `CHROME_SOURCE_PROFILE` | `~/Library/Application Support/Google/Chrome/Default` | Source Chrome profile with real login sessions |
+| `CHROME_WORK_PROFILE` | `/tmp/social-agent-chrome-profile` | Working copy used by the CDP-connected Chrome |
+| `CHROME_DEBUG_PORT` | `9222` | CDP remote debugging port |
+| `CHROME_BIN` | `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` | Chrome binary path |
+
+All variables are read from `.env` automatically (via `stubs/globals.ts` preload and the `source .env` in the script itself).
+
+### Key Notes from Operational Experience
+
+1. **Must copy `Local State`** alongside `Default/` — Chrome cannot read the profile correctly without it
+2. **Profile copy is large (~2-3GB)** — `setup-chrome.sh` does a full `cp -r`, which takes time on first run
+3. **agent-browser connects, not launches** — `agent-browser connect 9222` attaches to the already-running Chrome; does not launch a new one
+4. **Session persists across commands** — the daemon architecture means CDP session stays alive between individual `agent-browser` commands
+5. **Must kill Chrome first** — running Chrome will lock profile files; the script does `killall "Google Chrome"` before copying
+
+### Files
+
+| File | Purpose |
+|---|---|
+| `scripts/setup-chrome.sh` | The setup script |
+| `.env` | Chrome config vars (commented defaults, uncomment to override) |
+| `package.json` → `setup-chrome` | `bun run setup-chrome` shortcut |
 
 ---
 

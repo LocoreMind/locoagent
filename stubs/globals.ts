@@ -23,6 +23,14 @@ if (existsSync(envPath)) {
   }
 }
 
+// Inject --dangerously-skip-permissions into argv when SKIP_PERMISSIONS=1
+if (process.env.SKIP_PERMISSIONS === '1') {
+  const flag = '--dangerously-skip-permissions'
+  if (!process.argv.includes(flag)) {
+    process.argv.push(flag)
+  }
+}
+
 ;(globalThis as any).MACRO = {
   VERSION: '2.0.0',
   BUILD_TIME: new Date().toISOString(),
