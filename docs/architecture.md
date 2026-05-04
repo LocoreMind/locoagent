@@ -68,6 +68,7 @@ A comprehensive architecture analysis of the Locoremind Social Agent project, an
   - [5.7 Social Agent: Chrome CDP Pre-launch Setup](#57-social-agent-chrome-cdp-pre-launch-setup)
   - [5.8 Social Agent: Digital Persona System](#58-social-agent-digital-persona-system)
   - [5.9 Social Agent: Operation Log & State](#59-social-agent-operation-log--state)
+  - [5.10 Social Agent: Task Scheduling](#510-social-agent-task-scheduling)
 - [6. Deep Dive: query.ts — The Agentic Loop Engine](#6-deep-dive-queryts--the-agentic-loop-engine)
   - [6.1 Architecture Overview](#61-architecture-overview)
   - [6.2 Key Types](#62-key-types)
@@ -191,10 +192,12 @@ locoremind-social-agent/
 │   └── msj-cv.html          # Source CV used to generate the persona
 ├── persona/
 │   ├── persona.md           # Digital persona document (editable, auto-loaded into system prompt)
+│   ├── tasks.md             # Task schedule: daily/weekly tasks + session constraints (editable)
 │   └── operation-log.json   # Social agent state: every action logged here for dedup + history
 ├── scripts/
 │   ├── setup-chrome.sh      # Chrome CDP pre-launch setup script
-│   └── log-operation.ts     # Operation log CLI helper (add / check / recent / summary)
+│   ├── log-operation.ts     # Operation log CLI helper (add / check / recent / summary)
+│   └── run-tasks.ts         # Task runner: reads tasks.md and executes daily/weekly session
 ├── bunfig.toml              # Bun config (preload: globals.ts)
 └── package.json             # Dependencies and scripts
 ```
@@ -2171,6 +2174,77 @@ The injected section includes:
 | `persona/operation-log.json` | The state store (JSON, human-editable) |
 | `scripts/log-operation.ts` | CLI helper: add / check / recent / summary |
 | `src/constants/prompts.ts` → `getOperationLogSection()` | Injects 30-day summary into system prompt |
+
+---
+
+## 5.10 Social Agent: Task Scheduling
+
+The task scheduling system replaces ad-hoc prompts with a structured, repeatable session workflow. Instead of writing a new prompt each time, you run one command and the agent executes today's appropriate tasks automatically.
+
+### How It Works
+
+```
+persona/tasks.md            ← editable task definitions
+  ↓ (read by run-tasks.ts)
+scripts/run-tasks.ts        ← builds prompt from tasks.md + log summary + day context
+  ↓ (launches)
+agent (via --print)         ← executes tasks, checks/writes operation log
+  ↓
+persona/operation-log.json  ← updated with new actions
+```
+
+### Usage
+
+```bash
+# Run today's scheduled tasks (daily always, weekly only on Mondays)
+bun run run-tasks
+
+# Preview the prompt without running (for debugging)
+bun run run-tasks:dry
+
+# Restrict to one platform
+bun run scripts/run-tasks.ts --platform x
+bun run scripts/run-tasks.ts --platform reddit
+```
+
+### File: `persona/tasks.md`
+
+The task schedule is a plain Markdown file with two sections:
+
+**Daily Tasks** — run every session:
+1. Engage with relevant content (like posts matching topic queries)
+2. Monitor own project mentions (LocoOperator, LocoTrainer, LocoreMind)
+3. Leave 1 technical comment on the most relevant post
+
+**Weekly Tasks** — run on Monday sessions only:
+4. Follow 3-5 relevant researchers
+5. Post 1 original tweet about recent research findings
+
+**Session Constraints** table limits per-session action counts to avoid platform risk (max 10 likes, 2 comments, 5 follows, 1 post per session).
+
+### How `run-tasks.ts` Works
+
+The script:
+1. Reads `persona/tasks.md` in full
+2. Runs `log-operation.ts summary --days 7` to get recent history
+3. Detects the current day (Monday triggers weekly tasks)
+4. Builds a structured prompt combining tasks + log context + execution rules
+5. Launches the agent via `bun run --preload stubs/globals.ts src/entrypoints/cli.tsx --print <prompt>`
+6. Streams agent output directly to stdout (10-minute timeout)
+
+### System Prompt Integration
+
+`getTasksSection()` in `src/constants/prompts.ts` reads `persona/tasks.md` at startup and injects it into the static system prompt region. This means the agent always has the task schedule available — even in interactive `bun run start` sessions, not just `run-tasks` sessions.
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `persona/tasks.md` | Task definitions (editable) |
+| `scripts/run-tasks.ts` | Task runner script |
+| `package.json` → `run-tasks` | `bun run run-tasks` shortcut |
+| `package.json` → `run-tasks:dry` | `bun run run-tasks:dry` for prompt preview |
+| `src/constants/prompts.ts` → `getTasksSection()` | Injects task schedule into system prompt |
 
 ---
 

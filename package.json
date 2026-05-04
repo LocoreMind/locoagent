@@ -9,6 +9,8 @@
   "scripts": {
     "start": "bun run --preload ./stubs/globals.ts ./src/entrypoints/cli.tsx",
     "setup-chrome": "bash ./scripts/setup-chrome.sh",
+    "run-tasks": "bun run scripts/run-tasks.ts",
+    "run-tasks:dry": "bun run scripts/run-tasks.ts --dry-run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

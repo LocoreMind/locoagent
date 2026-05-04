@@ -270,6 +270,23 @@ function getPersonaSection(): string {
   return ''
 }
 
+function getTasksSection(): string {
+  try {
+    const { existsSync, readFileSync } = require('node:fs')
+    const { join, dirname } = require('node:path')
+    const { fileURLToPath } = require('node:url')
+    const __dirname = dirname(fileURLToPath(import.meta.url))
+    const tasksPath = join(__dirname, '../../persona/tasks.md')
+    if (existsSync(tasksPath)) {
+      const content = readFileSync(tasksPath, 'utf-8')
+      return `# Social Agent Task Schedule\n\n${content}`
+    }
+  } catch (_) {
+    // tasks file not found or unreadable — continue without it
+  }
+  return ''
+}
+
 function getOperationLogSection(): string {
   try {
     const { existsSync } = require('node:fs')
@@ -879,6 +896,7 @@ ${CYBER_RISK_INSTRUCTION}`,
     getActionsSection(),
     getUsingYourToolsSection(enabledTools),
     getPersonaSection(),
+    getTasksSection(),
     getOperationLogSection(),
     getAgentBrowserSection(),
     getSimpleToneAndStyleSection(),
