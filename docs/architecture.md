@@ -66,6 +66,7 @@ A comprehensive architecture analysis of the Locoremind Social Agent project, an
   - [5.5 Enable a Feature Flag](#55-enable-a-feature-flag)
   - [5.6 Social Agent: agent-browser Integration](#56-social-agent-agent-browser-integration)
   - [5.7 Social Agent: Chrome CDP Pre-launch Setup](#57-social-agent-chrome-cdp-pre-launch-setup)
+  - [5.8 Social Agent: Digital Persona System](#58-social-agent-digital-persona-system)
 - [6. Deep Dive: query.ts — The Agentic Loop Engine](#6-deep-dive-queryts--the-agentic-loop-engine)
   - [6.1 Architecture Overview](#61-architecture-overview)
   - [6.2 Key Types](#62-key-types)
@@ -185,7 +186,12 @@ locoremind-social-agent/
 ├── .env                     # Local environment config (auto-loaded, not committed)
 ├── docs/
 │   ├── architecture.md      # This file
-│   └── agent-browser-help.txt  # Full agent-browser CLI reference
+│   ├── agent-browser-help.txt  # Full agent-browser CLI reference
+│   └── msj-cv.html          # Source CV used to generate the persona
+├── persona/
+│   └── persona.md           # Digital persona document (editable, auto-loaded into system prompt)
+├── scripts/
+│   └── setup-chrome.sh      # Chrome CDP pre-launch setup script
 ├── bunfig.toml              # Bun config (preload: globals.ts)
 └── package.json             # Dependencies and scripts
 ```
@@ -2034,6 +2040,57 @@ All variables are read from `.env` automatically (via `stubs/globals.ts` preload
 | `scripts/setup-chrome.sh` | The setup script |
 | `.env` | Chrome config vars (commented defaults, uncomment to override) |
 | `package.json` → `setup-chrome` | `bun run setup-chrome` shortcut |
+
+---
+
+## 5.8 Social Agent: Digital Persona System
+
+The persona system gives the agent a stable, editable identity that persists across all social media sessions. It bridges the gap between a generic AI assistant and a branded social operator.
+
+### Architecture
+
+```
+persona/persona.md          ← editable by the user
+  ↓ (read at startup)
+getPersonaSection()         ← src/constants/prompts.ts
+  ↓ (injected into)
+getSystemPrompt()           ← static/cacheable region
+  ↓
+agent knows who it is before the first turn
+```
+
+### File: `persona/persona.md`
+
+The persona document is structured into 8 sections:
+
+| Section | Purpose |
+|---------|---------|
+| `1. Identity` | Real name, handle, social links, role |
+| `2. Core Positioning` | One-line pitch, expertise pillars, differentiation |
+| `3. Audience & Community` | Target communities, credibility signals to reference |
+| `4. Voice & Tone` | Writing style, per-platform tone, what to avoid |
+| `5. Content Themes` | Primary/secondary topics, topics to avoid |
+| `6. Engagement Principles` | Reply guidelines, like/follow frequency limits |
+| `7. Current Projects` | Active projects with stats and links |
+| `8. Agent Operating Instructions` | Rules for the agent when using this persona |
+
+### How It Works in Code
+
+`getPersonaSection()` in `src/constants/prompts.ts` reads `persona/persona.md` at runtime using `import.meta.url` to resolve the project root. It wraps the content under the heading `# Personal Persona & Social Agent Identity` and injects it into the static (cacheable) region of the system prompt — before the `SYSTEM_PROMPT_DYNAMIC_BOUNDARY` marker.
+
+If `persona/persona.md` is missing or unreadable, the function returns `''` silently and the agent operates without persona context.
+
+### Editing the Persona
+
+`persona/persona.md` is a plain Markdown file — edit it directly. Changes take effect on the next agent startup. Key things to keep updated:
+
+- **Section 7 (Current Projects)** — update download counts, star counts after milestones
+- **Section 6 (Engagement Principles)** — tune frequency limits to platform risk tolerance
+- **Section 5 (Content Themes)** — adjust as research focus evolves
+
+### Source
+
+The initial persona was generated from `docs/msj-cv.html` (personal CV). The CV is kept in `docs/` as a reference for future persona updates.
 
 ---
 

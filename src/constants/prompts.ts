@@ -252,6 +252,24 @@ function getSimpleDoingTasksSection(): string {
   return [`# Doing tasks`, ...prependBullets(items)].join(`\n`)
 }
 
+function getPersonaSection(): string {
+  try {
+    const { existsSync, readFileSync } = require('node:fs')
+    const { join, dirname } = require('node:path')
+    const { fileURLToPath } = require('node:url')
+    const __dirname = dirname(fileURLToPath(import.meta.url))
+    // resolve to project root (two levels up from src/constants/)
+    const personaPath = join(__dirname, '../../persona/persona.md')
+    if (existsSync(personaPath)) {
+      const content = readFileSync(personaPath, 'utf-8')
+      return `# Personal Persona & Social Agent Identity\n\n${content}`
+    }
+  } catch (_) {
+    // persona file not found or unreadable — continue without it
+  }
+  return ''
+}
+
 function getAgentBrowserSection(): string {
   return `# agent-browser CLI
 
@@ -839,6 +857,7 @@ ${CYBER_RISK_INSTRUCTION}`,
       : null,
     getActionsSection(),
     getUsingYourToolsSection(enabledTools),
+    getPersonaSection(),
     getAgentBrowserSection(),
     getSimpleToneAndStyleSection(),
     getOutputEfficiencySection(),
