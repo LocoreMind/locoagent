@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "description": "Social agent operation log. Each entry records one action taken by the agent. The agent reads this at startup to avoid duplicate actions and maintain session continuity.",
+  "operations": []
+}

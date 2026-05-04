@@ -67,6 +67,7 @@ A comprehensive architecture analysis of the Locoremind Social Agent project, an
   - [5.6 Social Agent: agent-browser Integration](#56-social-agent-agent-browser-integration)
   - [5.7 Social Agent: Chrome CDP Pre-launch Setup](#57-social-agent-chrome-cdp-pre-launch-setup)
   - [5.8 Social Agent: Digital Persona System](#58-social-agent-digital-persona-system)
+  - [5.9 Social Agent: Operation Log & State](#59-social-agent-operation-log--state)
 - [6. Deep Dive: query.ts — The Agentic Loop Engine](#6-deep-dive-queryts--the-agentic-loop-engine)
   - [6.1 Architecture Overview](#61-architecture-overview)
   - [6.2 Key Types](#62-key-types)
@@ -189,9 +190,11 @@ locoremind-social-agent/
 │   ├── agent-browser-help.txt  # Full agent-browser CLI reference
 │   └── msj-cv.html          # Source CV used to generate the persona
 ├── persona/
-│   └── persona.md           # Digital persona document (editable, auto-loaded into system prompt)
+│   ├── persona.md           # Digital persona document (editable, auto-loaded into system prompt)
+│   └── operation-log.json   # Social agent state: every action logged here for dedup + history
 ├── scripts/
-│   └── setup-chrome.sh      # Chrome CDP pre-launch setup script
+│   ├── setup-chrome.sh      # Chrome CDP pre-launch setup script
+│   └── log-operation.ts     # Operation log CLI helper (add / check / recent / summary)
 ├── bunfig.toml              # Bun config (preload: globals.ts)
 └── package.json             # Dependencies and scripts
 ```
@@ -2091,6 +2094,83 @@ If `persona/persona.md` is missing or unreadable, the function returns `''` sile
 ### Source
 
 The initial persona was generated from `docs/msj-cv.html` (personal CV). The CV is kept in `docs/` as a reference for future persona updates.
+
+---
+
+## 5.9 Social Agent: Operation Log & State
+
+The operation log gives the agent persistent memory across sessions — it knows what it has already done and can avoid repeating actions on the same content.
+
+### Design Philosophy
+
+- **JSON file, not a database** — `persona/operation-log.json` is human-readable, editable, and zero-dependency. Sufficient for hundreds of operations per day.
+- **Agent-driven writes** — the agent calls `scripts/log-operation.ts` via the Bash tool after each action. No automatic instrumentation.
+- **Read at startup via system prompt** — a 30-day summary is injected into the system prompt so the agent has full context before the first turn.
+
+### Data Model
+
+Each entry in `operation-log.json` has:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `ts` | ISO string | When the action was taken |
+| `platform` | string | `x`, `reddit`, `linkedin`, etc. |
+| `action` | string | `like`, `comment`, `repost`, `follow`, `upvote`, `reply`, `post` |
+| `url` | string | Canonical URL of the target post/user |
+| `status` | string | `success`, `failed`, `skipped`, `restricted` |
+| `note` | string? | Optional context (comment text summary, reason for skip, etc.) |
+
+### CLI Helper: `scripts/log-operation.ts`
+
+The agent uses this script via Bash tool for all log operations:
+
+```bash
+# Before acting — check if already done (exit 0 = done, exit 1 = not done)
+bun run scripts/log-operation.ts check \
+  --platform x --action like --url "https://x.com/.../status/123"
+
+# After a successful action — record it
+bun run scripts/log-operation.ts add \
+  --platform x --action like --url "https://x.com/.../status/123" \
+  --status success --note "Qwen3 perf post by @researcher"
+
+# View recent 20 operations
+bun run scripts/log-operation.ts recent --limit 20
+
+# Get summary for system prompt (last N days)
+bun run scripts/log-operation.ts summary --days 30
+```
+
+### System Prompt Injection
+
+`getOperationLogSection()` in `src/constants/prompts.ts` runs `log-operation.ts summary` at startup and injects the result into the system prompt static region. This means the agent sees its full 30-day history before handling the first user message.
+
+The injected section includes:
+- Per-platform action counts
+- Complete list of already-acted URLs (the agent must not repeat these)
+- Instructions to `check` before acting and `add` after acting
+
+### Agent Workflow Pattern
+
+```
+1. User gives task: "Go like 5 posts about agent training on X"
+2. Agent opens X, finds candidate posts
+3. For each post URL:
+   a. bun run scripts/log-operation.ts check --platform x --action like --url <url>
+   b. If exit 0 → skip (already liked)
+   c. If exit 1 → agent-browser click <like-button>
+   d. Verify like succeeded via snapshot
+   e. bun run scripts/log-operation.ts add --platform x --action like --url <url> --status success
+4. Report summary of what was done vs skipped
+```
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `persona/operation-log.json` | The state store (JSON, human-editable) |
+| `scripts/log-operation.ts` | CLI helper: add / check / recent / summary |
+| `src/constants/prompts.ts` → `getOperationLogSection()` | Injects 30-day summary into system prompt |
 
 ---
 

@@ -270,6 +270,27 @@ function getPersonaSection(): string {
   return ''
 }
 
+function getOperationLogSection(): string {
+  try {
+    const { existsSync } = require('node:fs')
+    const { join, dirname } = require('node:path')
+    const { fileURLToPath } = require('node:url')
+    const { execSync } = require('node:child_process')
+    const __dirname = dirname(fileURLToPath(import.meta.url))
+    const logPath = join(__dirname, '../../persona/operation-log.json')
+    const scriptPath = join(__dirname, '../../scripts/log-operation.ts')
+    if (!existsSync(logPath) || !existsSync(scriptPath)) return ''
+    const summary = execSync(
+      `bun run ${scriptPath} summary --days 30`,
+      { encoding: 'utf-8', timeout: 5000 }
+    ).trim()
+    if (!summary) return ''
+    return `# Social Agent State\n\nThe following is your operation history. Do NOT repeat any action on a URL already listed. Before each action, use: bun run scripts/log-operation.ts check --platform <p> --action <a> --url <url>. After each successful action, log it with: bun run scripts/log-operation.ts add --platform <p> --action <a> --url <url> --status success [--note <context>]\n\n${summary}`
+  } catch (_) {
+    return ''
+  }
+}
+
 function getAgentBrowserSection(): string {
   return `# agent-browser CLI
 
@@ -858,6 +879,7 @@ ${CYBER_RISK_INSTRUCTION}`,
     getActionsSection(),
     getUsingYourToolsSection(enabledTools),
     getPersonaSection(),
+    getOperationLogSection(),
     getAgentBrowserSection(),
     getSimpleToneAndStyleSection(),
     getOutputEfficiencySection(),
