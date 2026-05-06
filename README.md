@@ -425,6 +425,46 @@ bun start --continue
 
 ---
 
+## 🔍 Realtime Trajectory Monitor
+
+`--print` mode runs the agent as a black box — you only see the final output. `tail-agent.ts` fixes this by watching the session `.jsonl` file in real-time (100ms flush) and printing live execution status.
+
+```bash
+# Terminal 1: start the monitor (waits for new entries)
+bun run tail
+
+# Terminal 2: launch the agent
+bun run --preload ./stubs/globals.ts ./src/entrypoints/cli.tsx --print \
+  "/x-com open timeline, like first post"
+```
+
+Terminal 1 shows each step as it happens:
+```
+═══ New Task ═══
+/x-com open timeline, like first post
+
+[6:30:47 PM] 💭 The user wants me to connect CDP and open timeline...
+[6:30:47 PM] ⚡ Bash: agent-browser connect 9222
+[6:30:47 PM] ✓ Result: ✓ Done
+[6:31:10 PM] ⚡ Bash: agent-browser open https://x.com/home
+[6:31:27 PM] ⚡ Bash: agent-browser snapshot -i -c -s 'article'
+[6:31:44 PM] ● Agent: 找到第一条帖子，点赞按钮 ref=e136
+[6:31:44 PM] ⚡ Bash: agent-browser click e136
+[6:31:45 PM] ✓ Result: ✓ Done
+```
+
+Additional commands:
+
+```bash
+bun run tail:history   # replay latest session from the beginning
+bun run tail:list      # list recent sessions with timestamps
+bun run tail <id> --from-start  # replay specific session
+```
+
+See `docs/architecture.md` section 5.11 for full details.
+
+---
+
 ## ⚠️ Disclaimer
 
 This is an **independent fork** and is **not affiliated with or endorsed by Anthropic**.

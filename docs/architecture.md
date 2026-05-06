@@ -69,6 +69,7 @@ A comprehensive architecture analysis of the Locoremind Social Agent project, an
   - [5.8 Social Agent: Digital Persona System](#58-social-agent-digital-persona-system)
   - [5.9 Social Agent: Operation Log & State](#59-social-agent-operation-log--state)
   - [5.10 Social Agent: Task Scheduling](#510-social-agent-task-scheduling)
+  - [5.11 Social Agent: Realtime Trajectory Monitor](#511-social-agent-realtime-trajectory-monitor)
 - [6. Deep Dive: query.ts — The Agentic Loop Engine](#6-deep-dive-queryts--the-agentic-loop-engine)
   - [6.1 Architecture Overview](#61-architecture-overview)
   - [6.2 Key Types](#62-key-types)
@@ -2274,6 +2275,75 @@ The script:
 | `package.json` → `run-tasks` | `bun run run-tasks` shortcut |
 | `package.json` → `run-tasks:dry` | `bun run run-tasks:dry` for prompt preview |
 | `src/constants/prompts.ts` → `getTasksSection()` | Injects task schedule into system prompt |
+
+---
+
+## 5.11 Social Agent: Realtime Trajectory Monitor
+
+`scripts/tail-agent.ts` provides real-time visibility into agent execution by watching the session `.jsonl` file and printing structured output as entries are written (100ms flush interval).
+
+### Problem it solves
+
+`--print` mode is a black box: you launch the agent and wait for the final answer with no visibility into what's happening. `tail-agent.ts` solves this by tailing the `.jsonl` file that the agent writes to continuously during execution.
+
+### Usage
+
+```bash
+# Watch latest session — only new entries from this point forward
+bun run tail
+
+# Watch latest session from the beginning (replay full history)
+bun run tail:history
+
+# List recent sessions with timestamps and file sizes
+bun run tail:list
+
+# Watch a specific session by ID
+bun run tail <session-id>
+bun run tail <session-id> --from-start
+```
+
+### Output Format
+
+| Prefix | Color | Meaning |
+|--------|-------|---------|
+| `● Agent:` | Cyan | Agent's text output (what it's saying/doing) |
+| `⚡ Bash:` | Yellow | Shell command being executed |
+| `✓ Result:` | Green | Tool result (truncated if >300 chars) |
+| `📋 Todo:` | Blue | Current in-progress todo item |
+| `💭` | Gray/dim | DeepSeek reasoning_content (thinking) |
+| `═══ New Task ═══` | Green bold | Task start marker |
+
+### How It Works
+
+The script polls the `.jsonl` file every 200ms. Each line is a JSON entry — it filters for `type: "assistant"` entries and extracts:
+- `content[].type === "text"` → agent speech
+- `content[].type === "tool_use"` → Bash commands, TodoWrite, other tools
+- `content[].type === "thinking"` → DeepSeek reasoning
+
+`type: "user"` entries with `tool_result` blocks show command results. `isMeta: true` entries (skill playbook injection) are skipped to avoid noise.
+
+### Typical Workflow
+
+```bash
+# Terminal 1: start the tail monitor
+bun run tail
+
+# Terminal 2: launch the agent task
+bun run --preload ./stubs/globals.ts ./src/entrypoints/cli.tsx --print \
+  "/x-com open timeline, like first post, report result"
+```
+
+Terminal 1 shows live step-by-step execution. Terminal 2 shows the final output when done.
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `scripts/tail-agent.ts` | Realtime trajectory monitor |
+| `package.json` → `tail` | `bun run tail` shortcut |
+| `package.json` → `tail:history` | Replay from start |
+| `package.json` → `tail:list` | List sessions |
 
 ---
 
