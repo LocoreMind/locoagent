@@ -11,6 +11,9 @@
     "setup-chrome": "bash ./scripts/setup-chrome.sh",
     "run-tasks": "bun run scripts/run-tasks.ts",
     "run-tasks:dry": "bun run scripts/run-tasks.ts --dry-run",
+    "tail": "bun run scripts/tail-agent.ts",
+    "tail:history": "bun run scripts/tail-agent.ts --from-start",
+    "tail:list": "bun run scripts/tail-agent.ts --list",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
