@@ -221,17 +221,104 @@ agent-browser click @e2          # Act by @ref
 agent-browser fill @e3 "text"
 ```
 
-Session persistence for social platforms:
+**Recommended: Chrome CDP mode** (operates with real login sessions):
 
 ```bash
-# Save login state once
-agent-browser --session-name twitter open https://twitter.com
-
-# Reused automatically in subsequent runs
-agent-browser --session-name twitter snapshot -i
+bun run setup-chrome             # One-time: copy profile + launch Chrome with CDP
+agent-browser connect 9222       # Connect to running Chrome
+agent-browser open https://x.com # All commands reuse the authenticated session
 ```
 
 Full CLI reference is available at `docs/agent-browser-help.txt`.
+
+---
+
+## 🎯 Platform Skills
+
+Platform-specific operation playbooks are loaded on-demand via slash commands using the skills system. Each skill injects a complete operation manual into the agent's context, enabling reliable one-pass composite task execution (e.g. like + reply + repost in a single run).
+
+### Available Skills
+
+| Skill | Command | Sections | Operations |
+|-------|---------|----------|-----------|
+| X.com | `/x-com` | 7 | 32+ (browse, engage, post, social graph, profile, navigation, lists) |
+
+### Usage
+
+In interactive mode or `--print`:
+
+```bash
+# Load x.com playbook and run a composite task
+bun run --preload ./stubs/globals.ts ./src/entrypoints/cli.tsx --print \
+  "/x-com open home timeline, like the first post, then reply 'Great post!'"
+```
+
+The full playbook is injected into context so the agent completes composite tasks in one pass without needing to look up individual operation steps.
+
+### Adding a New Platform Skill
+
+```bash
+mkdir -p .claude/skills/linkedin
+```
+
+```markdown
+# .claude/skills/linkedin/SKILL.md
+---
+description: "LinkedIn platform operations playbook for agent-browser."
+allowed-tools:
+  - Bash
+user-invocable: true
+---
+
+# LinkedIn Playbook content...
+```
+
+Auto-discovered at startup, available as `/linkedin`. See `docs/architecture.md` section 5.3 for details.
+
+---
+
+## 🔑 Chrome CDP Setup
+
+For operating real social accounts with existing login sessions:
+
+```bash
+# Launch Chrome with CDP on port 9222 using a copy of your real Chrome profile
+bun run setup-chrome
+```
+
+This copies your Chrome profile (with all cookies/sessions) to a working directory and launches Chrome with remote debugging enabled. All agent-browser commands then reuse this authenticated session.
+
+Configuration in `.env`:
+
+```env
+# CHROME_SOURCE_PROFILE=/Users/you/Library/Application Support/Google/Chrome/Default
+# CHROME_WORK_PROFILE=/tmp/social-agent-chrome-profile
+# CHROME_DEBUG_PORT=9222
+```
+
+See `docs/architecture.md` section 5.7 for full details.
+
+---
+
+## 📋 Operation Log
+
+Persistent deduplication state to prevent repeating actions across sessions:
+
+```bash
+# Check before acting
+bun run scripts/log-operation.ts check --platform x --action like --url "https://x.com/..."
+
+# Record after acting
+bun run scripts/log-operation.ts add --platform x --action like --url "https://x.com/..." --status success
+
+# View recent history
+bun run scripts/log-operation.ts recent --limit 20
+
+# Summary (injected into system prompt at startup)
+bun run scripts/log-operation.ts summary --days 30
+```
+
+State stored in `persona/operation-log.json` (human-readable, editable).
 
 ---
 

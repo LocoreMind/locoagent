@@ -41,6 +41,7 @@ import {
 interface OpenAIMessage {
   role: 'system' | 'user' | 'assistant' | 'tool'
   content?: string | Array<{ type: string; text?: string; image_url?: { url: string } }>
+  reasoning_content?: string
   tool_calls?: Array<{
     id: string
     type: 'function'
@@ -181,13 +182,20 @@ function convertMessages(
       // Check for tool_use blocks
       if (Array.isArray(content)) {
         const toolUses = content.filter((b: { type?: string }) => b.type === 'tool_use')
+        const thinkingBlocks = content.filter((b: { type?: string }) => b.type === 'thinking')
         const textContent = content.filter(
           (b: { type?: string }) => b.type !== 'tool_use' && b.type !== 'thinking',
         )
 
+        // Collect reasoning content from thinking blocks (DeepSeek format)
+        const reasoningContent = thinkingBlocks
+          .map((b: { thinking?: string }) => b.thinking ?? '')
+          .join('')
+
         const assistantMsg: OpenAIMessage = {
           role: 'assistant',
           content: convertContentBlocks(textContent) as string,
+          ...(reasoningContent ? { reasoning_content: reasoningContent } : {}),
         }
 
         if (toolUses.length > 0) {
@@ -294,6 +302,7 @@ interface OpenAIStreamChunk {
     delta: {
       role?: string
       content?: string | null
+      reasoning_content?: string | null
       tool_calls?: Array<{
         index: number
         id?: string
@@ -340,6 +349,9 @@ async function* openaiStreamToAnthropic(
   let contentBlockIndex = 0
   const activeToolCalls = new Map<number, { id: string; name: string; index: number }>()
   let hasEmittedContentStart = false
+  let hasEmittedThinkingStart = false
+  let hasClosedThinkingBlock = false
+  let thinkingBlockIndex = 0
   let lastStopReason: 'tool_use' | 'max_tokens' | 'end_turn' | null = null
   let hasEmittedFinalUsage = false
   let hasProcessedFinishReason = false
@@ -395,9 +407,33 @@ async function* openaiStreamToAnthropic(
       for (const choice of chunk.choices ?? []) {
         const delta = choice.delta
 
+        // DeepSeek reasoning_content — emit as thinking block before text
+        if (delta.reasoning_content != null && delta.reasoning_content !== '') {
+          if (!hasEmittedThinkingStart) {
+            yield {
+              type: 'content_block_start',
+              index: contentBlockIndex,
+              content_block: { type: 'thinking', thinking: '' },
+            }
+            hasEmittedThinkingStart = true
+            thinkingBlockIndex = contentBlockIndex
+          }
+          yield {
+            type: 'content_block_delta',
+            index: thinkingBlockIndex,
+            delta: { type: 'thinking_delta', thinking: delta.reasoning_content },
+          }
+        }
+
         // Text content — use != null to distinguish absent field from empty string,
         // some providers send "" as first delta to signal streaming start
         if (delta.content != null) {
+          // Close thinking block before starting text block
+          if (hasEmittedThinkingStart && !hasClosedThinkingBlock) {
+            yield { type: 'content_block_stop', index: thinkingBlockIndex }
+            hasClosedThinkingBlock = true
+            contentBlockIndex++
+          }
           if (!hasEmittedContentStart) {
             yield {
               type: 'content_block_start',

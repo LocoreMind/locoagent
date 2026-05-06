@@ -38,8 +38,9 @@ coverage/
 .nyc_output/
 test-output.log
 
-# Claude Code specific
-.claude/
+# Claude Code specific — exclude session data but track skills
+.claude/*
+!.claude/skills/
 *.pcap
 /tmp/
 

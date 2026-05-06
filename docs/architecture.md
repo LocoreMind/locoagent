@@ -1788,15 +1788,15 @@ export function getAllBaseTools(): Tools {
 
 **Approach A: Markdown file (no code changes)**
 
-Create a markdown file in your project or user skills directory:
+Skills must use the **directory format**: `.claude/skills/<name>/SKILL.md`. Single `.md` files directly in `/skills/` are NOT supported by `loadSkillsDir.ts`.
 
 ```bash
-# Project-level skill
-mkdir -p .claude/skills
+# Project-level skill — directory format required
+mkdir -p .claude/skills/my-skill
 ```
 
 ```markdown
-# .claude/skills/deploy.md
+# .claude/skills/my-skill/SKILL.md
 ---
 description: "Deploy the application to production"
 allowed-tools:
@@ -1812,7 +1812,30 @@ You are a deployment assistant. Deploy the application by:
 User request: $ARGUMENTS
 ```
 
-That's it. The skill will appear as `/deploy` and the model can invoke it via `SkillTool`.
+The skill will appear as `/my-skill` (directory name = command name) and the model can invoke it via `SkillTool`.
+
+**Platform Operation Playbooks (Social Agent pattern)**
+
+For social media platforms, skills serve as full operation playbooks injected on demand. This is different from the persona approach — playbooks should be injected in full because composite tasks (like + reply + repost) require all operation sections to be available simultaneously.
+
+Current platform skills:
+
+| Platform | Path | Command | Sections | Operations |
+|----------|------|---------|----------|-----------|
+| X.com | `.claude/skills/x-com/SKILL.md` | `/x-com` | 7 | 32+ |
+
+The X.com skill covers: Browse & Read, Navigation, Content Creation, Engagement, Social Graph, Profile Management, and Lists. Tested with agent-browser 0.24.0, Chrome CDP on port 9222.
+
+**Why full injection (not partial loading):**
+- Composite tasks like like+comment+repost require multiple playbook sections simultaneously
+- Full injection enables one-pass completion with no mid-task skill lookups
+- Token cost of ~1500 lines is acceptable within x.com automation scope
+
+To add a new platform skill:
+```bash
+mkdir -p .claude/skills/linkedin
+# Create .claude/skills/linkedin/SKILL.md with frontmatter + playbook content
+```
 
 **Approach B: Bundled skill (compiled into CLI)**
 
@@ -2051,12 +2074,18 @@ All variables are read from `.env` automatically (via `stubs/globals.ts` preload
 
 ## 5.8 Social Agent: Digital Persona System
 
+> **Status: DISABLED** — `persona/persona.md` and `persona/tasks.md` have been renamed to `.bak` and are not loaded.
+>
+> **Reason:** Testing showed that long persona documents (168 lines) hijack LLM attention weights, causing topic narrowing toward niche keywords in the persona instead of executing the actual task. Simple role prompts (e.g. "you are an AI researcher") outperform detailed persona documents. The platform skill approach (section 5.3) replaces this for operational context.
+>
+> To re-enable: rename `persona/persona.md.bak` → `persona/persona.md`.
+
 The persona system gives the agent a stable, editable identity that persists across all social media sessions. It bridges the gap between a generic AI assistant and a branded social operator.
 
 ### Architecture
 
 ```
-persona/persona.md          ← editable by the user
+persona/persona.md          ← editable by the user (currently disabled: .bak)
   ↓ (read at startup)
 getPersonaSection()         ← src/constants/prompts.ts
   ↓ (injected into)
