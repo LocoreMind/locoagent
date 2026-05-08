@@ -14,6 +14,12 @@
     "tail": "bun run scripts/tail-agent.ts",
     "tail:history": "bun run scripts/tail-agent.ts --from-start",
     "tail:list": "bun run scripts/tail-agent.ts --list",
+    "workflow": "bun run scripts/workflow-engine.ts",
+    "workflow:list": "bun run scripts/workflow-engine.ts list",
+    "workflow:status": "bun run scripts/workflow-engine.ts status",
+    "workflow:summary": "bun run scripts/workflow-engine.ts summary",
+    "workflow:run": "bun run scripts/workflow-engine.ts run",
+    "workflow:daemon": "bun run scripts/workflow-engine.ts daemon",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -40,7 +40,7 @@ import {
 
 interface OpenAIMessage {
   role: 'system' | 'user' | 'assistant' | 'tool'
-  content?: string | Array<{ type: string; text?: string; image_url?: { url: string } }>
+  content?: string | null | Array<{ type: string; text?: string; image_url?: { url: string } }>
   reasoning_content?: string
   tool_calls?: Array<{
     id: string
@@ -192,9 +192,10 @@ function convertMessages(
           .map((b: { thinking?: string }) => b.thinking ?? '')
           .join('')
 
+        const convertedContent = convertContentBlocks(textContent) as string
         const assistantMsg: OpenAIMessage = {
           role: 'assistant',
-          content: convertContentBlocks(textContent) as string,
+          content: convertedContent || null,
           ...(reasoningContent ? { reasoning_content: reasoningContent } : {}),
         }
 
@@ -453,7 +454,12 @@ async function* openaiStreamToAnthropic(
         if (delta.tool_calls) {
           for (const tc of delta.tool_calls) {
             if (tc.id && tc.function?.name) {
-              // New tool call starting
+              // New tool call starting — close any open thinking or text block first
+              if (hasEmittedThinkingStart && !hasClosedThinkingBlock) {
+                yield { type: 'content_block_stop', index: thinkingBlockIndex }
+                hasClosedThinkingBlock = true
+                contentBlockIndex++
+              }
               if (hasEmittedContentStart) {
                 yield {
                   type: 'content_block_stop',

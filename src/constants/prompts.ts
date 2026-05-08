@@ -308,6 +308,48 @@ function getOperationLogSection(): string {
   }
 }
 
+function getWorkflowStatusSection(): string {
+  try {
+    const { existsSync } = require('node:fs')
+    const { join, dirname } = require('node:path')
+    const { fileURLToPath } = require('node:url')
+    const { execSync } = require('node:child_process')
+    const __dirname = dirname(fileURLToPath(import.meta.url))
+    const scriptPath = join(__dirname, '../../scripts/workflow-engine.ts')
+    if (!existsSync(scriptPath)) return ''
+    const summary = execSync(
+      `bun run ${scriptPath} summary`,
+      { encoding: 'utf-8', timeout: 5000 }
+    ).trim()
+    if (!summary) return ''
+    return [
+      `# Workflow Automation System`,
+      ``,
+      `Workflows are pure browser-automation pipelines (no LLM). You can monitor and control them.`,
+      ``,
+      summary,
+      ``,
+      `### How to use workflows`,
+      ``,
+      `- **Check status**: \`bun run workflow status --id <id>\` — see current state, last run result`,
+      `- **Start (background)**: \`bun run workflow start --id <id>\` — runs in background, returns immediately`,
+      `- **Run (blocking)**: \`bun run workflow run --id <id>\` — runs synchronously, waits for completion`,
+      `- **Stop**: \`bun run workflow stop --id <id>\` — stops at next checkpoint + kills background process`,
+      `- **Reset**: \`bun run workflow reset --id <id>\` — clears stopped state back to idle`,
+      `- **View log**: \`cat workflows/.tmp/<id>.log\` — see background execution output`,
+      `- **History**: \`bun run workflow history --id <id>\` — see past run results`,
+      ``,
+      `### When to run workflows`,
+      ``,
+      `- Daily workflows (like \`hf-papers-to-x\`) run automatically via \`run-tasks.ts\` before each task session`,
+      `- If the user asks you to post HuggingFace papers or run the daily paper workflow, use \`bun run workflow run --id hf-papers-to-x\``,
+      `- If a workflow is stopped, ask the user before resetting and restarting it`,
+    ].join('\n')
+  } catch (_) {
+    return ''
+  }
+}
+
 function getAgentBrowserSection(): string {
   return `# agent-browser CLI
 
@@ -898,6 +940,7 @@ ${CYBER_RISK_INSTRUCTION}`,
     getPersonaSection(),
     getTasksSection(),
     getOperationLogSection(),
+    getWorkflowStatusSection(),
     getAgentBrowserSection(),
     getSimpleToneAndStyleSection(),
     getOutputEfficiencySection(),

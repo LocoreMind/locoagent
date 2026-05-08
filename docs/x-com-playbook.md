@@ -3,9 +3,9 @@
 Platform-specific operation sequences for agent-browser on x.com.
 Each operation documents: preconditions, step-by-step agent-browser commands, verification method, and known pitfalls.
 
-**Status**: All sections (1-7) tested and documented.
+**Status**: All sections (1-7) tested and documented. Section 3.6 added for automated workflow posting.
 **Tested with**: agent-browser 0.24.0, Chrome CDP on port 9222, account @mashijiann.
-**Last updated**: 2026-05-06
+**Last updated**: 2026-05-08
 
 ---
 
@@ -32,6 +32,7 @@ Each operation documents: preconditions, step-by-step agent-browser commands, ve
   - [3.3 Reply to a Tweet](#33-reply-to-a-tweet)
   - [3.4 Quote Tweet](#34-quote-tweet)
   - [3.5 Delete Own Tweet](#35-delete-own-tweet)
+  - [3.6 Automated Posting via Workflow (Non-Interactive)](#36-automated-posting-via-workflow-non-interactive)
 - [4. Social Graph](#4-social-graph)
   - [4.1 Follow a User](#41-follow-a-user)
   - [4.2 Unfollow a User](#42-unfollow-a-user)
@@ -767,6 +768,150 @@ agent-browser snapshot -i -c -s 'article'
 - **`scrollintoview` before clicking More is important** — without it the click may not trigger the dropdown (likely the button is outside the viewport or behind another element)
 - Finding own tweets: use search `from:<username> <keyword>` with `f=live` tab for most reliable results. Profile page may have caching delay.
 - After deletion, you may be redirected to the previous page or see a "This post was deleted" placeholder
+
+---
+
+### 3.6 Automated Posting via Workflow (Non-Interactive)
+
+**Goal**: Post image+text tweets programmatically from a workflow executor script (no agent/LLM in the loop), with paper links in a self-reply comment.
+
+**Context**: The workflow automation system (`workflows/executors/*.ts`) posts tweets via `agent-browser` CLI calls from TypeScript using `execSync`. This section documents the proven posting pattern used by `hf-papers-to-x.ts` and `post-hf-paper.ts`.
+
+**Why self-reply for links**: X.com throttles/rate-limits posts that contain links directly. The workaround (used by @HuggingPapers and others) is to post the main content (title + abstract + image) without any links or hashtags, then immediately reply to your own post with the paper link. This avoids the throttling and X.com auto-generates link preview cards in replies.
+
+**Preconditions**: Chrome running with CDP on port 9222, logged in to X.com. `agent-browser` connected via `--cdp 9222`. `xUsername` configured for post URL extraction.
+
+**Pattern** — Post + Self-Reply (TypeScript `execSync` wrappers):
+
+```typescript
+// Helper: run agent-browser command
+function ab(cmd: string): string {
+  return execSync(`agent-browser --cdp 9222 ${cmd}`, {
+    encoding: 'utf-8', timeout: 30000
+  }).trim()
+}
+
+// Helper: find element ref from snapshot by pattern
+function findRef(pattern: string): string {
+  const snapshot = ab('snapshot -i -c')
+  const match = snapshot.match(new RegExp(`${pattern}.*?\\[ref=(e\\d+)\\]`))
+  return match ? `@${match[1]}` : ''
+}
+
+// Helper: eval JS in browser (write to tmp file to avoid shell quoting issues)
+function abEval(js: string): string {
+  writeFileSync('/tmp/.eval-tmp.js', js, 'utf-8')
+  return execSync(`agent-browser --cdp 9222 eval "$(cat '/tmp/.eval-tmp.js')"`,
+    { encoding: 'utf-8', timeout: 30000 }).trim()
+}
+
+// ── Step A: Compose & post main tweet (NO links, NO hashtags) ──
+
+ab('open https://x.com/home')
+ab('wait 2000')
+
+// Upload image first
+ab(`upload 'input[type="file"]' "/path/to/image.png"`)
+ab('wait 3000')
+
+// Fill tweet text — title + abstract + upvotes only
+const tweet = `${title}\n\n${abstract}\n\n${upvotes} upvotes on HuggingFace Daily Papers`
+const textboxRef = findRef('textbox "Post text"')
+ab(`fill ${textboxRef} "${tweet.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`)
+ab('wait 1000')
+
+// Click Post with retry
+for (let attempt = 1; attempt <= 3; attempt++) {
+  const snap = ab('snapshot -i -c')
+  const postMatch = snap.match(/button "Post" \[ref=(e\d+)\]/)
+  if (!postMatch) { ab('wait 2000'); continue }
+  ab(`click @${postMatch[1]}`)
+  ab('wait 5000')
+  const verify = ab('snapshot -i -c -s \'[role="textbox"]\'')
+  if (!verify.includes(title.slice(0, 20))) break  // Success
+}
+
+// ── Step B: Extract post URL from timeline ──
+
+ab('wait 2000')
+const xUsername = 'mashijiann'
+const postUrl = abEval(`
+  const links = document.querySelectorAll('a[href*="/${xUsername}/status/"]');
+  const urls = Array.from(links).map(a => a.href)
+    .filter(h => h.match(/\\/${xUsername}\\/status\\/\\d+$/));
+  urls.sort((a, b) => {
+    const idA = BigInt(a.split('/status/')[1] || '0');
+    const idB = BigInt(b.split('/status/')[1] || '0');
+    return idB > idA ? 1 : idB < idA ? -1 : 0;
+  });
+  JSON.stringify(urls[0] || null);
+`)
+
+// ── Step C: Self-reply with paper link ──
+
+ab(`open ${postUrl}`)
+ab('wait 3000')
+
+const replyTextboxRef = findRef('textbox "Post text"')
+ab(`fill ${replyTextboxRef} "Paper: ${paperUrl}"`)
+ab('wait 1000')
+
+// Note: Reply button is "Reply", not "Post"
+for (let attempt = 1; attempt <= 3; attempt++) {
+  const snap = ab('snapshot -i -c')
+  const replyMatch = snap.match(/button "Reply" \[ref=(e\d+)\]/)
+  if (!replyMatch) { ab('wait 2000'); continue }
+  ab(`click @${replyMatch[1]}`)
+  ab('wait 4000')
+  const verify = ab('snapshot -i -c -s \'[role="textbox"]\'')
+  if (!verify.includes('Paper:')) break  // Success
+}
+```
+
+**Tweet Content Rules**:
+- **Main post**: `title + abstract + upvotes`. NO links. NO hashtags. Image attached.
+- **Self-reply**: `Paper: <url>`. X.com auto-generates link preview card.
+- This matches the @HuggingPapers pattern (see [example](https://x.com/HuggingPapers/status/2052486934505603507)).
+
+**Tweet Length Auto-Trimming**:
+
+```typescript
+function composeTweet(title: string, abstract: string, upvotes: number): string {
+  // No link, no hashtags — just content
+  let tweet = `${title}\n\n${abstract}\n\n${upvotes} upvotes on HuggingFace Daily Papers`
+
+  if (tweet.length > 280) {
+    const target = 280 - (title.length + 50)
+    const shortAbstract = abstract.slice(0, Math.max(target, 20)) + '...'
+    tweet = `${title}\n\n${shortAbstract}\n\n${upvotes} upvotes on HuggingFace Daily Papers`
+  }
+
+  if (tweet.length > 280) {
+    tweet = `${title}\n\n${upvotes} upvotes on HuggingFace Daily Papers`
+  }
+
+  return tweet
+}
+```
+
+**Post URL Extraction**: After posting, the tweet appears in the home timeline with "Now" timestamp. Extract it by querying for `a[href*="/<username>/status/"]` and picking the highest status ID (most recent). This avoids navigating to the profile page.
+
+**Reply vs Post Button**: On the tweet detail page, the compose area has the same `textbox "Post text"` element, but the submit button is `button "Reply"` instead of `button "Post"`. The retry loop must match the correct button label.
+
+**Verification**: After clicking Post/Reply and waiting 4-5s, snapshot the textbox area. If the tweet/reply text is no longer present in the compose box, the action succeeded.
+
+**Known Issues**:
+- **Refs are ephemeral** — never cache a ref across `ab()` calls. Always re-snapshot to get fresh refs before clicking.
+- **First click often fails** — the Post/Reply button ref changes after `fill` modifies the DOM. The retry loop (3 attempts, re-snapshot each time) handles this reliably.
+- **Upload before fill** — uploading an image after filling text can interfere with the compose state. Always upload first.
+- **`abEval()` shell quoting** — when using `agent-browser eval` from Bun, write JS to a temp file and use `eval "$(cat 'file')"` to avoid shell escaping issues.
+- **Same beforeunload trap** as Section 3.1 — if the script crashes mid-compose, the Chrome tab may have a stuck `beforeunload` handler requiring manual intervention.
+- **Pause between posts** — when posting multiple tweets in sequence, wait 3-5 seconds between posts to avoid rate limiting.
+- **Self-reply failure is non-fatal** — if the reply fails, the main tweet is still posted. The executor treats this as a success with a warning.
+
+**Reference Executors**:
+- `workflows/executors/hf-papers-to-x.ts` — full pipeline (fetch + post + self-reply for multiple papers)
+- `workflows/executors/post-hf-paper.ts` — single paper post + self-reply (standalone CLI)
 
 ---
 

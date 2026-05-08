@@ -30,6 +30,94 @@
       "url": "https://x.com/kernullist/status/2050955628257186068",
       "status": "success",
       "note": "Shared experience with LocoOperator-4B on prompt compression and chunked context for small models"
+    },
+    {
+      "ts": "2026-05-04T09:10:11.252Z",
+      "platform": "x",
+      "action": "like",
+      "url": "https://x.com/VivekIntel/status/2050951311148175795",
+      "status": "success",
+      "note": "AIRecon pentesting agent with Ollama offline LLM"
+    },
+    {
+      "ts": "2026-05-04T09:11:23.635Z",
+      "platform": "x",
+      "action": "like",
+      "url": "https://x.com/Leechael/status/2050974413563347277",
+      "status": "success",
+      "note": "llama.cpp + gemma4 combo for local inference"
+    },
+    {
+      "ts": "2026-05-04T09:11:43.529Z",
+      "platform": "x",
+      "action": "like",
+      "url": "https://x.com/runfusion/status/2050962678911483921",
+      "status": "success",
+      "note": "Agent runtime improvements with llama.cpp integration"
+    },
+    {
+      "ts": "2026-05-04T09:12:08.005Z",
+      "platform": "x",
+      "action": "like",
+      "url": "https://x.com/MylesBorins/status/2051151144760590348",
+      "status": "success",
+      "note": "Utility for streamlining local inference experimentation"
+    },
+    {
+      "ts": "2026-05-04T09:14:24.176Z",
+      "platform": "x",
+      "action": "comment",
+      "url": "https://x.com/chenzeling4/status/2051209555271434321",
+      "status": "success",
+      "note": "Technical comment on scaffold-model fit vs raw scale, referencing LocoOperator-4B findings"
+    },
+    {
+      "ts": "2026-05-04T09:19:11.317Z",
+      "platform": "x",
+      "action": "follow",
+      "url": "https://x.com/wire_agent",
+      "status": "success",
+      "note": "Chimpansky - discusses RL/LLM post-training and agent research"
+    },
+    {
+      "ts": "2026-05-04T09:20:34.994Z",
+      "platform": "x",
+      "action": "follow",
+      "url": "https://x.com/floinkus",
+      "status": "success",
+      "note": "cole benefield @servohq - discusses agent post-training and harness design"
+    },
+    {
+      "ts": "2026-05-04T09:21:21.711Z",
+      "platform": "x",
+      "action": "follow",
+      "url": "https://x.com/_lopopolo",
+      "status": "success",
+      "note": "Ryan Lopopolo @OpenAI - discusses multi-agent systems and post-training"
+    },
+    {
+      "ts": "2026-05-06T10:04:34.007Z",
+      "platform": "x",
+      "action": "like",
+      "url": "https://x.com/aakashgupta/status/2051965005390872617",
+      "status": "success",
+      "note": "Liked monarch butterfly migration post from home timeline"
+    },
+    {
+      "ts": "2026-05-06T10:04:34.026Z",
+      "platform": "x",
+      "action": "comment",
+      "url": "https://x.com/aakashgupta/status/2051965005390872617",
+      "status": "success",
+      "note": "Replied 'Great post\\!' to monarch butterfly migration post"
+    },
+    {
+      "ts": "2026-05-07T00:55:21.866Z",
+      "platform": "x",
+      "action": "post",
+      "url": "https://huggingface.co/papers/2605.03042",
+      "status": "failed",
+      "note": "Post button click did not navigate away from compose"
     }
   ]
 }

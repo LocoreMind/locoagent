@@ -52,6 +52,57 @@ try {
   logSummary = '(operation log unavailable)'
 }
 
+// ── Run due workflows (before agent session) ─────────────────────────────────
+const WORKFLOW_ENGINE = resolve(ROOT, 'scripts/workflow-engine.ts')
+
+function runDueWorkflows(): string {
+  if (!existsSync(WORKFLOW_ENGINE)) return ''
+  try {
+    // Get workflow list as JSON
+    const listJson = execSync(`bun run ${WORKFLOW_ENGINE} list`, {
+      encoding: 'utf-8', timeout: 10000,
+    }).trim()
+    const workflows = JSON.parse(listJson) as Array<{
+      id: string; name: string; schedule: string; status: string; lastRun: string; lastResult: string
+    }>
+
+    const results: string[] = []
+    for (const wf of workflows) {
+      // Skip non-daily or already running/stopped
+      if (wf.schedule !== 'daily') continue
+      if (wf.status === 'running' || wf.status === 'stopped') {
+        results.push(`- ${wf.name}: skipped (status=${wf.status})`)
+        continue
+      }
+
+      // Skip if already ran today
+      const today = new Date().toISOString().split('T')[0]!
+      if (wf.lastRun !== 'never' && wf.lastRun.startsWith(today)) {
+        results.push(`- ${wf.name}: skipped (already ran today)`)
+        continue
+      }
+
+      // Run synchronously
+      console.log(`[run-tasks] Running workflow: ${wf.name}`)
+      const wfResult = spawnSync('bun', ['run', WORKFLOW_ENGINE, 'run', '--id', wf.id], {
+        stdio: 'inherit',
+        encoding: 'utf-8',
+        cwd: ROOT,
+        timeout: 10 * 60 * 1000,
+      })
+      const status = wfResult.status === 0 ? 'success' : 'failed'
+      results.push(`- ${wf.name}: ${status}`)
+    }
+
+    return results.length > 0 ? results.join('\n') : ''
+  } catch (e: any) {
+    console.error(`[run-tasks] Workflow pre-run failed: ${e.message}`)
+    return ''
+  }
+}
+
+const workflowResults = runDueWorkflows()
+
 // ── Determine day context ─────────────────────────────────────────────────────
 const today = new Date()
 const dayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][today.getDay()]
@@ -73,6 +124,10 @@ ${weeklyNote}${platformNote}
 ## Your Task Schedule
 
 ${tasksContent}
+
+## Workflow Results (pre-session)
+
+${workflowResults || '(no workflows ran)'}
 
 ## Recent Operation Log (last 7 days)
 
@@ -118,7 +173,7 @@ const result = spawnSync(
     stdio: 'inherit',
     encoding: 'utf-8',
     cwd: ROOT,
-    timeout: 10 * 60 * 1000, // 10 min max per session
+    timeout: 30 * 60 * 1000, // 30 min max per session
   }
 )
 

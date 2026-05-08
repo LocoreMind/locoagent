@@ -1,0 +1,863 @@
+{
+  "version": 1,
+  "workflows": {
+    "hf-daily-papers": {
+      "status": "idle",
+      "lastRun": {
+        "startedAt": "2026-05-07T00:57:44.092Z",
+        "finishedAt": "2026-05-08T07:47:52.219Z",
+        "status": "success",
+        "stepsCompleted": 3,
+        "stepsTotal": 3,
+        "output": {
+          "stepsCompleted": 3,
+          "stepsTotal": 3,
+          "papers": [
+            {
+              "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+              "arxivId": "2605.06416",
+              "upvotes": 32
+            },
+            {
+              "title": "MARBLE: Multi-Aspect Reward Balance for Diffusion RL",
+              "arxivId": "2605.06507",
+              "upvotes": 29
+            },
+            {
+              "title": "When to Trust Imagination: Adaptive Action Execution for World Action Models",
+              "arxivId": "2605.06222",
+              "upvotes": 26
+            }
+          ],
+          "steps": [
+            {
+              "step": "fetch_list",
+              "status": "success",
+              "detail": "3 papers selected"
+            },
+            {
+              "step": "fetch_abstracts",
+              "status": "success",
+              "detail": "3 abstracts fetched"
+            },
+            {
+              "step": "download_thumbnails",
+              "status": "success"
+            }
+          ]
+        }
+      },
+      "runCount": 5,
+      "history": [
+        {
+          "startedAt": "2026-05-07T00:53:36.548Z",
+          "finishedAt": "2026-05-07T00:53:36.563Z",
+          "status": "failed",
+          "stepsCompleted": 0,
+          "stepsTotal": 0,
+          "error": "exit code 1",
+          "output": {}
+        },
+        {
+          "startedAt": "2026-05-07T00:54:09.525Z",
+          "finishedAt": "2026-05-07T00:54:14.024Z",
+          "status": "failed",
+          "stepsCompleted": 0,
+          "stepsTotal": 0,
+          "error": "exit code 1",
+          "output": {}
+        },
+        {
+          "startedAt": "2026-05-07T00:56:47.817Z",
+          "finishedAt": "2026-05-07T00:57:05.979Z",
+          "status": "success",
+          "stepsCompleted": 0,
+          "stepsTotal": 0,
+          "output": {}
+        },
+        {
+          "startedAt": "2026-05-07T00:57:44.092Z",
+          "finishedAt": "2026-05-07T00:57:58.131Z",
+          "status": "success",
+          "stepsCompleted": 3,
+          "stepsTotal": 3,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 3,
+            "papers": [
+              {
+                "title": "ARIS: Autonomous Research via Adversarial Multi-Agent Collaboration",
+                "arxivId": "2605.03042",
+                "upvotes": 68
+              },
+              {
+                "title": "OpenSeeker-v2: Pushing the Limits of Search Agents with Informative and High-Difficulty Trajectories",
+                "arxivId": "2605.04036",
+                "upvotes": 38
+              },
+              {
+                "title": "Beyond SFT-to-RL: Pre-alignment via Black-Box On-Policy Distillation for Multimodal RL",
+                "arxivId": "2604.28123",
+                "upvotes": 35
+              }
+            ],
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "3 papers selected"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "success",
+                "detail": "3 abstracts fetched"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "success"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-07T00:57:44.092Z",
+          "finishedAt": "2026-05-08T07:47:52.219Z",
+          "status": "success",
+          "stepsCompleted": 3,
+          "stepsTotal": 3,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 3,
+            "papers": [
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 32
+              },
+              {
+                "title": "MARBLE: Multi-Aspect Reward Balance for Diffusion RL",
+                "arxivId": "2605.06507",
+                "upvotes": 29
+              },
+              {
+                "title": "When to Trust Imagination: Adaptive Action Execution for World Action Models",
+                "arxivId": "2605.06222",
+                "upvotes": 26
+              }
+            ],
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "3 papers selected"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "success",
+                "detail": "3 abstracts fetched"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "success"
+              }
+            ]
+          }
+        }
+      ],
+      "logFile": "/Users/jason/Projects/msj-locoremind/locoremind-social-agent/workflows/.tmp/hf-daily-papers.log"
+    },
+    "hf-papers-to-x": {
+      "status": "running",
+      "lastRun": {
+        "startedAt": "2026-05-08T07:04:29.004Z",
+        "finishedAt": "2026-05-08T08:35:06.011Z",
+        "status": "success",
+        "stepsCompleted": 4,
+        "stepsTotal": 4,
+        "output": {
+          "stepsCompleted": 4,
+          "stepsTotal": 4,
+          "hfDate": "2026-05-08",
+          "papers": [
+            {
+              "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+              "arxivId": "2605.06416",
+              "upvotes": 33,
+              "posted": false,
+              "skippedDedup": true
+            },
+            {
+              "title": "MARBLE: Multi-Aspect Reward Balance for Diffusion RL",
+              "arxivId": "2605.06507",
+              "upvotes": 29,
+              "posted": false,
+              "skippedDedup": true
+            },
+            {
+              "title": "When to Trust Imagination: Adaptive Action Execution for World Action Models",
+              "arxivId": "2605.06222",
+              "upvotes": 27,
+              "posted": false,
+              "skippedDedup": true
+            },
+            {
+              "title": "Continuous Latent Diffusion Language Model",
+              "arxivId": "2605.06548",
+              "upvotes": 25,
+              "posted": false,
+              "skippedDedup": true
+            },
+            {
+              "title": "Nonsense Helps: Prompt Space Perturbation Broadens Reasoning Exploration",
+              "arxivId": "2605.05566",
+              "upvotes": 17,
+              "posted": true,
+              "skippedDedup": false
+            }
+          ],
+          "posted": 1,
+          "skipped": 4,
+          "failed": 0,
+          "steps": [
+            {
+              "step": "fetch_list",
+              "status": "success",
+              "detail": "5 selected, 1 new"
+            },
+            {
+              "step": "fetch_abstracts",
+              "status": "success",
+              "detail": "1 abstracts fetched"
+            },
+            {
+              "step": "download_thumbnails",
+              "status": "success"
+            },
+            {
+              "step": "post_to_x",
+              "status": "success",
+              "detail": "posted=1 skipped=4"
+            }
+          ]
+        }
+      },
+      "runCount": 8,
+      "history": [
+        {
+          "startedAt": "2026-05-07T01:13:45.845Z",
+          "finishedAt": "2026-05-07T01:14:49.317Z",
+          "status": "success",
+          "stepsCompleted": 4,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 4,
+            "stepsTotal": 4,
+            "papers": [
+              {
+                "title": "ARIS: Autonomous Research via Adversarial Multi-Agent Collaboration",
+                "arxivId": "2605.03042",
+                "upvotes": 68,
+                "posted": false
+              },
+              {
+                "title": "OpenSeeker-v2: Pushing the Limits of Search Agents with Informative and High-Difficulty Trajectories",
+                "arxivId": "2605.04036",
+                "upvotes": 40,
+                "posted": false
+              },
+              {
+                "title": "Beyond SFT-to-RL: Pre-alignment via Black-Box On-Policy Distillation for Multimodal RL",
+                "arxivId": "2604.28123",
+                "upvotes": 35,
+                "posted": false
+              },
+              {
+                "title": "X2SAM: Any Segmentation in Images and Videos",
+                "arxivId": "2605.00891",
+                "upvotes": 16,
+                "posted": true
+              },
+              {
+                "title": "HeavySkill: Heavy Thinking as the Inner Skill in Agentic Harness",
+                "arxivId": "2605.02396",
+                "upvotes": 12,
+                "posted": true
+              }
+            ],
+            "posted": 2,
+            "skipped": 3,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 papers selected"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "success",
+                "detail": "5 abstracts fetched"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "success"
+              },
+              {
+                "step": "post_to_x",
+                "status": "success",
+                "detail": "posted=2 skipped=3"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T06:22:46.067Z",
+          "finishedAt": "2026-05-08T06:24:43.908Z",
+          "status": "partial",
+          "stepsCompleted": 3,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 32,
+                "posted": false,
+                "skippedDedup": false
+              },
+              {
+                "title": "MARBLE: Multi-Aspect Reward Balance for Diffusion RL",
+                "arxivId": "2605.06507",
+                "upvotes": 28,
+                "posted": true,
+                "skippedDedup": false
+              },
+              {
+                "title": "When to Trust Imagination: Adaptive Action Execution for World Action Models",
+                "arxivId": "2605.06222",
+                "upvotes": 24,
+                "posted": true,
+                "skippedDedup": false
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 21,
+                "posted": true,
+                "skippedDedup": false
+              },
+              {
+                "title": "Continuous-Time Distribution Matching for Few-Step Diffusion Distillation",
+                "arxivId": "2605.06376",
+                "upvotes": 16,
+                "posted": true,
+                "skippedDedup": false
+              }
+            ],
+            "posted": 4,
+            "skipped": 0,
+            "failed": 1,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "success",
+                "detail": "5 abstracts fetched"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "success"
+              },
+              {
+                "step": "post_to_x",
+                "status": "failed",
+                "detail": "posted=4 skipped=0 failed=1"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T06:25:02.187Z",
+          "finishedAt": "2026-05-08T06:25:34.413Z",
+          "status": "success",
+          "stepsCompleted": 4,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 4,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 32,
+                "posted": true,
+                "skippedDedup": false
+              },
+              {
+                "title": "MARBLE: Multi-Aspect Reward Balance for Diffusion RL",
+                "arxivId": "2605.06507",
+                "upvotes": 28,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "When to Trust Imagination: Adaptive Action Execution for World Action Models",
+                "arxivId": "2605.06222",
+                "upvotes": 24,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 21,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous-Time Distribution Matching for Few-Step Diffusion Distillation",
+                "arxivId": "2605.06376",
+                "upvotes": 16,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 1,
+            "skipped": 4,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 1 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "success",
+                "detail": "1 abstracts fetched"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "success"
+              },
+              {
+                "step": "post_to_x",
+                "status": "success",
+                "detail": "posted=1 skipped=4"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T06:59:11.366Z",
+          "finishedAt": "2026-05-08T06:59:47.507Z",
+          "status": "success",
+          "stepsCompleted": 4,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 4,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 32,
+                "posted": true,
+                "skippedDedup": false
+              },
+              {
+                "title": "MARBLE: Multi-Aspect Reward Balance for Diffusion RL",
+                "arxivId": "2605.06507",
+                "upvotes": 28,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "When to Trust Imagination: Adaptive Action Execution for World Action Models",
+                "arxivId": "2605.06222",
+                "upvotes": 26,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 22,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous-Time Distribution Matching for Few-Step Diffusion Distillation",
+                "arxivId": "2605.06376",
+                "upvotes": 16,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 1,
+            "skipped": 4,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 1 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "success",
+                "detail": "1 abstracts fetched"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "success"
+              },
+              {
+                "step": "post_to_x",
+                "status": "success",
+                "detail": "posted=1 skipped=4"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:03:40.691Z",
+          "finishedAt": "2026-05-08T07:03:46.662Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-06",
+            "papers": [
+              {
+                "title": "ARIS: Autonomous Research via Adversarial Multi-Agent Collaboration",
+                "arxivId": "2605.03042",
+                "upvotes": 92,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "OpenSeeker-v2: Pushing the Limits of Search Agents with Informative and High-Difficulty Trajectories",
+                "arxivId": "2605.04036",
+                "upvotes": 57,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Beyond SFT-to-RL: Pre-alignment via Black-Box On-Policy Distillation for Multimodal RL",
+                "arxivId": "2604.28123",
+                "upvotes": 41,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "X2SAM: Any Segmentation in Images and Videos",
+                "arxivId": "2605.00891",
+                "upvotes": 20,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "HeavySkill: Heavy Thinking as the Inner Skill in Agentic Harness",
+                "arxivId": "2605.02396",
+                "upvotes": 17,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-08T07:07:15.305Z",
+          "status": "success",
+          "stepsCompleted": 4,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 4,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-06",
+            "papers": [
+              {
+                "title": "ARIS: Autonomous Research via Adversarial Multi-Agent Collaboration",
+                "arxivId": "2605.03042",
+                "upvotes": 92,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "OpenSeeker-v2: Pushing the Limits of Search Agents with Informative and High-Difficulty Trajectories",
+                "arxivId": "2605.04036",
+                "upvotes": 57,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Beyond SFT-to-RL: Pre-alignment via Black-Box On-Policy Distillation for Multimodal RL",
+                "arxivId": "2604.28123",
+                "upvotes": 41,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "X2SAM: Any Segmentation in Images and Videos",
+                "arxivId": "2605.00891",
+                "upvotes": 20,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "HeavySkill: Heavy Thinking as the Inner Skill in Agentic Harness",
+                "arxivId": "2605.02396",
+                "upvotes": 17,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Video Generation with Predictive Latents",
+                "arxivId": "2605.02134",
+                "upvotes": 14,
+                "posted": true,
+                "skippedDedup": false
+              },
+              {
+                "title": "StableI2I: Spotting Unintended Changes in Image-to-Image Transition",
+                "arxivId": "2605.04453",
+                "upvotes": 9,
+                "posted": true,
+                "skippedDedup": false
+              },
+              {
+                "title": "SymptomAI: Towards a Conversational AI Agent for Everyday Symptom Assessment",
+                "arxivId": "2605.04012",
+                "upvotes": 9,
+                "posted": true,
+                "skippedDedup": false
+              },
+              {
+                "title": "SVGS: Enhancing Gaussian Splatting Using Primitives with Spatially Varying Colors",
+                "arxivId": "2411.18966",
+                "upvotes": 7,
+                "posted": true,
+                "skippedDedup": false
+              },
+              {
+                "title": "PatRe: A Full-Stage Office Action and Rebuttal Generation Benchmark for Patent Examination",
+                "arxivId": "2605.03571",
+                "upvotes": 5,
+                "posted": true,
+                "skippedDedup": false
+              }
+            ],
+            "posted": 5,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "10 selected, 5 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "success",
+                "detail": "5 abstracts fetched"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "success"
+              },
+              {
+                "step": "post_to_x",
+                "status": "success",
+                "detail": "posted=5 skipped=5"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-08T07:27:17.576Z",
+          "status": "success",
+          "stepsCompleted": 4,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 4,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-05",
+            "papers": [
+              {
+                "title": "MolmoAct2: Action Reasoning Models for Real-world Deployment",
+                "arxivId": "2605.02881",
+                "upvotes": 249,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "From Context to Skills: Can Language Models Learn from Context Skillfully?",
+                "arxivId": "2604.27660",
+                "upvotes": 142,
+                "posted": true,
+                "skippedDedup": false
+              },
+              {
+                "title": "Persistent Visual Memory: Sustaining Perception for Deep Generation in LVLMs",
+                "arxivId": "2605.00814",
+                "upvotes": 19,
+                "posted": true,
+                "skippedDedup": false
+              },
+              {
+                "title": "Hallucinations Undermine Trust; Metacognition is a Way Forward",
+                "arxivId": "2605.01428",
+                "upvotes": 18,
+                "posted": false,
+                "skippedDedup": false
+              },
+              {
+                "title": "Repetition over Diversity: High-Signal Data Filtering for Sample-Efficient German Language Modeling",
+                "arxivId": "2604.28075",
+                "upvotes": 18,
+                "posted": false,
+                "skippedDedup": false
+              }
+            ],
+            "posted": 2,
+            "skipped": 1,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 4 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "success",
+                "detail": "4 abstracts fetched"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "success"
+              },
+              {
+                "step": "post_to_x",
+                "status": "success",
+                "detail": "posted=2 skipped=1"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-08T08:35:06.011Z",
+          "status": "success",
+          "stepsCompleted": 4,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 4,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 33,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "MARBLE: Multi-Aspect Reward Balance for Diffusion RL",
+                "arxivId": "2605.06507",
+                "upvotes": 29,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "When to Trust Imagination: Adaptive Action Execution for World Action Models",
+                "arxivId": "2605.06222",
+                "upvotes": 27,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 25,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Nonsense Helps: Prompt Space Perturbation Broadens Reasoning Exploration",
+                "arxivId": "2605.05566",
+                "upvotes": 17,
+                "posted": true,
+                "skippedDedup": false
+              }
+            ],
+            "posted": 1,
+            "skipped": 4,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 1 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "success",
+                "detail": "1 abstracts fetched"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "success"
+              },
+              {
+                "step": "post_to_x",
+                "status": "success",
+                "detail": "posted=1 skipped=4"
+              }
+            ]
+          }
+        }
+      ],
+      "logFile": "/Users/jason/Projects/msj-locoremind/locoremind-social-agent/workflows/.tmp/hf-papers-to-x.log",
+      "pid": 30556,
+      "mode": "daemon"
+    }
+  }
+}

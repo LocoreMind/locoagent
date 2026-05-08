@@ -70,6 +70,7 @@ A comprehensive architecture analysis of the Locoremind Social Agent project, an
   - [5.9 Social Agent: Operation Log & State](#59-social-agent-operation-log--state)
   - [5.10 Social Agent: Task Scheduling](#510-social-agent-task-scheduling)
   - [5.11 Social Agent: Realtime Trajectory Monitor](#511-social-agent-realtime-trajectory-monitor)
+  - [5.12 Social Agent: Workflow Automation System](#512-social-agent-workflow-automation-system)
 - [6. Deep Dive: query.ts — The Agentic Loop Engine](#6-deep-dive-queryts--the-agentic-loop-engine)
   - [6.1 Architecture Overview](#61-architecture-overview)
   - [6.2 Key Types](#62-key-types)
@@ -132,16 +133,26 @@ bun run typecheck
 **Authentication / Configuration:** Create a `.env` file in the project root — it is automatically loaded at startup via `stubs/globals.ts` preload. No need to export variables in the shell.
 
 ```env
+# Option A: OpenRouter (any model)
 CLAUDE_CODE_USE_OPENAI=1
 SKIP_PERMISSIONS=1
 OPENAI_API_KEY=sk-or-v1-...
 OPENAI_BASE_URL=https://openrouter.ai/api/v1
 OPENAI_MODEL=anthropic/claude-sonnet-4.5
+
+# Option B: DeepSeek direct (thinking mode supported)
+CLAUDE_CODE_USE_OPENAI=1
+SKIP_PERMISSIONS=1
+OPENAI_API_KEY=sk-...
+OPENAI_BASE_URL=https://api.deepseek.com
+OPENAI_MODEL=deepseek-v4-flash
 ```
 
 `SKIP_PERMISSIONS=1` bypasses all tool permission prompts — required for non-interactive `--print` mode (e.g. automated social agent tasks). Remove or set to `0` to restore interactive confirmation.
 
 For direct Anthropic API access, set `ANTHROPIC_API_KEY` instead (and omit `CLAUDE_CODE_USE_OPENAI`).
+
+**Note on DeepSeek thinking models:** `deepseek-v4-flash` and similar models that return `reasoning_content` are fully supported. The `openaiShim.ts` correctly handles thinking + tool_use streaming (see section 2.1.2 and 2.1.4 for details).
 
 ### 0.3 Project Structure
 
@@ -198,7 +209,17 @@ locoremind-social-agent/
 ├── scripts/
 │   ├── setup-chrome.sh      # Chrome CDP pre-launch setup script
 │   ├── log-operation.ts     # Operation log CLI helper (add / check / recent / summary)
-│   └── run-tasks.ts         # Task runner: reads tasks.md and executes daily/weekly session
+│   ├── run-tasks.ts         # Task runner: reads tasks.md and executes daily/weekly session
+│   └── workflow-engine.ts   # Workflow lifecycle manager (list/start/stop/reset/run/history/summary)
+├── workflows/
+│   ├── hf-daily-papers.json       # Workflow definition: HuggingFace data fetch
+│   ├── hf-papers-to-x.json       # Workflow definition: HuggingFace → X.com posting pipeline
+│   ├── state.json                 # Workflow state persistence (run history, status)
+│   ├── executors/
+│   │   ├── hf-daily-papers.ts     # Executor: fetch papers, abstracts, thumbnails
+│   │   ├── hf-papers-to-x.ts     # Executor: fetch + post to X.com end-to-end
+│   │   └── post-hf-paper.ts      # Executor: post a single paper to X.com
+│   └── .tmp/                      # Workflow output data (thumbnails, papers.json per date)
 ├── bunfig.toml              # Bun config (preload: globals.ts)
 └── package.json             # Dependencies and scripts
 ```
@@ -285,6 +306,8 @@ All variables can be set in the project root `.env` file (automatically loaded a
 | `OPENAI_BASE_URL` | Base URL for OpenAI-compatible endpoint (default: `https://api.openai.com/v1`) |
 | `OPENAI_MODEL` | Model ID for OpenAI-compatible provider (default: `gpt-4o`) |
 | `ANTHROPIC_API_KEY` | Anthropic API key (used when `CLAUDE_CODE_USE_OPENAI` is not set) |
+| `ANTHROPIC_BASE_URL` | Override Anthropic API base URL for the SDK client (takes priority over staging OAuth config) |
+| `ANTHROPIC_AUTH_TOKEN` | Override Anthropic auth token (used as `authToken` in SDK client when not a Claude AI subscriber) |
 
 **Behavior:**
 
@@ -493,6 +516,14 @@ The system supports multiple API providers through a unified client interface:
 
 - **`openaiShim.ts`** - Translates Anthropic SDK calls into OpenAI-compatible chat completion requests and streams back events in Anthropic format. Supports OpenAI, Azure OpenAI, Ollama, LM Studio, OpenRouter, Together, Groq, Fireworks, DeepSeek, Mistral, and any OpenAI-compatible API. The rest of the codebase is unaware of which provider is being used.
 
+  **DeepSeek Thinking Mode Fix (critical for `deepseek-v4-flash` and similar models):**
+
+  Models that return `reasoning_content` (thinking/reasoning tokens) alongside `tool_calls` in streaming mode require special handling. The original code had a **content block index collision bug**: when DeepSeek returned `reasoning_content` → `tool_calls` without any text content in between, both the thinking block and the first tool_use block were assigned index 0 in the Anthropic stream format. This caused the tool_use block to overwrite the thinking block in `claude.ts`'s `contentBlocks[]` array. On the next API call, `reasoning_content` was missing from the conversation history, triggering a 400 error: *"The reasoning_content in the thinking mode must be passed back to the API"*.
+
+  **Fix (streaming — `openaiStreamToAnthropic`):** Before starting any `tool_use` content block, the shim now checks if a thinking block is still open (`hasEmittedThinkingStart && !hasClosedThinkingBlock`) and emits a `content_block_stop` event for it, then increments `contentBlockIndex`. This ensures thinking, text, and tool_use blocks each get unique sequential indices.
+
+  **Fix (message conversion — `convertMessages`):** When an assistant message has `tool_calls` but empty text content, `content` is set to `null` (not empty string `""`). DeepSeek's API rejects empty-string content on assistant messages that carry `reasoning_content`.
+
 - **`providerConfig.ts`** - Resolves model names, base URLs, and transport type (chat completions vs. Codex responses). Handles Codex alias models (`codexplan` -> `gpt-5.4`, `codexspark` -> `gpt-5.3-codex-spark`).
 
 - **`withRetry.ts`** - Retry logic with exponential backoff and fallback model support.
@@ -512,6 +543,17 @@ The system supports multiple API providers through a unified client interface:
 | `services/voice.ts` | Voice input/output |
 | `services/rateLimitMessages.ts` | Rate limit messaging |
 | `services/tokenEstimation.ts` | Token count estimation |
+
+#### 2.1.4 Provider Compatibility Notes
+
+When using OpenAI-compatible providers via `openaiShim.ts`, be aware of provider-specific quirks:
+
+| Provider | Quirk | Handling |
+|----------|-------|----------|
+| **DeepSeek (thinking models)** | Returns `reasoning_content` field; requires it to be passed back in conversation history. Empty-string `content` on assistant messages with `reasoning_content` causes 400 errors. | Shim preserves `reasoning_content` as `thinking` blocks. Assistant `content` set to `null` (not `""`) when empty. See DeepSeek Thinking Mode Fix in section 2.1.2. |
+| **DeepSeek (thinking + tool_use)** | Streaming may emit `reasoning_content` → `tool_calls` without any text `content` in between, causing content block index collisions. | Shim closes the thinking block and increments block index before starting tool_use blocks. |
+| **OpenRouter** | Passes through various model providers; behavior depends on underlying model. | Use `OPENAI_BASE_URL=https://openrouter.ai/api/v1` with the full model path (e.g., `anthropic/claude-sonnet-4.5`). |
+| **Ollama / LM Studio** | Local models; may not support all features (thinking, tool_use). | Works for basic chat; tool_use support varies by model. |
 
 ### 2.2 Tools System
 
@@ -808,7 +850,7 @@ Display final response in REPL
 
 ### 2.7 Key Findings for Secondary Development
 
-1. **To add a new model provider** - Create a new shim similar to `openaiShim.ts` that translates to/from Anthropic stream format. The rest of the codebase remains untouched. Alternatively, modify `client.ts` to add a new provider branch.
+1. **To add a new model provider** - Create a new shim similar to `openaiShim.ts` that translates to/from Anthropic stream format. The rest of the codebase remains untouched. Alternatively, modify `client.ts` to add a new provider branch. **Important:** If your provider supports thinking/reasoning tokens (like DeepSeek's `reasoning_content`), ensure the streaming shim correctly manages content block indices — thinking, text, and tool_use blocks must each get unique sequential indices. See section 2.1.4 for known provider quirks.
 
 2. **To add a new tool** - Create a directory under `src/tools/YourTool/`, implement the `Tool` interface, and register it in `getAllBaseTools()` in `tools.ts`. Use feature flags for conditional inclusion.
 
@@ -1676,7 +1718,7 @@ export OPENAI_BASE_URL="https://your-provider.com/v1"
 bun run start -- --model "your-model-name"
 ```
 
-The existing `openaiShim.ts` handles the translation automatically.
+The existing `openaiShim.ts` handles the translation automatically. This includes support for providers with thinking/reasoning tokens (e.g., DeepSeek's `reasoning_content`) — see section 2.1.4 for provider-specific compatibility notes.
 
 **Approach B: Custom provider with unique API format**
 
@@ -2344,6 +2386,310 @@ Terminal 1 shows live step-by-step execution. Terminal 2 shows the final output 
 | `package.json` → `tail` | `bun run tail` shortcut |
 | `package.json` → `tail:history` | Replay from start |
 | `package.json` → `tail:list` | List sessions |
+
+---
+
+## 5.12 Social Agent: Workflow Automation System
+
+Workflows are **pure browser-automation pipelines** that run without any LLM/agent involvement. They execute deterministic sequences of `agent-browser` commands and `curl` requests. The agent's role is limited to **sensing workflow state** (via system prompt injection) and **controlling workflows** (start/stop via the workflow-engine CLI).
+
+### Design Philosophy
+
+- **No LLM in the loop** — workflows are fully automated scripts, not agent-driven. This eliminates token cost, latency, and non-determinism.
+- **Agent as supervisor** — the agent can inspect workflow status (injected into system prompt) and control lifecycle via Bash tool calls to `workflow-engine.ts`.
+- **JSON definition + TypeScript executor** — each workflow is a JSON config file paired with a TypeScript executor script.
+- **State persistence** — `workflows/state.json` tracks run history, status, and step counts across sessions.
+
+### Architecture
+
+```
+workflows/<id>.json              ← workflow definition (config, schedule, executor path)
+  ↓ (read by)
+scripts/workflow-engine.ts       ← lifecycle CLI (start/stop/reset/run/status/history/summary)
+  ↓ (spawns)
+workflows/executors/<script>.ts  ← executor: pure browser automation, outputs JSON summary on stdout
+  ↓ (results saved to)
+workflows/state.json             ← persistent state (status, lastRun, history[])
+  ↓ (read at startup by)
+getWorkflowStatusSection()       ← src/constants/prompts.ts → injected into system prompt
+```
+
+### Workflow Definition Format
+
+Each workflow is a JSON file in `workflows/`:
+
+```json
+{
+  "id": "hf-papers-to-x",
+  "name": "HuggingFace Daily Papers → X.com Post",
+  "description": "Fetch top papers from HuggingFace, download thumbnails, and post each as image+text tweet to X.com",
+  "schedule": "daily",
+  "executor": "executors/hf-papers-to-x.ts",
+  "config": {
+    "maxPapers": 5,
+    "minUpvotes": 5,
+    "cdpPort": 9222,
+    "proxy": "http://127.0.0.1:6738",
+    "abstractMaxChars": 150,
+    "outputDir": ".tmp",
+    "xUsername": "mashijiann",
+    "hfDate": "2026-05-06"
+  }
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Unique identifier, used as `--id` argument |
+| `name` | string | Human-readable name |
+| `description` | string | What the workflow does |
+| `schedule` | string | Intended frequency (`daily`, `weekly`, etc.) — informational only, not auto-scheduled |
+| `executor` | string | Path to executor script relative to `workflows/` |
+| `config` | object | Arbitrary config passed to executor as `--config` JSON |
+
+**`hf-papers-to-x` config fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `maxPapers` | number | Max papers to select per run |
+| `minUpvotes` | number | Minimum upvotes threshold |
+| `cdpPort` | number | Chrome CDP port for agent-browser |
+| `proxy` | string? | HTTP proxy for thumbnail downloads |
+| `abstractMaxChars` | number | Max abstract length before truncation |
+| `outputDir` | string? | Output directory relative to `workflows/` |
+| `xUsername` | string? | X.com username for post URL extraction (default: `mashijiann`) |
+| `hfDate` | string? | Override date (e.g. `"2026-05-06"`) — fetches that day's papers instead of auto-detecting from redirect |
+
+### Executor Contract
+
+Executor scripts must:
+
+1. Accept `--config <json_string>` as a CLI argument
+2. Write structured log output to **stderr** (visible during execution)
+3. Write a **single JSON summary line** to **stdout** as the last line (parsed by workflow-engine)
+
+The JSON summary must include:
+
+```typescript
+{
+  stepsCompleted: number,
+  stepsTotal: number,
+  // ...any additional fields (papers, posted count, etc.)
+}
+```
+
+### Workflow Engine CLI
+
+```bash
+bun run workflow list                     # list all workflows + status (JSON)
+bun run workflow status [--id <id>]       # detailed status (one or all)
+bun run workflow run --id <id>            # execute synchronously (blocking, one-shot)
+bun run workflow start --id <id>          # start in background (one-shot, non-blocking, returns PID)
+bun run workflow daemon --id <id> [--interval <min>]  # start long-running daemon (default: 60min)
+bun run workflow stop --id <id>           # stop at next checkpoint + kill background process
+bun run workflow reset --id <id>          # clear stopped state back to idle
+bun run workflow history --id <id>        # show execution history
+bun run workflow summary                  # compact summary for system prompt injection
+```
+
+**`run` vs `start` vs `daemon`**:
+- `run` is synchronous (spawnSync, blocks until done, one-shot).
+- `start` spawns `workflow-engine.ts run` as a detached background process, saves PID to state.json, and returns immediately. One-shot — exits after a single execution. Background output goes to `workflows/.tmp/<id>.log`.
+- `daemon` runs the workflow repeatedly on a fixed interval (default 60 minutes). Each cycle: check stop signal → run executor → wait interval → repeat. Dedup in the executor ensures idempotent re-runs — if no new papers have appeared, the cycle completes in seconds with zero posts. The daemon checks for stop signals every 10 seconds during the wait interval, so `stop` takes effect within 10s even between cycles.
+
+**`stop`**: Writes `stopped` to state.json (executor reads this at checkpoints and breaks the loop), then sends SIGTERM to kill the background process. Works for both `start` and `daemon` modes. Use `reset` to clear the stopped state back to idle.
+
+### Agent-Workflow Integration
+
+The agent interacts with workflows through three mechanisms:
+
+**1. System prompt awareness** (`src/constants/prompts.ts` → `getWorkflowStatusSection()`):
+- On every agent session start, `workflow-engine.ts summary` is executed and injected into the system prompt
+- The agent sees: workflow status, last run time/result, PID if running in background, and available control commands
+- This lets the agent answer questions like "did today's papers get posted?" and decide whether to trigger a workflow
+
+**2. Task session auto-run** (`scripts/run-tasks.ts`):
+- Before the agent's daily task session starts, `run-tasks.ts` automatically runs all `schedule: "daily"` workflows
+- Skip conditions: already ran today, currently running/stopped
+- Results are injected into the agent's session prompt under "Workflow Results (pre-session)"
+- This means daily workflows like `hf-papers-to-x` run without LLM involvement, then the agent handles social engagement tasks
+
+**3. Interactive control** (agent uses Bash tool):
+- The agent can run `bun run workflow start/stop/reset/run/status` via the Bash tool during a conversation
+- Example: user says "post today's HuggingFace papers" → agent runs `bun run workflow run --id hf-papers-to-x`
+- Example: user says "stop the paper posting" → agent runs `bun run workflow stop --id hf-papers-to-x`
+
+### Checkpoint Protocol
+
+Executors must honor stop signals for the agent to have real control:
+
+```typescript
+// In executor: read state.json at safe points between expensive operations
+function checkWorkflowStopped(): boolean {
+  const state = JSON.parse(readFileSync('workflows/state.json', 'utf-8'))
+  const ws = state.workflows?.['<workflow-id>']
+  return ws?.status === 'stopped'
+}
+
+// Call between iterations (e.g. between posting papers)
+if (checkWorkflowStopped()) { log('Workflow stopped'); break }
+```
+
+Checkpoints should be placed:
+- Between processing individual items (papers, posts, etc.)
+- Before expensive network operations
+- NOT in the middle of an atomic operation (e.g. not between uploading an image and clicking Post)
+
+### State Model
+
+`workflows/state.json` persists per-workflow state:
+
+```typescript
+interface WorkflowState {
+  status: 'idle' | 'running' | 'stopped'
+  lastRun: {
+    startedAt: string        // ISO timestamp
+    finishedAt: string | null
+    status: 'success' | 'failed' | 'partial'
+    stepsCompleted: number
+    stepsTotal: number
+    error?: string
+    output?: Record<string, unknown>  // Full executor JSON output
+  } | null
+  runCount: number
+  history: WorkflowRun[]     // Last 30 runs
+}
+```
+
+### System Prompt Injection
+
+`getWorkflowStatusSection()` in `src/constants/prompts.ts` runs `workflow-engine.ts summary` at startup and injects the result into the system prompt static region (between `getOperationLogSection()` and `getAgentBrowserSection()`). This means the agent sees all workflow statuses before the first turn.
+
+### HuggingFace Date Tracking
+
+HuggingFace Daily Papers updates **Monday through Friday only**. Accessing `/papers` on a weekend redirects to the most recent Friday's page. Executors detect the **actual HF date** from the redirect URL rather than using the system date:
+
+```
+Request: https://huggingface.co/papers
+Redirect: https://huggingface.co/papers/date/2026-05-08  ← actual date extracted from here
+```
+
+This means:
+- Output directories use the HF date (`hf-2026-05-08/`), not system date — weekend runs correctly reuse Friday's directory
+- The workflow can run any day of the week; it naturally handles weekends by seeing no date change
+- Running multiple times per day is safe — the dedup layer prevents duplicate posts
+
+### Dedup: posted-papers.json
+
+`workflows/.tmp/posted-papers.json` is a global dedup store that tracks every paper posted to X.com by `arxivId`. This replaces the earlier `skipPaperIndices` approach which required manual index management.
+
+```typescript
+interface PostedStore {
+  version: number
+  papers: Array<{
+    arxivId: string    // unique paper identifier
+    title: string
+    postedAt: string   // ISO timestamp of when it was posted
+    hfDate: string     // HF daily papers date it appeared on
+  }>
+}
+```
+
+**How dedup works in `hf-papers-to-x.ts`:**
+1. Load `posted-papers.json` at startup, build a `Set<arxivId>` of already-posted papers
+2. After fetching the paper list, mark each paper as `skippedDedup: true` if its `arxivId` is in the set
+3. Only fetch abstracts, download thumbnails, and post for papers NOT in the set
+4. After each successful post, immediately append the `arxivId` to the store and save — so even a mid-run crash preserves partial progress
+5. On the next run, those papers are automatically skipped
+
+**Idempotent daily operation:** The workflow can be run at any frequency (hourly, multiple times daily, etc.). Each run fetches the current HF page, filters out already-posted papers, and only posts new ones. This handles:
+- Papers whose upvotes cross the `minUpvotes` threshold later in the day
+- Papers that failed to post in a previous run (not recorded in dedup store)
+- Weekend/holiday runs (no new papers = all skipped, clean exit)
+
+### Current Workflows
+
+| Workflow | ID | Executor | Description |
+|----------|----|----------|-------------|
+| HuggingFace Daily Papers | `hf-daily-papers` | `executors/hf-daily-papers.ts` | Fetch paper list, abstracts, and thumbnails from HuggingFace (data only, no posting) |
+| HuggingFace → X.com Pipeline | `hf-papers-to-x` | `executors/hf-papers-to-x.ts` | Full pipeline: fetch HF papers → download thumbnails → post as image+text tweets to X.com |
+| Post Single Paper | — | `executors/post-hf-paper.ts` | Standalone executor: post one paper to X.com (CLI args, not workflow-engine managed) |
+
+### Executor Implementation Notes
+
+**Browser automation via `agent-browser` CLI:**
+- All executors use `agent-browser --cdp <port>` to connect to the existing Chrome CDP session
+- The `ab()` helper wraps `execSync` calls with 30s timeout and error handling
+- `abEval()` writes JavaScript to a temp file then runs `eval "$(cat 'file')"` to avoid shell quoting issues with Bun
+
+**X.com posting pattern (in `hf-papers-to-x.ts` and `post-hf-paper.ts`):**
+- **Post + self-reply**: Main tweet contains title + abstract + image (NO links, NO hashtags). Paper link is posted as a self-reply to avoid X.com link throttling.
+- Upload image: `upload 'input[type="file"]' "<path>"`
+- Fill text: find `textbox "Post text"` ref via snapshot, then `fill @ref "<text>"`
+- Click Post: find `button "Post"` ref via snapshot, click, wait 5s, verify text cleared
+- Extract post URL: after posting, query `a[href*="/<username>/status/"]` in timeline DOM, pick highest status ID
+- Self-reply: navigate to post URL, find reply `textbox "Post text"`, fill with `Paper: <url>`, click `button "Reply"` (not "Post")
+- Retry logic: up to 3 attempts with re-snapshot between each (refs change after DOM updates)
+- Tweet auto-trimming: progressive shortening (cut abstract → drop abstract) to fit 280 char limit
+
+**Date override (`hfDate` config):**
+- When `hfDate` is set, the executor opens `https://huggingface.co/papers/date/<hfDate>` directly instead of `https://huggingface.co/papers` (which auto-redirects to today's date)
+- Useful for backfilling past dates or testing with specific paper sets
+
+**Proxy support:**
+- Thumbnail downloads use `curl` with `--proxy` flag when `config.proxy` is set
+- HuggingFace page loads go through the CDP Chrome instance (proxy configured at Chrome level)
+
+### Adding a New Workflow
+
+1. Create `workflows/<id>.json` with the definition
+2. Create `workflows/executors/<script>.ts` implementing the executor contract
+3. Test with: `bun run workflow run --id <id>`
+4. Verify with: `bun run workflow status --id <id>`
+
+The workflow will automatically appear in `workflow list` and the system prompt summary.
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `scripts/workflow-engine.ts` | Workflow lifecycle CLI |
+| `workflows/*.json` | Workflow definitions (excluding `state.json`) |
+| `workflows/state.json` | Persistent state store |
+| `workflows/executors/*.ts` | Executor scripts |
+| `workflows/.tmp/` | Output data directory (thumbnails, papers.json per date) |
+| `workflows/.tmp/posted-papers.json` | Global dedup store (arxivId → posted timestamp) |
+| `src/constants/prompts.ts` → `getWorkflowStatusSection()` | Injects workflow summary into system prompt |
+| `package.json` → `workflow`, `workflow:*` | CLI shortcuts (`workflow:daemon` for long-running mode) |
+
+### Daemon Mode
+
+The `daemon` command enables long-running, unattended operation. Typical usage:
+
+```bash
+# Start daemon (runs every 60 minutes, checks for new papers)
+nohup bun run workflow:daemon --id hf-papers-to-x --interval 60 > workflows/.tmp/hf-papers-to-x-daemon.log 2>&1 &
+
+# Custom interval (every 30 minutes)
+bun run workflow daemon --id hf-papers-to-x --interval 30
+
+# Stop the daemon (responds within 10 seconds)
+bun run workflow stop --id hf-papers-to-x
+
+# After stopping, reset to idle before restarting
+bun run workflow reset --id hf-papers-to-x
+```
+
+**How it works:**
+1. Marks workflow as `running` with `mode: 'daemon'` in state.json
+2. Runs the executor (same as `run` command)
+3. Records run result in history, keeps status as `running`
+4. Waits for the interval, checking stop signal every 10 seconds
+5. Repeats from step 2
+
+**Idempotent re-runs:** The `posted-papers.json` dedup store ensures that re-running the same day is safe. If all papers for today are already posted, the cycle completes in seconds with zero posts and no side effects.
+
+**State cleanup:** On stop, crash, or normal exit, the daemon cleans up its `pid` and `mode` metadata from state.json. If the process dies unexpectedly, state may show stale `running` — use `reset` to clear it.
 
 ---
 
