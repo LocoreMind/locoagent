@@ -186,12 +186,42 @@ function outputResult(hfDate: string) {
   console.log(JSON.stringify(result))
 }
 
+// ── Tab management ──────────────────────────────────────────────────────────
+// Two dedicated tabs: one for HuggingFace, one for X.com.
+// All HF navigation (paper list, abstracts) stays in the HF tab.
+// All X.com navigation (posting, replying) stays in the X tab.
+// This avoids cross-domain navigation which triggers Chrome "Leave site?" popups.
+// Tab indices are determined dynamically since the browser may have pre-existing tabs.
+
+function getActiveTabIndex(): number {
+  const listing = ab('tab list')
+  // Strip ANSI escape codes, then find active tab marked with → prefix
+  const clean = listing.replace(/\x1b\[\d*m/g, '')
+  const match = clean.match(/→\s*\[(\d+)\]/)
+  return match ? parseInt(match[1]!, 10) : 0
+}
+
+let tabHF = getActiveTabIndex()  // Current tab becomes HF tab
+let tabX = -1                     // Will be set when Tab 2 is created
+
+function switchToHF(): void {
+  ab(`tab ${tabHF}`)
+  ab('wait 300')
+}
+
+function switchToX(): void {
+  if (tabX < 0) return
+  ab(`tab ${tabX}`)
+  ab('wait 300')
+}
+
 // ── Step 1: Fetch paper list & detect actual date ───────────────────────────
 
 log('Step 1/4: Fetching paper list from HuggingFace...')
 const hfUrl = config.hfDate
   ? `https://huggingface.co/papers/date/${config.hfDate}`
   : 'https://huggingface.co/papers'
+// Tab 1 (current tab) = HuggingFace
 ab(`open ${hfUrl}`)
 ab('wait 2000')
 
@@ -255,6 +285,8 @@ if (newPapers.length === 0) {
 // ── Step 2: Fetch abstracts (only for new papers) ───────────────────────────
 
 log('Step 2/4: Fetching abstracts...')
+// Stay in Tab 1 (HF) — paper detail pages are same domain
+switchToHF()
 for (const paper of newPapers) {
   ab(`open ${paper.link}`)
   ab('wait 1500')
@@ -355,6 +387,8 @@ function getPostUrl(): string | null {
  */
 function replyWithLink(tweetUrl: string, paperLink: string): boolean {
   log(`  Replying to ${tweetUrl} with link...`)
+  // Stay in Tab 2 (X.com) — tweet URL is same domain
+  switchToX()
   ab(`open ${tweetUrl}`)
   ab('wait 3000')
 
@@ -400,7 +434,8 @@ function postOnePaper(paper: Paper): 'success' | 'failed' {
   const tweet = composeTweet(paper)
   log(`  Posting (${tweet.length} chars): ${paper.title.slice(0, 50)}...`)
 
-  // ── Step A: Open home timeline and compose main tweet ──
+  // ── Step A: Switch to X.com tab and open home timeline ──
+  switchToX()
   ab('open https://x.com/home')
   ab('wait 2000')
 
@@ -463,6 +498,14 @@ function postOnePaper(paper: Paper): 'success' | 'failed' {
   return 'success'
 }
 
+// Create X.com tab (HF tab stays untouched)
+ab('tab new')
+ab('wait 500')
+tabX = getActiveTabIndex()
+ab('open https://x.com/home')
+ab('wait 2000')
+log(`X.com tab ready (HF=tab ${tabHF}, X=tab ${tabX})`)
+
 for (const paper of papers) {
   if (paper.skippedDedup) {
     log(`  ⏭ Skipping (already posted): ${paper.arxivId} — ${paper.title.slice(0, 40)}...`)
@@ -497,6 +540,13 @@ for (const paper of papers) {
     ab('wait 3000')
   }
 }
+
+// Close X.com tab and switch back to HF tab
+switchToX()
+ab('tab close')
+ab('wait 300')
+switchToHF()
+log('X.com tab closed, back to HF tab')
 
 if (failedCount > 0) {
   steps.push({ step: 'post_to_x', status: 'failed', detail: `posted=${postedCount} skipped=${skippedCount} failed=${failedCount}` })

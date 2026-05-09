@@ -521,14 +521,26 @@ if (command === 'daemon') {
       const now = new Date().toISOString()
       console.log(`\n[daemon] ═══ Cycle ${cycleCount} at ${now} ═══`)
 
-      // Run the executor synchronously
+      // Run the executor asynchronously (spawnSync blocks event loop, breaking setTimeout)
       const startedAt = new Date().toISOString()
-      const result = spawnSync('bun', ['run', executorPath, '--config', configJson], {
-        stdio: ['inherit', 'pipe', 'inherit'],
-        encoding: 'utf-8',
-        cwd: ROOT,
-        timeout: 10 * 60 * 1000,
-      })
+      let execStdout = ''
+      let execExitCode: number | null = null
+      try {
+        const proc = Bun.spawn(['bun', 'run', executorPath, '--config', configJson], {
+          cwd: ROOT,
+          stdin: 'inherit',
+          stdout: 'pipe',
+          stderr: 'inherit',
+        })
+        // Set a 10-minute timeout
+        const timeoutId = setTimeout(() => { proc.kill() }, 10 * 60 * 1000)
+        execStdout = await new Response(proc.stdout).text()
+        execExitCode = await proc.exited
+        clearTimeout(timeoutId)
+      } catch (e: any) {
+        console.error(`[daemon] Executor error: ${e.message}`)
+        execExitCode = 1
+      }
 
       // Finalize this run in state
       const freshState = loadState()
@@ -537,12 +549,12 @@ if (command === 'daemon') {
       // If stopped during execution, finalize and exit
       if (freshWs.status === 'stopped') {
         console.log(`[daemon] Stopped during execution. Finalizing and exiting.`)
-        finalizeRun(freshState, freshWs, result.stdout ?? '', result.status, result.stderr ?? '')
+        finalizeRun(freshState, freshWs, execStdout, execExitCode)
         break
       }
 
       // Save run result but keep status as 'running' for daemon mode
-      const run = finalizeRun(freshState, freshWs, result.stdout ?? '', result.status, result.stderr ?? '')
+      const run = finalizeRun(freshState, freshWs, execStdout, execExitCode)
       // Re-mark as running (finalizeRun sets it to idle)
       freshWs.status = 'running'
       ;(freshWs as any).pid = process.pid
