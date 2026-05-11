@@ -3,9 +3,9 @@
 Platform-specific operation sequences for agent-browser on x.com.
 Each operation documents: preconditions, step-by-step agent-browser commands, verification method, and known pitfalls.
 
-**Status**: All sections (1-7) tested and documented. Section 3.6 added for automated workflow posting.
+**Status**: All sections (1-7) tested and documented. Section 3.6 added for automated workflow posting. Section 3.7 added for reply-from-timeline via modal dialog.
 **Tested with**: agent-browser 0.24.0, Chrome CDP on port 9222, account @mashijiann.
-**Last updated**: 2026-05-08
+**Last updated**: 2026-05-11
 
 ---
 
@@ -33,6 +33,7 @@ Each operation documents: preconditions, step-by-step agent-browser commands, ve
   - [3.4 Quote Tweet](#34-quote-tweet)
   - [3.5 Delete Own Tweet](#35-delete-own-tweet)
   - [3.6 Automated Posting via Workflow (Non-Interactive)](#36-automated-posting-via-workflow-non-interactive)
+  - [3.7 Reply to a Tweet from Search Timeline (Modal Dialog)](#37-reply-to-a-tweet-from-search-timeline-modal-dialog)
 - [4. Social Graph](#4-social-graph)
   - [4.1 Follow a User](#41-follow-a-user)
   - [4.2 Unfollow a User](#42-unfollow-a-user)
@@ -912,6 +913,121 @@ function composeTweet(title: string, abstract: string, upvotes: number): string 
 **Reference Executors**:
 - `workflows/executors/hf-papers-to-x.ts` — full pipeline (fetch + post + self-reply for multiple papers)
 - `workflows/executors/post-hf-paper.ts` — single paper post + self-reply (standalone CLI)
+
+---
+
+### 3.7 Reply to a Tweet from Search Timeline (Modal Dialog)
+
+**Goal**: Reply to a tweet directly from the search results timeline without navigating to the tweet detail page. This opens a modal reply dialog.
+
+**Context**: This is an alternative to Section 3.3 (which replies from the tweet detail page). When browsing search results (e.g. `Latest` tab), you can click the Reply button on any visible tweet to open a modal compose dialog without leaving the search page. This is useful for replying to multiple tweets in sequence.
+
+**Preconditions**: On a search results page (e.g. `https://x.com/search?q=<query>&src=typed_query&f=live`), target tweet is visible in the viewport.
+
+**Steps**:
+```bash
+# 1. Search and navigate to Latest tab
+agent-browser open "https://x.com/search?q=<url_encoded_query>&src=typed_query&f=live"
+agent-browser wait 2000
+
+# 2. Snapshot to find articles and their Reply buttons
+agent-browser snapshot -i -c -s 'article'
+# Each article has: button "N Replies. Reply" (engagement stat) or button "0 Replies. Reply"
+# This is the SAME button you click to open the reply modal
+
+# 3. Click the Reply button on the target article
+# Look for: button "0 Replies. Reply" [ref=eXXX]
+agent-browser click <reply_button_ref>
+
+# 4. Wait for modal to open, then snapshot to find the textbox
+agent-browser wait 1500
+agent-browser snapshot -i -c
+# The modal (group element) contains:
+#   - The original tweet (article element)
+#   - button "Replying to @<username>" or "Replying to @<user1> and @<user2>"
+#   - textbox "Post text" [ref=eYYY] — EMPTY
+#   - button "Reply" [disabled] — disabled until text is entered
+#   - Media buttons: "Add photos or video", "Add a GIF", "Add emoji", etc.
+#   - button "Close" — to dismiss modal without replying
+#   - button "Drafts" — to save as draft
+
+# 5. IMPORTANT: Use `fill` (NOT `type`) to enter text into the textbox
+agent-browser fill <textbox_ref> "Your reply text here"
+
+# 6. Wait briefly, then verify text was entered and Reply button is enabled
+agent-browser wait 1000
+agent-browser snapshot -i -c
+# Look for: button "Reply" (without [disabled]) — now enabled
+# Verify: textbox should contain your text
+
+# 7. Click Reply to send
+agent-browser click <reply_button_ref>
+
+# 8. Wait for modal to close and verify
+agent-browser wait 2000
+agent-browser snapshot -i -c -s 'article'
+# Modal should be closed, back to search timeline
+# The replied-to tweet should now show incremented reply count (e.g. "1 Reply. Reply")
+```
+
+**Verification**:
+```bash
+# After replying:
+# 1. Modal should be closed (no more group/dialog element)
+# 2. Back on the search timeline
+# 3. The tweet's reply count should increment (e.g. "0 Replies" → "1 Reply")
+agent-browser snapshot -i -c -s 'article'
+# Look for: button "1 Reply. Reply" on the target article (was "0 Replies. Reply")
+```
+
+**Element Identification**:
+- **Reply button (timeline)**: `button "N Replies. Reply"` — clicking this opens the modal (NOT the same as the Reply submit button inside the modal)
+- **Modal container**: `group "Drafts<author>@<username>·<time>..."` — the reply modal wrapper
+- **Reply textbox**: `textbox "Post text"` — contenteditable div, same as main compose
+- **Reply submit button**: `button "Reply" [disabled]` → `button "Reply"` (enabled after fill)
+- **Close modal**: `button "Close"` — dismisses modal without replying
+- **Replying-to indicator**: `button "Replying to @<username>"` or `button "Replying to @<user1> and @<user2>"` — shows who the reply targets
+
+**Key Difference: `fill` vs `type`**:
+- `fill` works on the contenteditable textbox — it sets the value and triggers React state updates correctly
+- `type` does NOT work — the text appears to be typed but does not register in X.com's React state, leaving the textbox visually and functionally empty
+- Always use `agent-browser fill <ref> "text"` for reply text input
+
+**Known Issues**:
+- **`type` does not work**: The reply textbox is a contenteditable div managed by React/Draft.js. Using `type` or `keyboard type` will NOT work — text does not register. Always use `fill`.
+- **Refs invalidate after DOM changes**: When the modal opens, all previous refs from the timeline snapshot are invalidated. Always re-snapshot after the modal opens to get fresh refs. Similarly, after `fill` modifies the textbox, the Reply button ref may change — re-snapshot before clicking Reply.
+- **Viewport matters for Reply button click**: The Reply button on a timeline article must be visible in the viewport for the click to work. If the article is partially off-screen, the click may not trigger the modal. Use `scrollintoview <ref>` before clicking if needed.
+- **Scrolling in search timeline is unreliable for targeting specific posts**: X.com's virtualized list aggressively recycles DOM nodes. After scrolling, previously visible articles are removed from DOM and their refs become invalid. When iterating through multiple posts to reply:
+  - **Approach A (recommended)**: Reply to posts as they appear in the current viewport before scrolling. After replying (modal closes, back to timeline), the timeline may have refreshed — re-snapshot to find the next target.
+  - **Approach B**: Collect tweet URLs from the timeline first (via `eval` to extract `a[href*="/status/"]` links), then navigate to each tweet's detail page individually to reply (Section 3.3 approach).
+  - **Do NOT** assume refs survive across scroll operations — they will not.
+- **Modal may show "Show more" for long tweets**: If the original tweet in the modal is truncated, click `button "Show more"` to see the full content before composing your reply.
+- **Same beforeunload trap as 3.1**: If you fill text in the modal and then try to navigate away without posting or closing, the beforeunload dialog may appear.
+- **Multiple replies in sequence**: After successfully replying and the modal closes, you're back on the search timeline. You can immediately click another article's Reply button to reply to the next post. No need to refresh the page. However, the timeline may auto-refresh with new posts — re-snapshot to confirm which articles are currently visible.
+
+**Example — Reply to 5 posts from "ai agent" Latest search**:
+```bash
+# 1. Open search
+agent-browser open "https://x.com/search?q=ai%20agent&src=typed_query&f=live"
+agent-browser wait 2000
+
+# 2. Loop: snapshot → find article → click Reply → fill → send → repeat
+# For each post visible in viewport:
+agent-browser snapshot -i -c -s 'article'
+# Identify target article's Reply button ref
+
+agent-browser click <reply_button_ref>
+agent-browser wait 1500
+agent-browser snapshot -i -c   # Find textbox ref in modal
+agent-browser fill <textbox_ref> "Reply text based on post content"
+agent-browser wait 1000
+agent-browser snapshot -i -c   # Find enabled Reply button ref
+agent-browser click <reply_submit_ref>
+agent-browser wait 2000
+
+# Back to timeline — repeat for next post
+# NOTE: scroll carefully, re-snapshot each time, refs will change
+```
 
 ---
 

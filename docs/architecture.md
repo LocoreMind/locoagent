@@ -2607,12 +2607,73 @@ interface PostedStore {
 - Papers that failed to post in a previous run (not recorded in dedup store)
 - Weekend/holiday runs (no new papers = all skipped, clean exit)
 
+### X.com Search & AI Reply Workflow (`x-search-reply`)
+
+This workflow searches X.com's Latest tab for a keyword, reads each post, generates a contextual reply using an LLM (DeepSeek v4 flash), and posts the reply. It is the first workflow to integrate an external LLM API for content generation (as opposed to the HF workflows which only use browser automation).
+
+**4-step pipeline:**
+
+| Step | Description |
+|------|-------------|
+| 1. Search | Open X.com Latest tab for `searchQuery`, extract post URLs via DOM query, scroll for more, deduplicate by status ID, filter own posts (`xUsername`) |
+| 2. Read Posts | Navigate to each post detail page, read content via `ab("snapshot -i -c -s 'article'")`, cap at 1000 chars |
+| 3. Generate Replies | Call DeepSeek API (`/chat/completions`) with post content + system prompt, cap reply at 280 chars |
+| 4. Post Replies | Navigate to post → find reply textbox → `fill` reply text → click `button "Reply"` → verify textbox empty (3 retry attempts) |
+
+**Config (`workflows/x-search-reply.json`):**
+
+```json
+{
+  "searchQuery": "ai agent",
+  "maxPosts": 5,
+  "cdpPort": 9222,
+  "xUsername": "mashijiann",
+  "outputDir": ".tmp",
+  "replySystemPrompt": "You are a knowledgeable AI enthusiast on X.com..."
+}
+```
+
+**DeepSeek API integration:**
+- Loads API config from `.env`: `OPENAI_API_KEY`, `OPENAI_BASE_URL` (defaults to `https://api.deepseek.com`), `OPENAI_MODEL` (defaults to `deepseek-v4-flash`)
+- Uses OpenAI-compatible chat completions endpoint
+- System prompt instructs: 1-2 sentences, under 200 chars, no hashtags/emojis, reply in same language as post
+- Temperature 0.8 for varied but coherent replies
+
+**Dedup: replied-posts.json:**
+
+`workflows/.tmp/replied-posts.json` tracks posts already replied to, preventing duplicate replies across daemon cycles.
+
+```typescript
+interface RepliedStore {
+  version: number
+  description: string
+  posts: Array<{
+    postUrl: string      // full X.com post URL
+    repliedAt: string    // ISO timestamp
+    searchQuery: string  // query used when this reply was made
+  }>
+}
+```
+
+Dedup is checked at search time (step 1) by comparing extracted URLs against the store. After each successful reply (step 4), the post is immediately appended and saved.
+
+**Typical daemon usage:**
+
+```bash
+# Run every 3 minutes
+bun run workflow daemon --id x-search-reply --interval 3
+
+# Stop
+bun run workflow stop --id x-search-reply
+```
+
 ### Current Workflows
 
 | Workflow | ID | Executor | Description |
 |----------|----|----------|-------------|
 | HuggingFace Daily Papers | `hf-daily-papers` | `executors/hf-daily-papers.ts` | Fetch paper list, abstracts, and thumbnails from HuggingFace (data only, no posting) |
 | HuggingFace → X.com Pipeline | `hf-papers-to-x` | `executors/hf-papers-to-x.ts` | Full pipeline: fetch HF papers → download thumbnails → post as image+text tweets to X.com |
+| X.com Search & AI Reply | `x-search-reply` | `executors/x-search-reply.ts` | Search X.com Latest tab → read posts → generate AI reply via DeepSeek → post reply |
 | Post Single Paper | — | `executors/post-hf-paper.ts` | Standalone executor: post one paper to X.com (CLI args, not workflow-engine managed) |
 
 ### Executor Implementation Notes
@@ -2658,7 +2719,8 @@ The workflow will automatically appear in `workflow list` and the system prompt 
 | `workflows/state.json` | Persistent state store |
 | `workflows/executors/*.ts` | Executor scripts |
 | `workflows/.tmp/` | Output data directory (thumbnails, papers.json per date) |
-| `workflows/.tmp/posted-papers.json` | Global dedup store (arxivId → posted timestamp) |
+| `workflows/.tmp/posted-papers.json` | Global dedup store for HF papers (arxivId → posted timestamp) |
+| `workflows/.tmp/replied-posts.json` | Global dedup store for X.com replies (postUrl → replied timestamp) |
 | `src/constants/prompts.ts` → `getWorkflowStatusSection()` | Injects workflow summary into system prompt |
 | `package.json` → `workflow`, `workflow:*` | CLI shortcuts (`workflow:daemon` for long-running mode) |
 
@@ -2687,7 +2749,7 @@ bun run workflow reset --id hf-papers-to-x
 4. Waits for the interval, checking stop signal every 10 seconds
 5. Repeats from step 2
 
-**Idempotent re-runs:** The `posted-papers.json` dedup store ensures that re-running the same day is safe. If all papers for today are already posted, the cycle completes in seconds with zero posts and no side effects.
+**Idempotent re-runs:** Each workflow has its own dedup store (`posted-papers.json` for HF papers, `replied-posts.json` for X.com replies) ensuring that re-running is safe. If all items are already processed, the cycle completes in seconds with zero actions and no side effects.
 
 **State cleanup:** On stop, crash, or normal exit, the daemon cleans up its `pid` and `mode` metadata from state.json. If the process dies unexpectedly, state may show stale `running` — use `reset` to clear it.
 
