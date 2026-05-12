@@ -468,6 +468,12 @@ async function main() {
       failedCount++
       post.error = 'reply button click failed after 3 attempts'
       log(`  FAIL ${post.url.split('/status/')[1]}: reply failed after 3 attempts`)
+      // Clear textbox to prevent "Leave site?" dialog blocking subsequent navigations
+      abEval(
+        `(() => { const el = document.querySelector('[data-testid="tweetTextarea_0"]'); if (el) { el.focus(); document.execCommand('selectAll'); document.execCommand('delete'); } })()`,
+        OUTPUT_DIR
+      )
+      ab('wait 500')
     }
 
     // Pause between replies
