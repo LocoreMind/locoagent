@@ -632,11 +632,16 @@ agent-browser snapshot -i -c
 # 3. Fill the reply text
 agent-browser fill <reply_textbox_ref> "Your reply text here"
 
-# 4. Snapshot to confirm Reply button is enabled
+# 4. CRITICAL: Scroll the Reply button into the viewport before clicking.
+#    On long posts the inline Reply button sits below the viewport and click silently fails.
+agent-browser eval "(() => { const btn = document.querySelector('button[data-testid=\"tweetButtonInline\"]'); if (btn) btn.scrollIntoView({ block: 'center', behavior: 'instant' }); })()"
+agent-browser wait 500
+
+# 5. Snapshot to confirm Reply button is enabled and get fresh ref
 agent-browser snapshot -i -c
 # Look for: button "Reply" (without [disabled])
 
-# 5. Click Reply to send
+# 6. Click Reply to send
 agent-browser click <reply_button_ref>
 ```
 
@@ -656,6 +661,7 @@ agent-browser snapshot -i -c -s 'article'
 
 **Known Issues**:
 - **Recommended approach**: Navigate to tweet detail page first, then use the inline reply box. This is more reliable than clicking reply from timeline (which opens a modal).
+- **CRITICAL — Reply button out of viewport**: On long posts (long text, embedded video, images), the inline Reply button (`button[data-testid="tweetButtonInline"]`) sits below the viewport. `click` silently fails because the element is not visible. **Always use `scrollIntoView` on the Reply button before clicking.** Regular `scroll down` does NOT work because the reply area's position is unaffected by page scroll (it's in a separate scroll context). Use: `agent-browser eval "(() => { const btn = document.querySelector('button[data-testid=\"tweetButtonInline\"]'); if (btn) btn.scrollIntoView({ block: 'center', behavior: 'instant' }); })()"`
 - Same beforeunload trap as 3.1 — always post or clear before navigating away
 - `fill` works on the reply textbox (same contenteditable div behavior)
 - **CRITICAL — Quote tweet navigation trap**: When browsing a timeline and you see a quote tweet (a tweet that embeds another tweet), clicking the article body navigates to the **quoted (embedded) original post**, NOT the quote tweet itself. This means if you want to reply to user A's quote tweet of user B, clicking the article takes you to user B's original post instead. See section 3.4 Known Issues for the correct approach.
@@ -856,6 +862,10 @@ ab('wait 3000')
 const replyTextboxRef = findRef('textbox "Post text"')
 ab(`fill ${replyTextboxRef} "Paper: ${paperUrl}"`)
 ab('wait 1000')
+
+// CRITICAL: Scroll Reply button into viewport before clicking (long posts push it off-screen)
+abEval(`(() => { const btn = document.querySelector('button[data-testid="tweetButtonInline"]'); if (btn) btn.scrollIntoView({ block: "center", behavior: "instant" }); })()`)
+ab('wait 500')
 
 // Note: Reply button is "Reply", not "Post"
 for (let attempt = 1; attempt <= 3; attempt++) {
