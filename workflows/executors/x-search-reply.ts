@@ -417,6 +417,13 @@ async function main() {
     ab(`fill ${textboxRef} "${escapedReply}"`)
     ab('wait 1000')
 
+    // Scroll Reply button into view (it can be below the viewport on long posts)
+    abEval(
+      `(() => { const btn = document.querySelector('button[data-testid="tweetButtonInline"]'); if (btn) btn.scrollIntoView({ block: "center", behavior: "instant" }); })()`,
+      OUTPUT_DIR
+    )
+    ab('wait 500')
+
     // Click Reply button (retry up to 3 times)
     let posted = false
     for (let attempt = 1; attempt <= 3; attempt++) {
@@ -438,6 +445,13 @@ async function main() {
         break
       }
       log(`  Attempt ${attempt}: text still present, retrying...`)
+
+      // Re-scroll Reply button into view before next attempt
+      abEval(
+        `(() => { const btn = document.querySelector('button[data-testid="tweetButtonInline"]'); if (btn) btn.scrollIntoView({ block: "center", behavior: "instant" }); })()`,
+        OUTPUT_DIR
+      )
+      ab('wait 500')
     }
 
     if (posted) {
