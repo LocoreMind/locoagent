@@ -34,9 +34,9 @@ if (process.env.SKIP_PERMISSIONS === '1') {
 ;(globalThis as any).MACRO = {
   VERSION: '2.0.0',
   BUILD_TIME: new Date().toISOString(),
-  PACKAGE_URL: '@anthropic-ai/claude-code',
-  NATIVE_PACKAGE_URL: '@anthropic-ai/claude-code-native',
-  FEEDBACK_CHANNEL: 'https://github.com/anthropics/claude-code/issues',
-  ISSUES_EXPLAINER: 'Report issues at https://github.com/anthropics/claude-code/issues',
+  PACKAGE_URL: '@anthropic-ai/locoagent',
+  NATIVE_PACKAGE_URL: '@anthropic-ai/locoagent-native',
+  FEEDBACK_CHANNEL: 'https://github.com/anthropics/locoagent/issues',
+  ISSUES_EXPLAINER: 'Report issues at https://github.com/anthropics/locoagent/issues',
   VERSION_CHANGELOG: '',
 }

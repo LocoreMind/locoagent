@@ -213,7 +213,7 @@ export function deletePluginOptions(pluginId: string): void {
   //
   // Use `undefined` (not `delete`) because `updateSettingsForSource` merges
   // via `mergeWith` — absent keys are ignored, only `undefined` triggers
-  // removal. Cast is deliberate (CLAUDE.md's 10% case): adding z.undefined()
+  // removal. Cast is deliberate (AGENT.md's 10% case): adding z.undefined()
   // to the schema instead (like enabledPlugins:466 does) leaks
   // `| {[k: string]: unknown}` into the public SDK type, which subsumes the
   // real object arm and kills excess-property checks for SDK consumers. The

@@ -1,6 +1,6 @@
-# Locoremind Social Agent
+# LocoAgent
 
-**An AI-powered social media agent built on a privacy-focused Claude Code fork, with browser automation capabilities via `agent-browser` CLI.**
+**An AI-powered social media agent by LocoreMind, built on a privacy-focused Claude Code fork, with browser automation capabilities via `agent-browser` CLI.**
 
 [![License](https://img.shields.io/badge/license-See%20Original-blue)](https://github.com/anthropics/claude-code)
 [![Privacy](https://img.shields.io/badge/privacy-100%25-green)](https://github.com/IIIIQIIII/claude-code-clean)
@@ -199,7 +199,7 @@ The tool is exposed as `mcp__computer-control__computer` with actions: `get_scre
 
 ## 🌍 Browser Automation via agent-browser
 
-Locoremind Social Agent uses [`agent-browser`](https://github.com/browserbase/agent-browser) CLI as the primary browser automation tool for social media interactions. The agent has full knowledge of the CLI built into its system prompt.
+LocoAgent uses [`agent-browser`](https://github.com/browserbase/agent-browser) CLI as the primary browser automation tool for social media interactions. The agent has full knowledge of the CLI built into its system prompt.
 
 ### Prerequisites
 
@@ -292,7 +292,7 @@ Configuration in `.env`:
 
 ```env
 # CHROME_SOURCE_PROFILE=/Users/you/Library/Application Support/Google/Chrome/Default
-# CHROME_WORK_PROFILE=/tmp/social-agent-chrome-profile
+# CHROME_WORK_PROFILE=/tmp/locoagent-chrome-profile
 # CHROME_DEBUG_PORT=9222
 ```
 
@@ -324,7 +324,7 @@ State stored in `persona/operation-log.json` (human-readable, editable).
 
 ## 🌐 OpenAI-Compatible Model Support
 
-Locoremind Social Agent supports **any OpenAI-compatible API** as the backend LLM, including OpenAI, OpenRouter, DeepSeek, Ollama, LM Studio, Together AI, Groq, Mistral, Azure OpenAI, and more.
+LocoAgent supports **any OpenAI-compatible API** as the backend LLM, including OpenAI, OpenRouter, DeepSeek, Ollama, LM Studio, Together AI, Groq, Mistral, Azure OpenAI, and more.
 
 ### Environment Variables
 

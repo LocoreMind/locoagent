@@ -9,7 +9,7 @@
 #
 # Required env vars (set in .env or shell):
 #   CHROME_SOURCE_PROFILE  - path to your real Chrome profile dir (default: ~/Library/Application Support/Google/Chrome/Default)
-#   CHROME_WORK_PROFILE    - temp dir to copy profile into           (default: /tmp/social-agent-chrome-profile)
+#   CHROME_WORK_PROFILE    - temp dir to copy profile into           (default: /tmp/locoagent-chrome-profile)
 #   CHROME_DEBUG_PORT      - CDP remote debugging port               (default: 9222)
 #   CHROME_BIN             - path to Chrome binary                   (default: /Applications/Google Chrome.app/Contents/MacOS/Google Chrome)
 
@@ -27,7 +27,7 @@ fi
 
 # ── Defaults ──────────────────────────────────────────────────────────────────
 CHROME_SOURCE_PROFILE="${CHROME_SOURCE_PROFILE:-$HOME/Library/Application Support/Google/Chrome/Default}"
-CHROME_WORK_PROFILE="${CHROME_WORK_PROFILE:-/tmp/social-agent-chrome-profile}"
+CHROME_WORK_PROFILE="${CHROME_WORK_PROFILE:-/tmp/locoagent-chrome-profile}"
 CHROME_DEBUG_PORT="${CHROME_DEBUG_PORT:-9222}"
 CHROME_BIN="${CHROME_BIN:-/Applications/Google Chrome.app/Contents/MacOS/Google Chrome}"
 CHROME_LOCAL_STATE_SRC="$(dirname "$CHROME_SOURCE_PROFILE")/Local State"

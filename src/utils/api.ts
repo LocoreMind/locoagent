@@ -493,10 +493,10 @@ export async function logContextMetrics(
     ])
   // Extract individual context sizes and calculate total
   const gitStatusSize = systemContext.gitStatus?.length ?? 0
-  const claudeMdSize = userContext.claudeMd?.length ?? 0
+  const agentMdSize = userContext.agentMd?.length ?? 0
 
   // Calculate total context size
-  const totalContextSize = gitStatusSize + claudeMdSize
+  const totalContextSize = gitStatusSize + agentMdSize
 
   // Get file count using ripgrep (rounded to nearest power of 10 for privacy)
   const currentDir = getCwd()
@@ -551,7 +551,7 @@ export async function logContextMetrics(
 
   logEvent('tengu_context_size', {
     git_status_size: gitStatusSize,
-    claude_md_size: claudeMdSize,
+    agent_md_size: agentMdSize,
     total_context_size: totalContextSize,
     project_file_count_rounded: fileCount,
     mcp_tools_count: mcpToolsCount,

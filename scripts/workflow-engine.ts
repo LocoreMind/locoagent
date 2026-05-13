@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * workflow-engine.ts
- * Workflow lifecycle manager for locoremind-social-agent.
+ * Workflow lifecycle manager for LocoAgent.
  *
  * Workflows are pure browser-automation pipelines — no LLM involved.
  * The agent can sense workflow state and control them via this CLI.

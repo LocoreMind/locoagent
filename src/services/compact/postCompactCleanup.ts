@@ -4,7 +4,7 @@ import { clearSystemPromptSections } from '../../constants/systemPromptSections.
 import { getUserContext } from '../../context.js'
 import { clearSpeculativeChecks } from '../../tools/BashTool/bashPermissions.js'
 import { clearClassifierApprovals } from '../../utils/classifierApprovals.js'
-import { resetGetMemoryFilesCache } from '../../utils/claudemd.js'
+import { resetGetMemoryFilesCache } from '../../utils/agentmd.js'
 import { clearSessionMessagesCache } from '../../utils/sessionStorage.js'
 import { clearBetaTracingState } from '../../utils/telemetry-stub.js'
 import { resetMicrocompactState } from './microCompact.js'
@@ -49,7 +49,7 @@ export function runPostCompactCleanup(querySource?: QuerySource): void {
     }
   }
   if (isMainThreadCompact) {
-    // getUserContext is a memoized outer layer wrapping getClaudeMds() →
+    // getUserContext is a memoized outer layer wrapping getAgentMds() →
     // getMemoryFiles(). If only the inner getMemoryFiles cache is cleared,
     // the next turn hits the getUserContext cache and never reaches
     // getMemoryFiles(), so the armed InstructionsLoaded hook never fires.

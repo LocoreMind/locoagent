@@ -75,7 +75,7 @@ export async function writeBridgePointer(
 
 /**
  * Read the pointer and its age (ms since last write). Operates directly
- * and handles errors — no existence check (CLAUDE.md TOCTOU rule). Returns
+ * and handles errors — no existence check (AGENT.md TOCTOU rule). Returns
  * null on any failure: missing file, corrupted JSON, schema mismatch, or
  * stale (mtime > 4h ago). Stale/invalid pointers are deleted so they don't
  * keep re-prompting after the backend has already GC'd the env.

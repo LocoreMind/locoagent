@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * tail-agent.ts — Real-time trajectory monitor for locoremind-social-agent
+ * tail-agent.ts — Real-time trajectory monitor for LocoAgent
  *
  * Watches the latest (or specified) session .jsonl file and prints
  * agent status as it executes: text output, tool calls, tool results.
@@ -15,7 +15,7 @@ import { readdir, stat, open } from 'fs/promises'
 import { join } from 'path'
 import { homedir } from 'os'
 
-const PROJECT_DIR = join(homedir(), '.claude', 'projects', '-Users-jason-Projects-msj-locoremind-locoremind-social-agent')
+const PROJECT_DIR = join(homedir(), '.claude', 'projects', '-Users-jason-Projects-msj-locoremind-locoagent')
 const POLL_INTERVAL_MS = 200
 
 // ANSI colors
@@ -247,7 +247,7 @@ if (args[0] && !args[0].startsWith('-')) {
     const fromStart = args.includes('--from-start')
     await watchFile(latest, fromStart)
   } else {
-    console.log(C.red + 'No session files found. Start locoremind-social-agent first.' + C.reset)
+    console.log(C.red + 'No session files found. Start LocoAgent first.' + C.reset)
     process.exit(1)
   }
 }

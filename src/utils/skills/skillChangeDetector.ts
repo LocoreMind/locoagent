@@ -1,6 +1,6 @@
 import chokidar, { type FSWatcher } from 'chokidar'
 import * as platformPath from 'path'
-import { getAdditionalDirectoriesForClaudeMd } from '../../bootstrap/state.js'
+import { getAdditionalDirectoriesForAgentMd } from '../../bootstrap/state.js'
 import {
   clearCommandMemoizationCaches,
   clearCommandsCache,
@@ -207,6 +207,15 @@ async function getWatchablePaths(): Promise<string[]> {
     }
   }
 
+  // LocoAgent: project-root skills/ directory
+  const projectRootSkillsPath = platformPath.resolve('skills')
+  try {
+    await fs.stat(projectRootSkillsPath)
+    paths.push(projectRootSkillsPath)
+  } catch {
+    // Path doesn't exist, skip it
+  }
+
   // Project commands directory (.claude/commands)
   const projectCommandsPath = getSkillsPath('projectSettings', 'commands')
   if (projectCommandsPath) {
@@ -221,7 +230,7 @@ async function getWatchablePaths(): Promise<string[]> {
   }
 
   // Additional directories (--add-dir) skills
-  for (const dir of getAdditionalDirectoriesForClaudeMd()) {
+  for (const dir of getAdditionalDirectoriesForAgentMd()) {
     const additionalSkillsPath = platformPath.join(dir, '.claude', 'skills')
     try {
       await fs.stat(additionalSkillsPath)

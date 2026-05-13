@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__computer-control__computer",
+      "Read(//Users/jason/Projects/msj-passive-income/msj-models/Qianfan-OCR-Dev/**)",
+      "Read(//Users/jason/Projects/msj-passive-income/msj-models/Qianfan-OCR-Dev/.venv/bin/**)",
+      "Bash(\"/Users/jason/Projects/msj-passive-income/msj-models/Qianfan-OCR-Dev/.venv/bin/python\" -V)",
+      "Bash(\"/Users/jason/Projects/msj-passive-income/msj-models/Qianfan-OCR-Dev/.venv/bin/python\" -c \"import importlib.util; print\\(importlib.util.find_spec\\(''modelscope''\\)\\)\")",
+      "Bash(\"/Users/jason/Projects/msj-passive-income/msj-models/Qianfan-OCR-Dev/.venv/bin/pip\" show:*)",
+      "Bash(\"/Users/jason/Projects/msj-passive-income/msj-models/Qianfan-OCR-Dev/.venv/bin/modelscope\" --help)",
+      "Bash(uv run:*)"
+    ]
+  }
+}

@@ -1,7 +1,7 @@
 {
-  "name": "locoremind-social-agent",
+  "name": "locoagent",
   "version": "1.0.0-clean",
-  "description": "Locoremind Social Agent - AI-powered social media agent",
+  "description": "LocoAgent - AI-powered social media agent by LocoreMind",
   "type": "module",
   "bin": {
     "claude-clean": "./src/entrypoints/cli.tsx"

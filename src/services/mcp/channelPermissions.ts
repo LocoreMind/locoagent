@@ -195,7 +195,7 @@ export function filterPermissionRelayClients<
 
 /**
  * Factory for the callbacks object. The pending Map is closed over — NOT
- * module-level (per src/CLAUDE.md), NOT in AppState (functions-in-state
+ * module-level (per src/AGENT.md), NOT in AppState (functions-in-state
  * causes issues with equality/serialization). Same lifetime pattern as
  * `replBridgePermissionCallbacks`: constructed once per session inside
  * a React hook, stable reference stored in AppState.

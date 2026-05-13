@@ -53,3 +53,11 @@ Desktop.ini
 *.tmp
 *.temp
 /test_*.py
+
+# Runtime state (contains absolute paths, PIDs, execution history)
+workflows/state.json
+workflows/.tmp/
+
+# Persona runtime data (operation history, personal identity, task backups)
+persona/operation-log.json
+persona/*.bak

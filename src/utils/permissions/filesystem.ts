@@ -113,6 +113,11 @@ export function getClaudeSkillScope(
       dir: expandPath(join(homedir(), '.claude', 'skills')),
       prefix: '~/.claude/skills/',
     },
+    // LocoAgent: project-root skills/ directory
+    {
+      dir: expandPath(join(getOriginalCwd(), 'skills')),
+      prefix: '/skills/',
+    },
   ]
 
   for (const { dir, prefix } of bases) {
@@ -233,11 +238,14 @@ function isClaudeConfigFilePath(filePath: string): boolean {
   const commandsDir = join(getOriginalCwd(), '.claude', 'commands')
   const agentsDir = join(getOriginalCwd(), '.claude', 'agents')
   const skillsDir = join(getOriginalCwd(), '.claude', 'skills')
+  // LocoAgent: project-root skills/ directory
+  const rootSkillsDir = join(getOriginalCwd(), 'skills')
 
   return (
     pathInWorkingPath(filePath, commandsDir) ||
     pathInWorkingPath(filePath, agentsDir) ||
-    pathInWorkingPath(filePath, skillsDir)
+    pathInWorkingPath(filePath, skillsDir) ||
+    pathInWorkingPath(filePath, rootSkillsDir)
   )
 }
 
@@ -1284,7 +1292,9 @@ export function checkWritePermissionForTool<Input extends AnyObject>(
       (ruleContent.startsWith(CLAUDE_FOLDER_PERMISSION_PATTERN.slice(0, -2)) ||
         ruleContent.startsWith(
           GLOBAL_CLAUDE_FOLDER_PERMISSION_PATTERN.slice(0, -2),
-        )) &&
+        ) ||
+        // LocoAgent: project-root skills/ directory
+        ruleContent.startsWith('/skills/')) &&
       !ruleContent.includes('..') &&
       ruleContent.endsWith('/**')
     ) {

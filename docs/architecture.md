@@ -1,6 +1,6 @@
-# Locoremind Social Agent - Architecture Documentation
+# LocoAgent - Architecture Documentation
 
-A comprehensive architecture analysis of the Locoremind Social Agent project, an AI-powered social media agent built on top of a privacy-focused Claude Code fork.
+A comprehensive architecture analysis of LocoAgent, an AI-powered social media agent built on top of a privacy-focused Claude Code fork.
 
 ## Project Overview
 
@@ -64,13 +64,13 @@ A comprehensive architecture analysis of the Locoremind Social Agent project, an
   - [5.3 Add a New Skill](#53-add-a-new-skill)
   - [5.4 Add a New Slash Command](#54-add-a-new-slash-command)
   - [5.5 Enable a Feature Flag](#55-enable-a-feature-flag)
-  - [5.6 Social Agent: agent-browser Integration](#56-social-agent-agent-browser-integration)
-  - [5.7 Social Agent: Chrome CDP Pre-launch Setup](#57-social-agent-chrome-cdp-pre-launch-setup)
-  - [5.8 Social Agent: Digital Persona System](#58-social-agent-digital-persona-system)
-  - [5.9 Social Agent: Operation Log & State](#59-social-agent-operation-log--state)
-  - [5.10 Social Agent: Task Scheduling](#510-social-agent-task-scheduling)
-  - [5.11 Social Agent: Realtime Trajectory Monitor](#511-social-agent-realtime-trajectory-monitor)
-  - [5.12 Social Agent: Workflow Automation System](#512-social-agent-workflow-automation-system)
+  - [5.6 LocoAgent: agent-browser Integration](#56-locoagent-agent-browser-integration)
+  - [5.7 LocoAgent: Chrome CDP Pre-launch Setup](#57-locoagent-chrome-cdp-pre-launch-setup)
+  - [5.8 LocoAgent: Digital Persona System](#58-locoagent-digital-persona-system)
+  - [5.9 LocoAgent: Operation Log & State](#59-locoagent-operation-log--state)
+  - [5.10 LocoAgent: Task Scheduling](#510-locoagent-task-scheduling)
+  - [5.11 LocoAgent: Realtime Trajectory Monitor](#511-locoagent-realtime-trajectory-monitor)
+  - [5.12 LocoAgent: Workflow Automation System](#512-locoagent-workflow-automation-system)
 - [6. Deep Dive: query.ts — The Agentic Loop Engine](#6-deep-dive-queryts--the-agentic-loop-engine)
   - [6.1 Architecture Overview](#61-architecture-overview)
   - [6.2 Key Types](#62-key-types)
@@ -117,7 +117,7 @@ A comprehensive architecture analysis of the Locoremind Social Agent project, an
 
 ```bash
 # 1. Install dependencies
-cd locoremind-social-agent
+cd locoagent
 bun install
 
 # 2. Run the CLI
@@ -148,7 +148,7 @@ OPENAI_BASE_URL=https://api.deepseek.com
 OPENAI_MODEL=deepseek-v4-flash
 ```
 
-`SKIP_PERMISSIONS=1` bypasses all tool permission prompts — required for non-interactive `--print` mode (e.g. automated social agent tasks). Remove or set to `0` to restore interactive confirmation.
+`SKIP_PERMISSIONS=1` bypasses all tool permission prompts — required for non-interactive `--print` mode (e.g. automated LocoAgent tasks). Remove or set to `0` to restore interactive confirmation.
 
 For direct Anthropic API access, set `ANTHROPIC_API_KEY` instead (and omit `CLAUDE_CODE_USE_OPENAI`).
 
@@ -157,7 +157,7 @@ For direct Anthropic API access, set `ANTHROPIC_API_KEY` instead (and omit `CLAU
 ### 0.3 Project Structure
 
 ```
-locoremind-social-agent/
+locoagent/
 ├── src/
 │   ├── entrypoints/         # Entry points (cli.tsx, init.ts, SDK)
 │   ├── main.tsx             # Core orchestrator (785KB)
@@ -234,7 +234,7 @@ This file is the first code executed (via `bunfig.toml` preload). It does three 
 
 1. **Loads `.env`** from the project root into `process.env` (keys already set in the environment are not overridden)
 2. **Injects MACRO globals** used throughout the codebase
-3. **Injects `--dangerously-skip-permissions` into `process.argv`** when `SKIP_PERMISSIONS=1` is set — enabling fully non-interactive operation for automated social agent tasks
+3. **Injects `--dangerously-skip-permissions` into `process.argv`** when `SKIP_PERMISSIONS=1` is set — enabling fully non-interactive operation for automated LocoAgent tasks
 
 | Macro | Default | Purpose |
 |-------|---------|---------|
@@ -1857,7 +1857,7 @@ User request: $ARGUMENTS
 
 The skill will appear as `/my-skill` (directory name = command name) and the model can invoke it via `SkillTool`.
 
-**Platform Operation Playbooks (Social Agent pattern)**
+**Platform Operation Playbooks (LocoAgent pattern)**
 
 For social media platforms, skills serve as full operation playbooks injected on demand. This is different from the persona approach — playbooks should be injected in full because composite tasks (like + reply + repost) require all operation sections to be available simultaneously.
 
@@ -2000,9 +2000,9 @@ export function feature(name: string): boolean {
 
 ---
 
-## 5.6 Social Agent: agent-browser Integration
+## 5.6 LocoAgent: agent-browser Integration
 
-This project extends the base Claude Code fork into a **social media agent** by integrating `agent-browser` CLI as the primary browser automation tool.
+This project extends the base Claude Code fork into **LocoAgent** — a social media agent — by integrating `agent-browser` CLI as the primary browser automation tool.
 
 ### How It Works
 
@@ -2036,7 +2036,7 @@ To update the CLI reference (e.g. after an agent-browser upgrade):
 1. Re-run `agent-browser --help` and update `docs/agent-browser-help.txt`
 2. Update the string literal in `getAgentBrowserSection()` in `src/constants/prompts.ts`
 
-### Typical Social Agent Task Flow
+### Typical LocoAgent Task Flow
 
 ```bash
 # Agent executes these via the Bash tool:
@@ -2049,7 +2049,7 @@ agent-browser screenshot result.png
 
 ---
 
-## 5.7 Social Agent: Chrome CDP Pre-launch Setup
+## 5.7 LocoAgent: Chrome CDP Pre-launch Setup
 
 To operate real social accounts (e.g. X/Twitter), `agent-browser` needs to connect to a Chrome instance that already holds the user's login session. This requires a one-time pre-launch setup before starting the agent.
 
@@ -2062,9 +2062,9 @@ To operate real social accounts (e.g. X/Twitter), `agent-browser` needs to conne
 ```
 scripts/setup-chrome.sh
   1. killall "Google Chrome"               # clean slate
-  2. cp ~/Library/.../Chrome/Default  →  /tmp/social-agent-chrome-profile/Default
-     cp ~/Library/.../Chrome/Local State → /tmp/social-agent-chrome-profile/
-  3. Launch Chrome --remote-debugging-port=9222 --user-data-dir=/tmp/social-agent-chrome-profile
+  2. cp ~/Library/.../Chrome/Default  →  /tmp/locoagent-chrome-profile/Default
+     cp ~/Library/.../Chrome/Local State → /tmp/locoagent-chrome-profile/
+  3. Launch Chrome --remote-debugging-port=9222 --user-data-dir=/tmp/locoagent-chrome-profile
   4. Wait for http://127.0.0.1:9222/json/version to respond
   5. agent-browser connect 9222            # register CDP session
 ```
@@ -2076,7 +2076,7 @@ After setup, all subsequent `agent-browser` commands reuse the connected Chrome 
 ```bash
 # 1. (One-time) configure profile paths in .env if non-default:
 # CHROME_SOURCE_PROFILE=/Users/you/Library/Application Support/Google/Chrome/Default
-# CHROME_WORK_PROFILE=/tmp/social-agent-chrome-profile
+# CHROME_WORK_PROFILE=/tmp/locoagent-chrome-profile
 # CHROME_DEBUG_PORT=9222
 
 # 2. Run setup (do this before bun run start for social tasks)
@@ -2091,7 +2091,7 @@ bun run start
 | Variable | Default | Description |
 |---|---|---|
 | `CHROME_SOURCE_PROFILE` | `~/Library/Application Support/Google/Chrome/Default` | Source Chrome profile with real login sessions |
-| `CHROME_WORK_PROFILE` | `/tmp/social-agent-chrome-profile` | Working copy used by the CDP-connected Chrome |
+| `CHROME_WORK_PROFILE` | `/tmp/locoagent-chrome-profile` | Working copy used by the CDP-connected Chrome |
 | `CHROME_DEBUG_PORT` | `9222` | CDP remote debugging port |
 | `CHROME_BIN` | `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` | Chrome binary path |
 
@@ -2115,7 +2115,7 @@ All variables are read from `.env` automatically (via `stubs/globals.ts` preload
 
 ---
 
-## 5.8 Social Agent: Digital Persona System
+## 5.8 LocoAgent: Digital Persona System
 
 > **Status: DISABLED** — `persona/persona.md` and `persona/tasks.md` have been renamed to `.bak` and are not loaded.
 >
@@ -2154,7 +2154,7 @@ The persona document is structured into 8 sections:
 
 ### How It Works in Code
 
-`getPersonaSection()` in `src/constants/prompts.ts` reads `persona/persona.md` at runtime using `import.meta.url` to resolve the project root. It wraps the content under the heading `# Personal Persona & Social Agent Identity` and injects it into the static (cacheable) region of the system prompt — before the `SYSTEM_PROMPT_DYNAMIC_BOUNDARY` marker.
+`getPersonaSection()` in `src/constants/prompts.ts` reads `persona/persona.md` at runtime using `import.meta.url` to resolve the project root. It wraps the content under the heading `# Personal Persona & LocoAgent Identity` and injects it into the static (cacheable) region of the system prompt — before the `SYSTEM_PROMPT_DYNAMIC_BOUNDARY` marker.
 
 If `persona/persona.md` is missing or unreadable, the function returns `''` silently and the agent operates without persona context.
 
@@ -2172,7 +2172,7 @@ The initial persona was generated from `docs/msj-cv.html` (personal CV). The CV 
 
 ---
 
-## 5.9 Social Agent: Operation Log & State
+## 5.9 LocoAgent: Operation Log & State
 
 The operation log gives the agent persistent memory across sessions — it knows what it has already done and can avoid repeating actions on the same content.
 
@@ -2249,7 +2249,7 @@ The injected section includes:
 
 ---
 
-## 5.10 Social Agent: Task Scheduling
+## 5.10 LocoAgent: Task Scheduling
 
 The task scheduling system replaces ad-hoc prompts with a structured, repeatable session workflow. Instead of writing a new prompt each time, you run one command and the agent executes today's appropriate tasks automatically.
 
@@ -2320,7 +2320,7 @@ The script:
 
 ---
 
-## 5.11 Social Agent: Realtime Trajectory Monitor
+## 5.11 LocoAgent: Realtime Trajectory Monitor
 
 `scripts/tail-agent.ts` provides real-time visibility into agent execution by watching the session `.jsonl` file and printing structured output as entries are written (100ms flush interval).
 
@@ -2389,7 +2389,7 @@ Terminal 1 shows live step-by-step execution. Terminal 2 shows the final output 
 
 ---
 
-## 5.12 Social Agent: Workflow Automation System
+## 5.12 LocoAgent: Workflow Automation System
 
 Workflows are **pure browser-automation pipelines** that run without any LLM/agent involvement. They execute deterministic sequences of `agent-browser` commands and `curl` requests. The agent's role is limited to **sensing workflow state** (via system prompt injection) and **controlling workflows** (start/stop via the workflow-engine CLI).
 

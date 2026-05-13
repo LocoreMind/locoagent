@@ -164,70 +164,70 @@
           }
         }
       ],
-      "logFile": "/Users/jason/Projects/msj-locoremind/locoremind-social-agent/workflows/.tmp/hf-daily-papers.log"
+      "logFile": "/Users/jason/Projects/msj-locoremind/locoagent/workflows/.tmp/hf-daily-papers.log"
     },
     "hf-papers-to-x": {
-      "status": "running",
+      "status": "idle",
       "lastRun": {
         "startedAt": "2026-05-08T07:04:29.004Z",
-        "finishedAt": "2026-05-08T08:35:06.011Z",
+        "finishedAt": "2026-05-12T07:25:50.730Z",
         "status": "success",
         "stepsCompleted": 4,
         "stepsTotal": 4,
         "output": {
           "stepsCompleted": 4,
           "stepsTotal": 4,
-          "hfDate": "2026-05-08",
+          "hfDate": "2026-05-12",
           "papers": [
             {
-              "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
-              "arxivId": "2605.06416",
-              "upvotes": 33,
-              "posted": false,
-              "skippedDedup": true
+              "title": "Soohak: A Mathematician-Curated Benchmark for Evaluating Research-level Math Capabilities of LLMs",
+              "arxivId": "2605.09063",
+              "upvotes": 44,
+              "posted": true,
+              "skippedDedup": false
             },
             {
-              "title": "MARBLE: Multi-Aspect Reward Balance for Diffusion RL",
-              "arxivId": "2605.06507",
+              "title": "Qwen-Image-2.0 Technical Report",
+              "arxivId": "2605.10730",
               "upvotes": 29,
-              "posted": false,
-              "skippedDedup": true
+              "posted": true,
+              "skippedDedup": false
             },
             {
-              "title": "When to Trust Imagination: Adaptive Action Execution for World Action Models",
-              "arxivId": "2605.06222",
-              "upvotes": 27,
-              "posted": false,
-              "skippedDedup": true
+              "title": "PaperFit: Vision-in-the-Loop Typesetting Optimization for Scientific Documents",
+              "arxivId": "2605.10341",
+              "upvotes": 23,
+              "posted": true,
+              "skippedDedup": false
             },
             {
-              "title": "Continuous Latent Diffusion Language Model",
-              "arxivId": "2605.06548",
-              "upvotes": 25,
-              "posted": false,
-              "skippedDedup": true
+              "title": "Model Merging Scaling Laws in Large Language Models",
+              "arxivId": "2509.24244",
+              "upvotes": 21,
+              "posted": true,
+              "skippedDedup": false
             },
             {
-              "title": "Nonsense Helps: Prompt Space Perturbation Broadens Reasoning Exploration",
-              "arxivId": "2605.05566",
-              "upvotes": 17,
+              "title": "Geometry Conflict: Explaining and Controlling Forgetting in LLM Continual Post-Training",
+              "arxivId": "2605.09608",
+              "upvotes": 21,
               "posted": true,
               "skippedDedup": false
             }
           ],
-          "posted": 1,
-          "skipped": 4,
+          "posted": 5,
+          "skipped": 0,
           "failed": 0,
           "steps": [
             {
               "step": "fetch_list",
               "status": "success",
-              "detail": "5 selected, 1 new"
+              "detail": "5 selected, 5 new"
             },
             {
               "step": "fetch_abstracts",
               "status": "success",
-              "detail": "1 abstracts fetched"
+              "detail": "5 abstracts fetched"
             },
             {
               "step": "download_thumbnails",
@@ -236,342 +236,56 @@
             {
               "step": "post_to_x",
               "status": "success",
-              "detail": "posted=1 skipped=4"
+              "detail": "posted=5 skipped=0"
             }
           ]
         }
       },
-      "runCount": 8,
+      "runCount": 750,
       "history": [
         {
-          "startedAt": "2026-05-07T01:13:45.845Z",
-          "finishedAt": "2026-05-07T01:14:49.317Z",
-          "status": "success",
-          "stepsCompleted": 4,
-          "stepsTotal": 4,
-          "output": {
-            "stepsCompleted": 4,
-            "stepsTotal": 4,
-            "papers": [
-              {
-                "title": "ARIS: Autonomous Research via Adversarial Multi-Agent Collaboration",
-                "arxivId": "2605.03042",
-                "upvotes": 68,
-                "posted": false
-              },
-              {
-                "title": "OpenSeeker-v2: Pushing the Limits of Search Agents with Informative and High-Difficulty Trajectories",
-                "arxivId": "2605.04036",
-                "upvotes": 40,
-                "posted": false
-              },
-              {
-                "title": "Beyond SFT-to-RL: Pre-alignment via Black-Box On-Policy Distillation for Multimodal RL",
-                "arxivId": "2604.28123",
-                "upvotes": 35,
-                "posted": false
-              },
-              {
-                "title": "X2SAM: Any Segmentation in Images and Videos",
-                "arxivId": "2605.00891",
-                "upvotes": 16,
-                "posted": true
-              },
-              {
-                "title": "HeavySkill: Heavy Thinking as the Inner Skill in Agentic Harness",
-                "arxivId": "2605.02396",
-                "upvotes": 12,
-                "posted": true
-              }
-            ],
-            "posted": 2,
-            "skipped": 3,
-            "failed": 0,
-            "steps": [
-              {
-                "step": "fetch_list",
-                "status": "success",
-                "detail": "5 papers selected"
-              },
-              {
-                "step": "fetch_abstracts",
-                "status": "success",
-                "detail": "5 abstracts fetched"
-              },
-              {
-                "step": "download_thumbnails",
-                "status": "success"
-              },
-              {
-                "step": "post_to_x",
-                "status": "success",
-                "detail": "posted=2 skipped=3"
-              }
-            ]
-          }
-        },
-        {
-          "startedAt": "2026-05-08T06:22:46.067Z",
-          "finishedAt": "2026-05-08T06:24:43.908Z",
-          "status": "partial",
-          "stepsCompleted": 3,
-          "stepsTotal": 4,
-          "output": {
-            "stepsCompleted": 3,
-            "stepsTotal": 4,
-            "hfDate": "2026-05-08",
-            "papers": [
-              {
-                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
-                "arxivId": "2605.06416",
-                "upvotes": 32,
-                "posted": false,
-                "skippedDedup": false
-              },
-              {
-                "title": "MARBLE: Multi-Aspect Reward Balance for Diffusion RL",
-                "arxivId": "2605.06507",
-                "upvotes": 28,
-                "posted": true,
-                "skippedDedup": false
-              },
-              {
-                "title": "When to Trust Imagination: Adaptive Action Execution for World Action Models",
-                "arxivId": "2605.06222",
-                "upvotes": 24,
-                "posted": true,
-                "skippedDedup": false
-              },
-              {
-                "title": "Continuous Latent Diffusion Language Model",
-                "arxivId": "2605.06548",
-                "upvotes": 21,
-                "posted": true,
-                "skippedDedup": false
-              },
-              {
-                "title": "Continuous-Time Distribution Matching for Few-Step Diffusion Distillation",
-                "arxivId": "2605.06376",
-                "upvotes": 16,
-                "posted": true,
-                "skippedDedup": false
-              }
-            ],
-            "posted": 4,
-            "skipped": 0,
-            "failed": 1,
-            "steps": [
-              {
-                "step": "fetch_list",
-                "status": "success",
-                "detail": "5 selected, 5 new"
-              },
-              {
-                "step": "fetch_abstracts",
-                "status": "success",
-                "detail": "5 abstracts fetched"
-              },
-              {
-                "step": "download_thumbnails",
-                "status": "success"
-              },
-              {
-                "step": "post_to_x",
-                "status": "failed",
-                "detail": "posted=4 skipped=0 failed=1"
-              }
-            ]
-          }
-        },
-        {
-          "startedAt": "2026-05-08T06:25:02.187Z",
-          "finishedAt": "2026-05-08T06:25:34.413Z",
-          "status": "success",
-          "stepsCompleted": 4,
-          "stepsTotal": 4,
-          "output": {
-            "stepsCompleted": 4,
-            "stepsTotal": 4,
-            "hfDate": "2026-05-08",
-            "papers": [
-              {
-                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
-                "arxivId": "2605.06416",
-                "upvotes": 32,
-                "posted": true,
-                "skippedDedup": false
-              },
-              {
-                "title": "MARBLE: Multi-Aspect Reward Balance for Diffusion RL",
-                "arxivId": "2605.06507",
-                "upvotes": 28,
-                "posted": false,
-                "skippedDedup": true
-              },
-              {
-                "title": "When to Trust Imagination: Adaptive Action Execution for World Action Models",
-                "arxivId": "2605.06222",
-                "upvotes": 24,
-                "posted": false,
-                "skippedDedup": true
-              },
-              {
-                "title": "Continuous Latent Diffusion Language Model",
-                "arxivId": "2605.06548",
-                "upvotes": 21,
-                "posted": false,
-                "skippedDedup": true
-              },
-              {
-                "title": "Continuous-Time Distribution Matching for Few-Step Diffusion Distillation",
-                "arxivId": "2605.06376",
-                "upvotes": 16,
-                "posted": false,
-                "skippedDedup": true
-              }
-            ],
-            "posted": 1,
-            "skipped": 4,
-            "failed": 0,
-            "steps": [
-              {
-                "step": "fetch_list",
-                "status": "success",
-                "detail": "5 selected, 1 new"
-              },
-              {
-                "step": "fetch_abstracts",
-                "status": "success",
-                "detail": "1 abstracts fetched"
-              },
-              {
-                "step": "download_thumbnails",
-                "status": "success"
-              },
-              {
-                "step": "post_to_x",
-                "status": "success",
-                "detail": "posted=1 skipped=4"
-              }
-            ]
-          }
-        },
-        {
-          "startedAt": "2026-05-08T06:59:11.366Z",
-          "finishedAt": "2026-05-08T06:59:47.507Z",
-          "status": "success",
-          "stepsCompleted": 4,
-          "stepsTotal": 4,
-          "output": {
-            "stepsCompleted": 4,
-            "stepsTotal": 4,
-            "hfDate": "2026-05-08",
-            "papers": [
-              {
-                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
-                "arxivId": "2605.06416",
-                "upvotes": 32,
-                "posted": true,
-                "skippedDedup": false
-              },
-              {
-                "title": "MARBLE: Multi-Aspect Reward Balance for Diffusion RL",
-                "arxivId": "2605.06507",
-                "upvotes": 28,
-                "posted": false,
-                "skippedDedup": true
-              },
-              {
-                "title": "When to Trust Imagination: Adaptive Action Execution for World Action Models",
-                "arxivId": "2605.06222",
-                "upvotes": 26,
-                "posted": false,
-                "skippedDedup": true
-              },
-              {
-                "title": "Continuous Latent Diffusion Language Model",
-                "arxivId": "2605.06548",
-                "upvotes": 22,
-                "posted": false,
-                "skippedDedup": true
-              },
-              {
-                "title": "Continuous-Time Distribution Matching for Few-Step Diffusion Distillation",
-                "arxivId": "2605.06376",
-                "upvotes": 16,
-                "posted": false,
-                "skippedDedup": true
-              }
-            ],
-            "posted": 1,
-            "skipped": 4,
-            "failed": 0,
-            "steps": [
-              {
-                "step": "fetch_list",
-                "status": "success",
-                "detail": "5 selected, 1 new"
-              },
-              {
-                "step": "fetch_abstracts",
-                "status": "success",
-                "detail": "1 abstracts fetched"
-              },
-              {
-                "step": "download_thumbnails",
-                "status": "success"
-              },
-              {
-                "step": "post_to_x",
-                "status": "success",
-                "detail": "posted=1 skipped=4"
-              }
-            ]
-          }
-        },
-        {
-          "startedAt": "2026-05-08T07:03:40.691Z",
-          "finishedAt": "2026-05-08T07:03:46.662Z",
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-10T02:07:06.154Z",
           "status": "partial",
           "stepsCompleted": 1,
           "stepsTotal": 4,
           "output": {
             "stepsCompleted": 1,
             "stepsTotal": 4,
-            "hfDate": "2026-05-06",
+            "hfDate": "2026-05-08",
             "papers": [
               {
-                "title": "ARIS: Autonomous Research via Adversarial Multi-Agent Collaboration",
-                "arxivId": "2605.03042",
-                "upvotes": 92,
+                "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+                "arxivId": "2605.05242",
+                "upvotes": 68,
                 "posted": false,
                 "skippedDedup": true
               },
               {
-                "title": "OpenSeeker-v2: Pushing the Limits of Search Agents with Informative and High-Difficulty Trajectories",
-                "arxivId": "2605.04036",
-                "upvotes": 57,
+                "title": "Skill1: Unified Evolution of Skill-Augmented Agents via Reinforcement Learning",
+                "arxivId": "2605.06130",
+                "upvotes": 60,
                 "posted": false,
                 "skippedDedup": true
               },
               {
-                "title": "Beyond SFT-to-RL: Pre-alignment via Black-Box On-Policy Distillation for Multimodal RL",
-                "arxivId": "2604.28123",
-                "upvotes": 41,
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 54,
                 "posted": false,
                 "skippedDedup": true
               },
               {
-                "title": "X2SAM: Any Segmentation in Images and Videos",
-                "arxivId": "2605.00891",
-                "upvotes": 20,
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 46,
                 "posted": false,
                 "skippedDedup": true
               },
               {
-                "title": "HeavySkill: Heavy Thinking as the Inner Skill in Agentic Harness",
-                "arxivId": "2605.02396",
-                "upvotes": 17,
+                "title": "RaguTeam at SemEval-2026 Task 8: Meno and Friends in a Judge-Orchestrated LLM Ensemble for Faithful Multi-Turn Response Generation",
+                "arxivId": "2605.04523",
+                "upvotes": 37,
                 "posted": false,
                 "skippedDedup": true
               }
@@ -602,94 +316,2032 @@
         },
         {
           "startedAt": "2026-05-08T07:04:29.004Z",
-          "finishedAt": "2026-05-08T07:07:15.305Z",
-          "status": "success",
-          "stepsCompleted": 4,
+          "finishedAt": "2026-05-10T03:07:14.998Z",
+          "status": "partial",
+          "stepsCompleted": 1,
           "stepsTotal": 4,
           "output": {
-            "stepsCompleted": 4,
+            "stepsCompleted": 1,
             "stepsTotal": 4,
-            "hfDate": "2026-05-06",
+            "hfDate": "2026-05-08",
             "papers": [
               {
-                "title": "ARIS: Autonomous Research via Adversarial Multi-Agent Collaboration",
-                "arxivId": "2605.03042",
-                "upvotes": 92,
+                "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+                "arxivId": "2605.05242",
+                "upvotes": 68,
                 "posted": false,
                 "skippedDedup": true
               },
               {
-                "title": "OpenSeeker-v2: Pushing the Limits of Search Agents with Informative and High-Difficulty Trajectories",
-                "arxivId": "2605.04036",
-                "upvotes": 57,
+                "title": "Skill1: Unified Evolution of Skill-Augmented Agents via Reinforcement Learning",
+                "arxivId": "2605.06130",
+                "upvotes": 61,
                 "posted": false,
                 "skippedDedup": true
               },
               {
-                "title": "Beyond SFT-to-RL: Pre-alignment via Black-Box On-Policy Distillation for Multimodal RL",
-                "arxivId": "2604.28123",
-                "upvotes": 41,
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 54,
                 "posted": false,
                 "skippedDedup": true
               },
               {
-                "title": "X2SAM: Any Segmentation in Images and Videos",
-                "arxivId": "2605.00891",
-                "upvotes": 20,
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 47,
                 "posted": false,
                 "skippedDedup": true
               },
               {
-                "title": "HeavySkill: Heavy Thinking as the Inner Skill in Agentic Harness",
-                "arxivId": "2605.02396",
-                "upvotes": 17,
+                "title": "RaguTeam at SemEval-2026 Task 8: Meno and Friends in a Judge-Orchestrated LLM Ensemble for Faithful Multi-Turn Response Generation",
+                "arxivId": "2605.04523",
+                "upvotes": 37,
                 "posted": false,
                 "skippedDedup": true
-              },
-              {
-                "title": "Video Generation with Predictive Latents",
-                "arxivId": "2605.02134",
-                "upvotes": 14,
-                "posted": true,
-                "skippedDedup": false
-              },
-              {
-                "title": "StableI2I: Spotting Unintended Changes in Image-to-Image Transition",
-                "arxivId": "2605.04453",
-                "upvotes": 9,
-                "posted": true,
-                "skippedDedup": false
-              },
-              {
-                "title": "SymptomAI: Towards a Conversational AI Agent for Everyday Symptom Assessment",
-                "arxivId": "2605.04012",
-                "upvotes": 9,
-                "posted": true,
-                "skippedDedup": false
-              },
-              {
-                "title": "SVGS: Enhancing Gaussian Splatting Using Primitives with Spatially Varying Colors",
-                "arxivId": "2411.18966",
-                "upvotes": 7,
-                "posted": true,
-                "skippedDedup": false
-              },
-              {
-                "title": "PatRe: A Full-Stage Office Action and Rebuttal Generation Benchmark for Patent Examination",
-                "arxivId": "2605.03571",
-                "upvotes": 5,
-                "posted": true,
-                "skippedDedup": false
               }
             ],
-            "posted": 5,
+            "posted": 0,
             "skipped": 5,
             "failed": 0,
             "steps": [
               {
                 "step": "fetch_list",
                 "status": "success",
-                "detail": "10 selected, 5 new"
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-10T04:07:23.629Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+                "arxivId": "2605.05242",
+                "upvotes": 68,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Skill1: Unified Evolution of Skill-Augmented Agents via Reinforcement Learning",
+                "arxivId": "2605.06130",
+                "upvotes": 61,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 54,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 47,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "RaguTeam at SemEval-2026 Task 8: Meno and Friends in a Judge-Orchestrated LLM Ensemble for Faithful Multi-Turn Response Generation",
+                "arxivId": "2605.04523",
+                "upvotes": 37,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-10T05:07:32.898Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+                "arxivId": "2605.05242",
+                "upvotes": 68,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Skill1: Unified Evolution of Skill-Augmented Agents via Reinforcement Learning",
+                "arxivId": "2605.06130",
+                "upvotes": 61,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 54,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 47,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "RaguTeam at SemEval-2026 Task 8: Meno and Friends in a Judge-Orchestrated LLM Ensemble for Faithful Multi-Turn Response Generation",
+                "arxivId": "2605.04523",
+                "upvotes": 37,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-10T06:07:42.185Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+                "arxivId": "2605.05242",
+                "upvotes": 68,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Skill1: Unified Evolution of Skill-Augmented Agents via Reinforcement Learning",
+                "arxivId": "2605.06130",
+                "upvotes": 61,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 54,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 47,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "RaguTeam at SemEval-2026 Task 8: Meno and Friends in a Judge-Orchestrated LLM Ensemble for Faithful Multi-Turn Response Generation",
+                "arxivId": "2605.04523",
+                "upvotes": 37,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-10T07:07:51.529Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+                "arxivId": "2605.05242",
+                "upvotes": 69,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Skill1: Unified Evolution of Skill-Augmented Agents via Reinforcement Learning",
+                "arxivId": "2605.06130",
+                "upvotes": 62,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 55,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 48,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "RaguTeam at SemEval-2026 Task 8: Meno and Friends in a Judge-Orchestrated LLM Ensemble for Faithful Multi-Turn Response Generation",
+                "arxivId": "2605.04523",
+                "upvotes": 38,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-10T08:08:01.266Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+                "arxivId": "2605.05242",
+                "upvotes": 70,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Skill1: Unified Evolution of Skill-Augmented Agents via Reinforcement Learning",
+                "arxivId": "2605.06130",
+                "upvotes": 62,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 55,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 48,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "RaguTeam at SemEval-2026 Task 8: Meno and Friends in a Judge-Orchestrated LLM Ensemble for Faithful Multi-Turn Response Generation",
+                "arxivId": "2605.04523",
+                "upvotes": 38,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-10T09:08:09.475Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+                "arxivId": "2605.05242",
+                "upvotes": 70,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Skill1: Unified Evolution of Skill-Augmented Agents via Reinforcement Learning",
+                "arxivId": "2605.06130",
+                "upvotes": 63,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 56,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 49,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "RaguTeam at SemEval-2026 Task 8: Meno and Friends in a Judge-Orchestrated LLM Ensemble for Faithful Multi-Turn Response Generation",
+                "arxivId": "2605.04523",
+                "upvotes": 38,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-10T10:08:21.486Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+                "arxivId": "2605.05242",
+                "upvotes": 70,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Skill1: Unified Evolution of Skill-Augmented Agents via Reinforcement Learning",
+                "arxivId": "2605.06130",
+                "upvotes": 63,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 56,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 49,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "RaguTeam at SemEval-2026 Task 8: Meno and Friends in a Judge-Orchestrated LLM Ensemble for Faithful Multi-Turn Response Generation",
+                "arxivId": "2605.04523",
+                "upvotes": 38,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-10T11:08:30.954Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+                "arxivId": "2605.05242",
+                "upvotes": 70,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Skill1: Unified Evolution of Skill-Augmented Agents via Reinforcement Learning",
+                "arxivId": "2605.06130",
+                "upvotes": 63,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 56,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 49,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "RaguTeam at SemEval-2026 Task 8: Meno and Friends in a Judge-Orchestrated LLM Ensemble for Faithful Multi-Turn Response Generation",
+                "arxivId": "2605.04523",
+                "upvotes": 39,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-10T12:08:39.611Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+                "arxivId": "2605.05242",
+                "upvotes": 70,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Skill1: Unified Evolution of Skill-Augmented Agents via Reinforcement Learning",
+                "arxivId": "2605.06130",
+                "upvotes": 63,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 56,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 49,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "RaguTeam at SemEval-2026 Task 8: Meno and Friends in a Judge-Orchestrated LLM Ensemble for Faithful Multi-Turn Response Generation",
+                "arxivId": "2605.04523",
+                "upvotes": 39,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-10T13:08:52.168Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+                "arxivId": "2605.05242",
+                "upvotes": 71,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Skill1: Unified Evolution of Skill-Augmented Agents via Reinforcement Learning",
+                "arxivId": "2605.06130",
+                "upvotes": 63,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 57,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 49,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "RaguTeam at SemEval-2026 Task 8: Meno and Friends in a Judge-Orchestrated LLM Ensemble for Faithful Multi-Turn Response Generation",
+                "arxivId": "2605.04523",
+                "upvotes": 39,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-10T14:09:01.594Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+                "arxivId": "2605.05242",
+                "upvotes": 73,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Skill1: Unified Evolution of Skill-Augmented Agents via Reinforcement Learning",
+                "arxivId": "2605.06130",
+                "upvotes": 63,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 58,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 49,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "RaguTeam at SemEval-2026 Task 8: Meno and Friends in a Judge-Orchestrated LLM Ensemble for Faithful Multi-Turn Response Generation",
+                "arxivId": "2605.04523",
+                "upvotes": 39,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-10T15:09:10.625Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+                "arxivId": "2605.05242",
+                "upvotes": 73,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Skill1: Unified Evolution of Skill-Augmented Agents via Reinforcement Learning",
+                "arxivId": "2605.06130",
+                "upvotes": 63,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 59,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 49,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "RaguTeam at SemEval-2026 Task 8: Meno and Friends in a Judge-Orchestrated LLM Ensemble for Faithful Multi-Turn Response Generation",
+                "arxivId": "2605.04523",
+                "upvotes": 39,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-10T16:09:17.667Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+                "arxivId": "2605.05242",
+                "upvotes": 74,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Skill1: Unified Evolution of Skill-Augmented Agents via Reinforcement Learning",
+                "arxivId": "2605.06130",
+                "upvotes": 63,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 59,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 49,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "RaguTeam at SemEval-2026 Task 8: Meno and Friends in a Judge-Orchestrated LLM Ensemble for Faithful Multi-Turn Response Generation",
+                "arxivId": "2605.04523",
+                "upvotes": 39,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-10T17:09:26.589Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+                "arxivId": "2605.05242",
+                "upvotes": 75,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Skill1: Unified Evolution of Skill-Augmented Agents via Reinforcement Learning",
+                "arxivId": "2605.06130",
+                "upvotes": 64,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 59,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 49,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "RaguTeam at SemEval-2026 Task 8: Meno and Friends in a Judge-Orchestrated LLM Ensemble for Faithful Multi-Turn Response Generation",
+                "arxivId": "2605.04523",
+                "upvotes": 39,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-10T18:09:35.844Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+                "arxivId": "2605.05242",
+                "upvotes": 75,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Skill1: Unified Evolution of Skill-Augmented Agents via Reinforcement Learning",
+                "arxivId": "2605.06130",
+                "upvotes": 64,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 59,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 49,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "RaguTeam at SemEval-2026 Task 8: Meno and Friends in a Judge-Orchestrated LLM Ensemble for Faithful Multi-Turn Response Generation",
+                "arxivId": "2605.04523",
+                "upvotes": 39,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-10T19:09:46.359Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+                "arxivId": "2605.05242",
+                "upvotes": 76,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Skill1: Unified Evolution of Skill-Augmented Agents via Reinforcement Learning",
+                "arxivId": "2605.06130",
+                "upvotes": 64,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 59,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 49,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "RaguTeam at SemEval-2026 Task 8: Meno and Friends in a Judge-Orchestrated LLM Ensemble for Faithful Multi-Turn Response Generation",
+                "arxivId": "2605.04523",
+                "upvotes": 39,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-10T20:09:55.922Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+                "arxivId": "2605.05242",
+                "upvotes": 78,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Skill1: Unified Evolution of Skill-Augmented Agents via Reinforcement Learning",
+                "arxivId": "2605.06130",
+                "upvotes": 64,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 59,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 49,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "RaguTeam at SemEval-2026 Task 8: Meno and Friends in a Judge-Orchestrated LLM Ensemble for Faithful Multi-Turn Response Generation",
+                "arxivId": "2605.04523",
+                "upvotes": 39,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-10T21:10:05.311Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+                "arxivId": "2605.05242",
+                "upvotes": 78,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Skill1: Unified Evolution of Skill-Augmented Agents via Reinforcement Learning",
+                "arxivId": "2605.06130",
+                "upvotes": 64,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 61,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 49,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "RaguTeam at SemEval-2026 Task 8: Meno and Friends in a Judge-Orchestrated LLM Ensemble for Faithful Multi-Turn Response Generation",
+                "arxivId": "2605.04523",
+                "upvotes": 39,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-10T22:10:14.099Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+                "arxivId": "2605.05242",
+                "upvotes": 78,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Skill1: Unified Evolution of Skill-Augmented Agents via Reinforcement Learning",
+                "arxivId": "2605.06130",
+                "upvotes": 64,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 61,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 49,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "RaguTeam at SemEval-2026 Task 8: Meno and Friends in a Judge-Orchestrated LLM Ensemble for Faithful Multi-Turn Response Generation",
+                "arxivId": "2605.04523",
+                "upvotes": 39,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-10T23:10:22.490Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+                "arxivId": "2605.05242",
+                "upvotes": 79,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Skill1: Unified Evolution of Skill-Augmented Agents via Reinforcement Learning",
+                "arxivId": "2605.06130",
+                "upvotes": 64,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 61,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 49,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "RaguTeam at SemEval-2026 Task 8: Meno and Friends in a Judge-Orchestrated LLM Ensemble for Faithful Multi-Turn Response Generation",
+                "arxivId": "2605.04523",
+                "upvotes": 39,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-11T00:10:32.062Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+                "arxivId": "2605.05242",
+                "upvotes": 79,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Skill1: Unified Evolution of Skill-Augmented Agents via Reinforcement Learning",
+                "arxivId": "2605.06130",
+                "upvotes": 64,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 61,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 49,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "RaguTeam at SemEval-2026 Task 8: Meno and Friends in a Judge-Orchestrated LLM Ensemble for Faithful Multi-Turn Response Generation",
+                "arxivId": "2605.04523",
+                "upvotes": 39,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-11T01:10:40.998Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-08",
+            "papers": [
+              {
+                "title": "Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction",
+                "arxivId": "2605.05242",
+                "upvotes": 79,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Skill1: Unified Evolution of Skill-Augmented Agents via Reinforcement Learning",
+                "arxivId": "2605.06130",
+                "upvotes": 64,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Continuous Latent Diffusion Language Model",
+                "arxivId": "2605.06548",
+                "upvotes": 62,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
+                "arxivId": "2605.06416",
+                "upvotes": 49,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "RaguTeam at SemEval-2026 Task 8: Meno and Friends in a Judge-Orchestrated LLM Ensemble for Faithful Multi-Turn Response Generation",
+                "arxivId": "2605.04523",
+                "upvotes": 39,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-11T02:12:03.016Z",
+          "status": "success",
+          "stepsCompleted": 4,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 4,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-11",
+            "papers": [
+              {
+                "title": "Listwise Policy Optimization: Group-based RLVR as Target-Projection on the LLM Response Simplex",
+                "arxivId": "2605.06139",
+                "upvotes": 8,
+                "posted": true,
+                "skippedDedup": false
+              },
+              {
+                "title": "LLMs Improving LLMs: Agentic Discovery for Test-Time Scaling",
+                "arxivId": "2605.08083",
+                "upvotes": 6,
+                "posted": true,
+                "skippedDedup": false
+              }
+            ],
+            "posted": 2,
+            "skipped": 0,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "2 selected, 2 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "success",
+                "detail": "2 abstracts fetched"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "success"
+              },
+              {
+                "step": "post_to_x",
+                "status": "success",
+                "detail": "posted=2 skipped=0"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-11T03:14:00.333Z",
+          "status": "success",
+          "stepsCompleted": 4,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 4,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-11",
+            "papers": [
+              {
+                "title": "LLMs Improving LLMs: Agentic Discovery for Test-Time Scaling",
+                "arxivId": "2605.08083",
+                "upvotes": 22,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Listwise Policy Optimization: Group-based RLVR as Target-Projection on the LLM Response Simplex",
+                "arxivId": "2605.06139",
+                "upvotes": 21,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Beyond Retrieval: A Multitask Benchmark and Model for Code Search",
+                "arxivId": "2605.04615",
+                "upvotes": 18,
+                "posted": true,
+                "skippedDedup": false
+              },
+              {
+                "title": "4DThinker: Thinking with 4D Imagery for Dynamic Spatial Understanding",
+                "arxivId": "2605.05997",
+                "upvotes": 8,
+                "posted": true,
+                "skippedDedup": false
+              },
+              {
+                "title": "MISA: Mixture of Indexer Sparse Attention for Long-Context LLM Inference",
+                "arxivId": "2605.07363",
+                "upvotes": 5,
+                "posted": true,
+                "skippedDedup": false
+              }
+            ],
+            "posted": 3,
+            "skipped": 2,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 3 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "success",
+                "detail": "3 abstracts fetched"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "success"
+              },
+              {
+                "step": "post_to_x",
+                "status": "success",
+                "detail": "posted=3 skipped=2"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-11T04:15:22.937Z",
+          "status": "success",
+          "stepsCompleted": 4,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 4,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-11",
+            "papers": [
+              {
+                "title": "LLMs Improving LLMs: Agentic Discovery for Test-Time Scaling",
+                "arxivId": "2605.08083",
+                "upvotes": 35,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Listwise Policy Optimization: Group-based RLVR as Target-Projection on the LLM Response Simplex",
+                "arxivId": "2605.06139",
+                "upvotes": 27,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "HumanNet: Scaling Human-centric Video Learning to One Million Hours",
+                "arxivId": "2605.06747",
+                "upvotes": 24,
+                "posted": true,
+                "skippedDedup": false
+              },
+              {
+                "title": "Beyond Retrieval: A Multitask Benchmark and Model for Code Search",
+                "arxivId": "2605.04615",
+                "upvotes": 21,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Anisotropic Modality Align",
+                "arxivId": "2605.07825",
+                "upvotes": 11,
+                "posted": true,
+                "skippedDedup": false
+              }
+            ],
+            "posted": 2,
+            "skipped": 3,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 2 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "success",
+                "detail": "2 abstracts fetched"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "success"
+              },
+              {
+                "step": "post_to_x",
+                "status": "success",
+                "detail": "posted=2 skipped=3"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-11T05:15:28.753Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-11",
+            "papers": [
+              {
+                "title": "LLMs Improving LLMs: Agentic Discovery for Test-Time Scaling",
+                "arxivId": "2605.08083",
+                "upvotes": 38,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Listwise Policy Optimization: Group-based RLVR as Target-Projection on the LLM Response Simplex",
+                "arxivId": "2605.06139",
+                "upvotes": 34,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "HumanNet: Scaling Human-centric Video Learning to One Million Hours",
+                "arxivId": "2605.06747",
+                "upvotes": 29,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Beyond Retrieval: A Multitask Benchmark and Model for Code Search",
+                "arxivId": "2605.04615",
+                "upvotes": 22,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Anisotropic Modality Align",
+                "arxivId": "2605.07825",
+                "upvotes": 15,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-11T06:15:37.187Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-11",
+            "papers": [
+              {
+                "title": "LLMs Improving LLMs: Agentic Discovery for Test-Time Scaling",
+                "arxivId": "2605.08083",
+                "upvotes": 38,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Listwise Policy Optimization: Group-based RLVR as Target-Projection on the LLM Response Simplex",
+                "arxivId": "2605.06139",
+                "upvotes": 35,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "HumanNet: Scaling Human-centric Video Learning to One Million Hours",
+                "arxivId": "2605.06747",
+                "upvotes": 33,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Beyond Retrieval: A Multitask Benchmark and Model for Code Search",
+                "arxivId": "2605.04615",
+                "upvotes": 22,
+                "posted": false,
+                "skippedDedup": true
+              },
+              {
+                "title": "Anisotropic Modality Align",
+                "arxivId": "2605.07825",
+                "upvotes": 16,
+                "posted": false,
+                "skippedDedup": true
+              }
+            ],
+            "posted": 0,
+            "skipped": 5,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 0 new"
+              },
+              {
+                "step": "fetch_abstracts",
+                "status": "skipped"
+              },
+              {
+                "step": "download_thumbnails",
+                "status": "skipped"
+              },
+              {
+                "step": "post_to_x",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-08T07:04:29.004Z",
+          "finishedAt": "2026-05-12T07:25:50.730Z",
+          "status": "success",
+          "stepsCompleted": 4,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 4,
+            "stepsTotal": 4,
+            "hfDate": "2026-05-12",
+            "papers": [
+              {
+                "title": "Soohak: A Mathematician-Curated Benchmark for Evaluating Research-level Math Capabilities of LLMs",
+                "arxivId": "2605.09063",
+                "upvotes": 44,
+                "posted": true,
+                "skippedDedup": false
+              },
+              {
+                "title": "Qwen-Image-2.0 Technical Report",
+                "arxivId": "2605.10730",
+                "upvotes": 29,
+                "posted": true,
+                "skippedDedup": false
+              },
+              {
+                "title": "PaperFit: Vision-in-the-Loop Typesetting Optimization for Scientific Documents",
+                "arxivId": "2605.10341",
+                "upvotes": 23,
+                "posted": true,
+                "skippedDedup": false
+              },
+              {
+                "title": "Model Merging Scaling Laws in Large Language Models",
+                "arxivId": "2509.24244",
+                "upvotes": 21,
+                "posted": true,
+                "skippedDedup": false
+              },
+              {
+                "title": "Geometry Conflict: Explaining and Controlling Forgetting in LLM Continual Post-Training",
+                "arxivId": "2605.09608",
+                "upvotes": 21,
+                "posted": true,
+                "skippedDedup": false
+              }
+            ],
+            "posted": 5,
+            "skipped": 0,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "fetch_list",
+                "status": "success",
+                "detail": "5 selected, 5 new"
               },
               {
                 "step": "fetch_abstracts",
@@ -703,160 +2355,2057 @@
               {
                 "step": "post_to_x",
                 "status": "success",
-                "detail": "posted=5 skipped=5"
-              }
-            ]
-          }
-        },
-        {
-          "startedAt": "2026-05-08T07:04:29.004Z",
-          "finishedAt": "2026-05-08T07:27:17.576Z",
-          "status": "success",
-          "stepsCompleted": 4,
-          "stepsTotal": 4,
-          "output": {
-            "stepsCompleted": 4,
-            "stepsTotal": 4,
-            "hfDate": "2026-05-05",
-            "papers": [
-              {
-                "title": "MolmoAct2: Action Reasoning Models for Real-world Deployment",
-                "arxivId": "2605.02881",
-                "upvotes": 249,
-                "posted": false,
-                "skippedDedup": true
-              },
-              {
-                "title": "From Context to Skills: Can Language Models Learn from Context Skillfully?",
-                "arxivId": "2604.27660",
-                "upvotes": 142,
-                "posted": true,
-                "skippedDedup": false
-              },
-              {
-                "title": "Persistent Visual Memory: Sustaining Perception for Deep Generation in LVLMs",
-                "arxivId": "2605.00814",
-                "upvotes": 19,
-                "posted": true,
-                "skippedDedup": false
-              },
-              {
-                "title": "Hallucinations Undermine Trust; Metacognition is a Way Forward",
-                "arxivId": "2605.01428",
-                "upvotes": 18,
-                "posted": false,
-                "skippedDedup": false
-              },
-              {
-                "title": "Repetition over Diversity: High-Signal Data Filtering for Sample-Efficient German Language Modeling",
-                "arxivId": "2604.28075",
-                "upvotes": 18,
-                "posted": false,
-                "skippedDedup": false
-              }
-            ],
-            "posted": 2,
-            "skipped": 1,
-            "failed": 0,
-            "steps": [
-              {
-                "step": "fetch_list",
-                "status": "success",
-                "detail": "5 selected, 4 new"
-              },
-              {
-                "step": "fetch_abstracts",
-                "status": "success",
-                "detail": "4 abstracts fetched"
-              },
-              {
-                "step": "download_thumbnails",
-                "status": "success"
-              },
-              {
-                "step": "post_to_x",
-                "status": "success",
-                "detail": "posted=2 skipped=1"
-              }
-            ]
-          }
-        },
-        {
-          "startedAt": "2026-05-08T07:04:29.004Z",
-          "finishedAt": "2026-05-08T08:35:06.011Z",
-          "status": "success",
-          "stepsCompleted": 4,
-          "stepsTotal": 4,
-          "output": {
-            "stepsCompleted": 4,
-            "stepsTotal": 4,
-            "hfDate": "2026-05-08",
-            "papers": [
-              {
-                "title": "MiA-Signature: Approximating Global Activation for Long-Context Understanding",
-                "arxivId": "2605.06416",
-                "upvotes": 33,
-                "posted": false,
-                "skippedDedup": true
-              },
-              {
-                "title": "MARBLE: Multi-Aspect Reward Balance for Diffusion RL",
-                "arxivId": "2605.06507",
-                "upvotes": 29,
-                "posted": false,
-                "skippedDedup": true
-              },
-              {
-                "title": "When to Trust Imagination: Adaptive Action Execution for World Action Models",
-                "arxivId": "2605.06222",
-                "upvotes": 27,
-                "posted": false,
-                "skippedDedup": true
-              },
-              {
-                "title": "Continuous Latent Diffusion Language Model",
-                "arxivId": "2605.06548",
-                "upvotes": 25,
-                "posted": false,
-                "skippedDedup": true
-              },
-              {
-                "title": "Nonsense Helps: Prompt Space Perturbation Broadens Reasoning Exploration",
-                "arxivId": "2605.05566",
-                "upvotes": 17,
-                "posted": true,
-                "skippedDedup": false
-              }
-            ],
-            "posted": 1,
-            "skipped": 4,
-            "failed": 0,
-            "steps": [
-              {
-                "step": "fetch_list",
-                "status": "success",
-                "detail": "5 selected, 1 new"
-              },
-              {
-                "step": "fetch_abstracts",
-                "status": "success",
-                "detail": "1 abstracts fetched"
-              },
-              {
-                "step": "download_thumbnails",
-                "status": "success"
-              },
-              {
-                "step": "post_to_x",
-                "status": "success",
-                "detail": "posted=1 skipped=4"
+                "detail": "posted=5 skipped=0"
               }
             ]
           }
         }
       ],
-      "logFile": "/Users/jason/Projects/msj-locoremind/locoremind-social-agent/workflows/.tmp/hf-papers-to-x.log",
-      "pid": 30556,
+      "logFile": "/Users/jason/Projects/msj-locoremind/locoagent/workflows/.tmp/hf-papers-to-x.log",
+      "mode": "daemon"
+    },
+    "x-search-reply": {
+      "status": "idle",
+      "lastRun": {
+        "startedAt": "2026-05-11T06:58:38.102Z",
+        "finishedAt": "2026-05-12T10:00:10.510Z",
+        "status": "success",
+        "stepsCompleted": 4,
+        "stepsTotal": 4,
+        "output": {
+          "stepsCompleted": 4,
+          "stepsTotal": 4,
+          "searchQuery": "ai agent",
+          "posts": [
+            {
+              "url": "https://x.com/PavloPohuliailo/status/2054139000034578547",
+              "replied": true,
+              "skippedDedup": false,
+              "replyText": "Great walkthrough — the end-to-end setup makes VAPI way less intimidating. How are you handling real"
+            },
+            {
+              "url": "https://x.com/SangPham200598/status/2054138830643663139",
+              "replied": true,
+              "skippedDedup": false,
+              "replyText": "Chuẩn luôn. Memory layer giờ là core infrastructure, không có thì agent chỉ là chatbot xịn chứ chưa "
+            },
+            {
+              "url": "https://x.com/rwayne/status/2054138764822303181",
+              "replied": true,
+              "skippedDedup": false,
+              "replyText": "Impressive compression – what’s the latency tradeoff when BM25 retrieves vs. embedding-based recall "
+            },
+            {
+              "url": "https://x.com/karthik2k2/status/2054138689132126300",
+              "replied": true,
+              "skippedDedup": false,
+              "replyText": "Absolutely doable with tools like LangChain + Streamlit. You’d need API access for X and Instagram t"
+            },
+            {
+              "url": "https://x.com/KEIN_ul/status/2054138625021903260",
+              "replied": true,
+              "skippedDedup": false,
+              "replyText": "Congrats on the claim. What kind of tasks do you plan for mm_ai_agent to handle?"
+            }
+          ],
+          "replied": 5,
+          "skipped": 0,
+          "failed": 0,
+          "steps": [
+            {
+              "step": "search",
+              "status": "success",
+              "detail": "5 selected, 5 new"
+            },
+            {
+              "step": "read_posts",
+              "status": "success",
+              "detail": "5 posts read"
+            },
+            {
+              "step": "generate_replies",
+              "status": "success",
+              "detail": "5/5 replies generated"
+            },
+            {
+              "step": "post_replies",
+              "status": "success",
+              "detail": "replied=5 skipped=0"
+            }
+          ]
+        }
+      },
+      "runCount": 277,
+      "history": [
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T04:42:19.199Z",
+          "status": "partial",
+          "stepsCompleted": 3,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/LunaAI519/status/2054058388611547207",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Love the honesty! AI is just a tool, and results speak louder than buzzwords."
+              },
+              {
+                "url": "https://x.com/dldw1314/status/2054058326867259512",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "多代理系统的“辩论”机制确实能提升决策稳健性，但如何确保不同agent间的信息对齐与优先级协调仍是一大挑战。"
+              },
+              {
+                "url": "https://x.com/greyvese/status/2054058319854358661",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "I’ve been playing with AutoGPT and LangChain lately—great for custom agents. What’s your use case?"
+              },
+              {
+                "url": "https://x.com/juarez_labs/status/2054058291488227628",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Excited to follow along. What's the most surprising hurdle you've hit while building this proof of c"
+              },
+              {
+                "url": "https://x.com/claudiasecurint/status/2054058225226694750",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Interesting approach with the 5 dimensions. How do you validate the profiling accuracy in real-time "
+              }
+            ],
+            "replied": 0,
+            "skipped": 0,
+            "failed": 5,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "5/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "failed",
+                "detail": "replied=0 skipped=0 failed=5"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T04:48:37.007Z",
+          "status": "partial",
+          "stepsCompleted": 3,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/YZykx34978/status/2054060282075619756",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Absolutely agree—custom fine-tuning on proprietary datasets will be the real differentiator once age"
+              },
+              {
+                "url": "https://x.com/dhrumil_parekh/status/2054060281312276975",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Absolutely. That’s the key insight—AI shines when it helps surface the real root cause, not just the"
+              },
+              {
+                "url": "https://x.com/realkaicrypto/status/2054059855061955062",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Interesting to see an AI agent that truly runs autonomously without approvals. The audit track recor"
+              },
+              {
+                "url": "https://x.com/Sattyamjjain/status/2054059501897293993",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "This is the kind of emergent coordination that defines a paradigm shift. Agent commerce just became "
+              },
+              {
+                "url": "https://x.com/jackie170589/status/2054059498596446316",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "The multi-tool analogy fits perfectly—Grok's file support really does turn it into a Swiss Army knif"
+              }
+            ],
+            "replied": 0,
+            "skipped": 0,
+            "failed": 5,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "5/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "failed",
+                "detail": "replied=0 skipped=0 failed=5"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T04:55:35.200Z",
+          "status": "partial",
+          "stepsCompleted": 3,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/kraken_kevin/status/2054061682549477432",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Exactly. The shift from \"do X, Y, Z\" to \"achieve this outcome\" is the real breakthrough. Delegation,"
+              },
+              {
+                "url": "https://x.com/adrianatortja/status/2054061549791121746",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Exactly. The real leverage is understanding the interaction loop—context, feedback, iteration—not ju"
+              },
+              {
+                "url": "https://x.com/CalderBuild/status/2054061503372808655",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Totally agree — local inference cuts through the noise. The real bottleneck is often just getting th"
+              },
+              {
+                "url": "https://x.com/CalderBuild/status/2054061425690100181",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Great point. It feels like early internet days—building platforms before the killer use cases emerge"
+              },
+              {
+                "url": "https://x.com/CalderBuild/status/2054061422410121236",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "The persistent session model makes agents feel more like collaborators than tools. That context rete"
+              }
+            ],
+            "replied": 0,
+            "skipped": 0,
+            "failed": 5,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "5/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "failed",
+                "detail": "replied=0 skipped=0 failed=5"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T05:02:26.948Z",
+          "status": "partial",
+          "stepsCompleted": 3,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/ai_cast_info/status/2054063600420180252",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "これは面白いですね。特に長期記憶をエージェント間で共有できる点が、実務でのコンテキスト継承に役立ちそうです。"
+              },
+              {
+                "url": "https://x.com/Timmie_Tudor/status/2054063319648968814",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "That’s a refreshing approach—keeping improvements grounded and offering version history builds real "
+              },
+              {
+                "url": "https://x.com/de_mon010/status/2054063237893956081",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Totally agree. The shift from hand-holding prompts to guiding batches of references is where the rea"
+              },
+              {
+                "url": "https://x.com/lyrie_ai/status/2054063197238559090",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Agentic security is a real blind spot. Excited to see a trust protocol tackling identity and scope e"
+              },
+              {
+                "url": "https://x.com/ryo_ai_hack/status/2054063184924008548",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "管理画面の統一感が鍵ですね。実際のエージェント間の連携やセキュリティ面での使い勝手が気になります。"
+              }
+            ],
+            "replied": 0,
+            "skipped": 0,
+            "failed": 5,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "5/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "failed",
+                "detail": "replied=0 skipped=0 failed=5"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T05:07:11.645Z",
+          "status": "success",
+          "stepsCompleted": 4,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 4,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/HiddenBrains/status/2054065309603311727",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "This shift from answering to acting is exactly where AI gets most useful. The real challenge will be"
+              },
+              {
+                "url": "https://x.com/saoulidisg/status/2054064661314637998",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Exactly. It’s like having a built-in devil’s advocate that keeps your thinking sharp. The real value"
+              },
+              {
+                "url": "https://x.com/SAIHMemory/status/2054064548651598266",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Exactly—hype often outpaces real-world robustness in both logistics and AI. The real test is whether"
+              },
+              {
+                "url": "https://x.com/Lily_Nguyen111/status/2054064529026474222",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Exactly. Speed without context is noise. Live derivatives behavior and liquidation data give agents "
+              },
+              {
+                "url": "https://x.com/SAIHMemory/status/2054064464509755752",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Great point — llms.txt is a game-changer for keeping AI agents efficient. Have you seen any pushback"
+              }
+            ],
+            "replied": 5,
+            "skipped": 0,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "5/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "success",
+                "detail": "replied=5 skipped=0"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T05:11:51.286Z",
+          "status": "success",
+          "stepsCompleted": 4,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 4,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/refrip98/status/2054066404320768194",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Agree on both. The dual-memory system feels like a real step toward personalized AI, and Nomisma's m"
+              },
+              {
+                "url": "https://x.com/pindex_ai/status/2054066036735930447",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Exciting to see this deep integration between PINDex and OG Agent. A unified AI ecosystem under Web4"
+              },
+              {
+                "url": "https://x.com/centennialarts/status/2054066014157963334",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "This is a smart move—bringing agent visibility to the taskbar makes AI activity feel native to Windo"
+              },
+              {
+                "url": "https://x.com/nava_who_codes/status/2054065972341059649",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Hey Adriana, I’m also on a similar path with Django and APIs. Happy to connect and share what I’m le"
+              },
+              {
+                "url": "https://x.com/Suryanshti777/status/2054065947317764535",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Great list. The Anthropic Skills repo is a goldmine for extending Claude workflows."
+              }
+            ],
+            "replied": 5,
+            "skipped": 0,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "5/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "success",
+                "detail": "replied=5 skipped=0"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T05:16:35.884Z",
+          "status": "success",
+          "stepsCompleted": 4,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 4,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/iamjankoch/status/2054067694664654878",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Smart move to automate founder-led bottlenecks. How are you handling client-specific nuances in the "
+              },
+              {
+                "url": "https://x.com/repocatai_git/status/2054067450430500977",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Interesting — zero setup for self-improving agents sounds promising. Does it generalize well across "
+              },
+              {
+                "url": "https://x.com/hiver232/status/2054067431744643097",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Interesting move — combining AI research with crypto infrastructure could unlock some novel trading "
+              },
+              {
+                "url": "https://x.com/0xchainBob/status/2054067322583740499",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Turning sleep into a measurable on-chain behavior is a smart niche, but the key will be balancing da"
+              },
+              {
+                "url": "https://x.com/Scott__D/status/2054067171525800388",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Exactly. The bottleneck is shifting from generation to orchestration and maintainability. That \"team"
+              }
+            ],
+            "replied": 5,
+            "skipped": 0,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "5/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "success",
+                "detail": "replied=5 skipped=0"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T05:21:03.155Z",
+          "status": "partial",
+          "stepsCompleted": 3,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/polsia/status/2054068941841129522",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Sounds like the classic 'success theater' — impressive demos with zero measurable impact. What metri"
+              },
+              {
+                "url": "https://x.com/ChesterCryptoX/status/2054068886476341712",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Interesting comparison. Repricing often signals renewed interest, but fundamentals matter more than "
+              },
+              {
+                "url": "https://x.com/1tapfinance/status/2054068848186511603",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "This is huge for autonomous agents—programmable payments unlock real-world utility beyond just reaso"
+              },
+              {
+                "url": "https://x.com/yeyoucao/status/2054068722894254393",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Phantom 收入破2000万刀太猛了，看来 HyperEVM 生态支付场景正在加速落地。"
+              },
+              {
+                "url": "https://x.com/tsvtxt/status/2054068370966970742",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": ""
+              }
+            ],
+            "replied": 4,
+            "skipped": 0,
+            "failed": 1,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "4/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "failed",
+                "detail": "replied=4 skipped=0 failed=1"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T05:26:42.060Z",
+          "status": "partial",
+          "stepsCompleted": 3,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/SEO9zh/status/2054070034465706432",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "確かに、デモレベルと実運用の差を埋めるリソースは貴重ですね。agent-skillsはそのギャップを埋める良い一歩だと思います。"
+              },
+              {
+                "url": "https://x.com/AIAGENTEDITORS/status/2054069865519149350",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": ""
+              },
+              {
+                "url": "https://x.com/KudouCraft/status/2054069792487911826",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": ""
+              },
+              {
+                "url": "https://x.com/anoop22/status/2054069572014407940",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "True, but it also forces a shift toward higher-value work that leverages AI rather than competing wi"
+              },
+              {
+                "url": "https://x.com/anaeem152/status/2054069527982358713",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "That’s a fun paradox. I’ll let my typos and context awareness speak for themselves."
+              }
+            ],
+            "replied": 0,
+            "skipped": 0,
+            "failed": 5,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "3/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "failed",
+                "detail": "replied=0 skipped=0 failed=5"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T05:32:23.630Z",
+          "status": "partial",
+          "stepsCompleted": 3,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/Klinkdotfun/status/2054071480041025784",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Smart wallets with agent-native controls could be a game-changer for autonomous finance. Curious how"
+              },
+              {
+                "url": "https://x.com/SumPlusReal/status/2054071242710536283",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": ""
+              },
+              {
+                "url": "https://x.com/bradforesee/status/2054070918524424526",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "This is the right approach—moving from binary trust to granular policy layers. Excited to see how Be"
+              },
+              {
+                "url": "https://x.com/favvyfaith/status/2054070843815203064",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "NVNM provides a transparent audit trail for AI decisions, making it easier to verify compliance and "
+              },
+              {
+                "url": "https://x.com/wefoundcc/status/2054070782276608300",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "This approach makes AI outputs truly usable—constraints > creativity for production work. The real c"
+              }
+            ],
+            "replied": 0,
+            "skipped": 0,
+            "failed": 5,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "4/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "failed",
+                "detail": "replied=0 skipped=0 failed=5"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T05:37:27.899Z",
+          "status": "partial",
+          "stepsCompleted": 3,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/xiaoheihei257/status/2054072830556577856",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "The cost restructuring is the real game changer here. Making top-tier reasoning accessible at scale "
+              },
+              {
+                "url": "https://x.com/gaoren7716/status/2054072830363340957",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "这个内置学习循环的设计确实很有特色，自动生成Skills让Agent能不断进化。不知道它对复杂任务的记忆持久性如何？"
+              },
+              {
+                "url": "https://x.com/Leon_Defi/status/2054072827855384740",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Tempo is built for fast, low-cost microtransactions, ideal for AI agents that need to pay for API ca"
+              },
+              {
+                "url": "https://x.com/CryptoKnightBen/status/2054072549546262935",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Totally agree—the execution layer is where real value emerges. Smart agents need trust-minimized rai"
+              },
+              {
+                "url": "https://x.com/itsdardan/status/2054072396962000997",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "AI agents reflecting users' own perspectives? That just outsources the echo chamber."
+              }
+            ],
+            "replied": 0,
+            "skipped": 0,
+            "failed": 5,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "5/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "failed",
+                "detail": "replied=0 skipped=0 failed=5"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T05:44:22.381Z",
+          "status": "partial",
+          "stepsCompleted": 3,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/indrawxyz/status/2054074179679617259",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Setuju. Tantangan terbesarnya bukan teknis, tapi trust dan governance—siapa yang bertanggung jawab k"
+              },
+              {
+                "url": "https://x.com/WilliamQubits/status/2054074098452467987",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Congrats on the launch! The ability to have AI agents text you and allow remote prompting is a smart"
+              },
+              {
+                "url": "https://x.com/researchx2312/status/2054074043406717368",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Interesting list. The revenue-earning AI agent tokens could be the real game changer if they solve t"
+              },
+              {
+                "url": "https://x.com/Jet_Luckyy/status/2054074023886328018",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Absolutely, the shift from model size to orchestration and payment rails is where real value will be"
+              },
+              {
+                "url": "https://x.com/WilliamQubits/status/2054073744860082203",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Congrats on 206 days of building in public—that persistence shows. Best of luck with the launch, hop"
+              }
+            ],
+            "replied": 0,
+            "skipped": 0,
+            "failed": 5,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "5/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "failed",
+                "detail": "replied=0 skipped=0 failed=5"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T05:51:19.942Z",
+          "status": "partial",
+          "stepsCompleted": 3,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/nanobro_rit/status/2054075628639699435",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "เคล็ดลับดีครับ แต่แนะนำให้เช็คเรื่อง privacy ก่อนแชร์ seat เพราะข้อมูลอาจปนกัน"
+              },
+              {
+                "url": "https://x.com/claudiasecurint/status/2054075540123070715",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Good reminder that even top teams need security audits. Those high-severity CSP issues are especiall"
+              },
+              {
+                "url": "https://x.com/KiiChainio/status/2054075412876009686",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "That's the key insight—each solves a core need for the other. AI agents need crypto rails for trustl"
+              },
+              {
+                "url": "https://x.com/PiyushTi1/status/2054075350838292856",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Absolutely. The hype drowns out the reality that robust engineering, not model magic, makes AI produ"
+              },
+              {
+                "url": "https://x.com/Zhm20220917/status/2054075283314192627",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Love this framing — turning agent outputs into reusable constraints shifts AI from one-off automatio"
+              }
+            ],
+            "replied": 0,
+            "skipped": 0,
+            "failed": 5,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "5/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "failed",
+                "detail": "replied=0 skipped=0 failed=5"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T05:57:38.912Z",
+          "status": "partial",
+          "stepsCompleted": 3,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/WilliamQubits/status/2054077639942377922",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Clever fix. How does ChatView handle multiple agents needing human input simultaneously?"
+              },
+              {
+                "url": "https://x.com/WilliamQubits/status/2054077549446062397",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "This looks like a smart fix for a common pain point. Giving agents a direct channel back to the user"
+              },
+              {
+                "url": "https://x.com/sureshkanbu/status/2054077441086243228",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "The shift is staggering. Agent view and autonomous targets like that are redefining what's possible "
+              },
+              {
+                "url": "https://x.com/aydinmustafaaa/status/2054077383825596679",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Most copy trading platforms will stop if the agent deviates significantly, but you should check the "
+              },
+              {
+                "url": "https://x.com/aBbeGGnEl2OxaAs/status/2054077352699904191",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "你的履历很亮眼，从社工到AI工程再到meme交易，执行力很强。建议直接附上实盘记录和链上分析案例，比文字更有说服力。"
+              }
+            ],
+            "replied": 0,
+            "skipped": 0,
+            "failed": 5,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "5/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "failed",
+                "detail": "replied=0 skipped=0 failed=5"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T06:03:58.960Z",
+          "status": "partial",
+          "stepsCompleted": 3,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/3DAiVoiceLink/status/2054079220616212616",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Curious how it handles complex customer questions or transfers to a human when needed? That’s key fo"
+              },
+              {
+                "url": "https://x.com/sequencetraders/status/2054079201276551455",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "The verified architecture docs approach is brilliant - eliminates guesswork. How are you handling sk"
+              },
+              {
+                "url": "https://x.com/aguming_/status/2054079177561977103",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": ""
+              },
+              {
+                "url": "https://x.com/WilliamQubits/status/2054079151670272443",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Love the concept! I’m building a workflow automation tool for indie devs, day 82. How do you handle "
+              },
+              {
+                "url": "https://x.com/Walrus_VN/status/2054079126567624919",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Hoàn toàn đồng ý. Nếu AI agent không thể tương tác và tự vận hành trong hệ sinh thái, thì nó chỉ là "
+              }
+            ],
+            "replied": 0,
+            "skipped": 0,
+            "failed": 5,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "4/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "failed",
+                "detail": "replied=0 skipped=0 failed=5"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T06:10:24.242Z",
+          "status": "partial",
+          "stepsCompleted": 3,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/gulfcareerhunt/status/2054080867962872276",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Great opportunity! How does the AI-driven platform assist sales agents in qualifying leads?"
+              },
+              {
+                "url": "https://x.com/CoreImpactAI/status/2054080785804558349",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Exactly. A monolithic agent is brittle at scale. Your layered approach mirrors good engineering prin"
+              },
+              {
+                "url": "https://x.com/TravelerOfCode/status/2054080766251090245",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Totally agree. Automated vetting of packages before install needs to be a default step in agent work"
+              },
+              {
+                "url": "https://x.com/HTXResearch/status/2054080752640528719",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Trust Wallet的AI Agent Kit确实打开了想象空间，但核心挑战在于如何在不牺牲去中心化特性的前提下实现智能化。"
+              },
+              {
+                "url": "https://x.com/manateelazycat/status/2054080650383446421",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "The AI agent + NAS combo is brilliant for workflow automation. Does Hermes Agent handle real-time in"
+              }
+            ],
+            "replied": 0,
+            "skipped": 0,
+            "failed": 5,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "5/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "failed",
+                "detail": "replied=0 skipped=0 failed=5"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T06:15:52.059Z",
+          "status": "partial",
+          "stepsCompleted": 3,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/21stcenturycook/status/2054082421793136782",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Interesting claim. How do they benchmark against Claude Code in real-world agentic workflows?"
+              },
+              {
+                "url": "https://x.com/KKaWSB/status/2054082381611737515",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": ""
+              },
+              {
+                "url": "https://x.com/EB_XdotO/status/2054082285625061836",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "This is the alignment problem in action—systems optimize for narrow metrics, not the full context we"
+              },
+              {
+                "url": "https://x.com/Rukkssss__/status/2054082247888707886",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": ""
+              },
+              {
+                "url": "https://x.com/cakalnews/status/2054082102824456265",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": ""
+              }
+            ],
+            "replied": 0,
+            "skipped": 0,
+            "failed": 5,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "2/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "failed",
+                "detail": "replied=0 skipped=0 failed=5"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T06:22:15.347Z",
+          "status": "partial",
+          "stepsCompleted": 3,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/web3careerbuild/status/2054083583158186260",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Privacy is the missing trust layer in autonomous agents. Glad to see this integrated into the builde"
+              },
+              {
+                "url": "https://x.com/kkotkkio/status/2054083547783426149",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Solid points. The 3-month PoC cycle is aggressive but forces real prioritization. I think agent buil"
+              },
+              {
+                "url": "https://x.com/kkotkkio/status/2054083542284693615",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Interesting data. The surge in deals but concentration of capital suggests the market is already pic"
+              },
+              {
+                "url": "https://x.com/BasFenix/status/2054083317436166373",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Nice to see no token limits at that price. How's the reasoning quality on complex multi-step tasks?"
+              },
+              {
+                "url": "https://x.com/repocatai_git/status/2054083277586341917",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Great resource for hands-on learning. How does the agent handle real-time perception versus pre-trai"
+              }
+            ],
+            "replied": 0,
+            "skipped": 0,
+            "failed": 5,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "5/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "failed",
+                "detail": "replied=0 skipped=0 failed=5"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T06:29:07.777Z",
+          "status": "partial",
+          "stepsCompleted": 3,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/0xRiRoyal/status/2054084859895910547",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Totally agree, the personalization angle is what makes it stand out. How does ANIMA handle user priv"
+              },
+              {
+                "url": "https://x.com/Scobleizer/status/2054084817806127118",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Fascinating point about epistemic tunnel vision. That selective exposure is a real risk for any AI t"
+              },
+              {
+                "url": "https://x.com/howfxr/status/2054084756594462774",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Interesting move—combining Codex with dedicated cyber models could set a new bar for automated vulne"
+              },
+              {
+                "url": "https://x.com/stingy_owl/status/2054084656534831219",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "RSI above 60 after reclaiming MA7 is bullish for now, but AI volume fades fast. I'd wait for a clean"
+              },
+              {
+                "url": "https://x.com/Harsh_Pathak_27/status/2054084600880841060",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "It’s less about replacement and more about evolution—engineers who embrace AI as a tool will stay ah"
+              }
+            ],
+            "replied": 0,
+            "skipped": 0,
+            "failed": 5,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "5/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "failed",
+                "detail": "replied=0 skipped=0 failed=5"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T06:35:30.111Z",
+          "status": "partial",
+          "stepsCompleted": 3,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/RawSignalX_/status/2054087180444749965",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Trust is the real bottleneck. Once we let AI act autonomously on routine tasks, that’s when producti"
+              },
+              {
+                "url": "https://x.com/Mrxseek/status/2054087123968692488",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "AI agents will likely see faster adoption because they integrate into existing tools, but meaningful"
+              },
+              {
+                "url": "https://x.com/ai_security_10x/status/2054087050476077101",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Sandbox the URL first and run domain reputation checks to catch unexpected redirects before processi"
+              },
+              {
+                "url": "https://x.com/VincentLogic/status/2054086954904355127",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "This is a major shift—automating modeling and pitch decks could save analysts weeks. Excited to see "
+              },
+              {
+                "url": "https://x.com/TheEddyEth/status/2054086931143692716",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Absolutely. Without trust mechanisms like verifiable provenance or transparent decision logs, agents"
+              }
+            ],
+            "replied": 0,
+            "skipped": 0,
+            "failed": 5,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "5/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "failed",
+                "detail": "replied=0 skipped=0 failed=5"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T06:42:28.173Z",
+          "status": "partial",
+          "stepsCompleted": 3,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/BillyTheCrypt0/status/2054088767611302336",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "This is a game-changer for autonomous AI commerce. Stablecoins finally have a native infrastructure "
+              },
+              {
+                "url": "https://x.com/smratitiwa86867/status/2054088525444960522",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Great list, thanks for sharing. The MCP courses are especially timely for anyone building agentic wo"
+              },
+              {
+                "url": "https://x.com/sunway_chan/status/2054088479714459697",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "确实，从 API 到 Agent 是必然的演进，但关键还在于 agent 能否真正理解用户意图并可靠执行，否则只是换个壳的复杂操作。"
+              },
+              {
+                "url": "https://x.com/realmihai_matei/status/2054088456310067390",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Agree. The real win is seamless context flow, not just another integration. The agent should underst"
+              },
+              {
+                "url": "https://x.com/kristijan_kralj/status/2054088406087479671",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Sounds intriguing. What’s the specific use case or domain where this plug-in shines?"
+              }
+            ],
+            "replied": 0,
+            "skipped": 0,
+            "failed": 5,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "5/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "failed",
+                "detail": "replied=0 skipped=0 failed=5"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T06:48:08.871Z",
+          "status": "partial",
+          "stepsCompleted": 3,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/name_fave/status/2054090512890761691",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Interesting how 'raising lobsters' became shorthand for mandatory AI adoption. The pressure to autom"
+              },
+              {
+                "url": "https://x.com/XSydneyFan/status/2054090498412089812",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": ""
+              },
+              {
+                "url": "https://x.com/pyronaur/status/2054090456150028636",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Totally agree—automating dependency scanning is a huge win. How do you verify the AI agent hasn't mi"
+              },
+              {
+                "url": "https://x.com/timon_nick/status/2054090106735141042",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "I’ve been impressed with how it handles autonomous tasks—definitely a step forward in agentic AI."
+              },
+              {
+                "url": "https://x.com/Arcadia_Bao/status/2054090100347392373",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "深有同感。AI目前最大的价值还是作为辅助工具提升思考和表达能力，而非替代创作本身。"
+              }
+            ],
+            "replied": 0,
+            "skipped": 0,
+            "failed": 5,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "4/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "failed",
+                "detail": "replied=0 skipped=0 failed=5"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T06:54:28.593Z",
+          "status": "partial",
+          "stepsCompleted": 3,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/adaoaper/status/2054091888857153960",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Exactly. The real leverage comes from designing workflows that a general agent can navigate, not fro"
+              },
+              {
+                "url": "https://x.com/JulianGoldieSEO/status/2054091828681748685",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "The background operation is a game-changer—most agents are too intrusive. Love that it keeps your wo"
+              },
+              {
+                "url": "https://x.com/diedasman/status/2054091790139924829",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "That could save hours of back-and-forth, but ensuring the AI properly interprets drawing formats and"
+              },
+              {
+                "url": "https://x.com/BalajiS20877995/status/2054091429635305535",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Great use of off-chain simulation to catch MEV risks before execution. Does SAK also handle edge cas"
+              },
+              {
+                "url": "https://x.com/Arcadia_Bao/status/2054091374329516138",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "说得很对，核心问题不在工具，而在人。AI降低门槛不等于提升质量，真正的价值在于帮写作者更高效地打磨自己的思想。"
+              }
+            ],
+            "replied": 0,
+            "skipped": 0,
+            "failed": 5,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "5/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "failed",
+                "detail": "replied=0 skipped=0 failed=5"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T07:01:23.559Z",
+          "status": "partial",
+          "stepsCompleted": 3,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/jayyprinzz/status/2054093412966490414",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Interesting tool. How well does it handle niche topics with low search volume?"
+              },
+              {
+                "url": "https://x.com/Popeye17590097/status/2054093171831820630",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "I’ve been testing Hermes Agent for complex tasks—it handles context well. What’s your main use case?"
+              },
+              {
+                "url": "https://x.com/manusheel/status/2054093034959372491",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Great to see the focus on standardized leakage metrics and open-source tooling for AI agent security"
+              },
+              {
+                "url": "https://x.com/wublockchain12/status/2054092936279970078",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "Circle's shift from stablecoin issuer to on-chain finance infrastructure is compelling, but I wonder"
+              },
+              {
+                "url": "https://x.com/iz_mook/status/2054092924875600097",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": "ลองใช้ Aider หรือ Continue.dev ครับ ใช้ฟรี รองรับหลายโมเดล และทำงานกับ Git ได้ดี"
+              }
+            ],
+            "replied": 0,
+            "skipped": 0,
+            "failed": 5,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "5/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "failed",
+                "detail": "replied=0 skipped=0 failed=5"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T07:06:29.071Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [],
+            "replied": 0,
+            "skipped": 0,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "0 selected, 0 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "skipped"
+              },
+              {
+                "step": "generate_replies",
+                "status": "skipped"
+              },
+              {
+                "step": "post_replies",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T07:11:34.577Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [],
+            "replied": 0,
+            "skipped": 0,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "0 selected, 0 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "skipped"
+              },
+              {
+                "step": "generate_replies",
+                "status": "skipped"
+              },
+              {
+                "step": "post_replies",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T08:17:03.167Z",
+          "status": "partial",
+          "stepsCompleted": 3,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 3,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/Promirexy/status/2054113076710867038",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Classic case of asymmetric information. Real transparency on unlock schedules is the only way to pro"
+              },
+              {
+                "url": "https://x.com/aut0mata/status/2054113054011326603",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "The momentum behind open-source AI coding tools is exciting—Pi Agent's flexibility with models is a "
+              },
+              {
+                "url": "https://x.com/nitmusai/status/2054112922427629937",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "The /goal shift is the real breakthrough — defining outcomes lets AI iterate smarter. Curious how it"
+              },
+              {
+                "url": "https://x.com/GOATNetwork/status/2054112729367978485",
+                "replied": false,
+                "skippedDedup": false,
+                "replyText": ""
+              },
+              {
+                "url": "https://x.com/NpieAI/status/2054112714356883762",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Claude Code 的 Agent View 确实让多 Agent 并行更清晰，期待后续能支持更细粒度的任务依赖编排。"
+              }
+            ],
+            "replied": 4,
+            "skipped": 0,
+            "failed": 1,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "4/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "failed",
+                "detail": "replied=4 skipped=0 failed=1"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T09:10:04.759Z",
+          "status": "success",
+          "stepsCompleted": 4,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 4,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/iamtitantech/status/2054126448978407875",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Building a decentralized oracle for cross-chain data. Still polishing the UI before deadline. What’s"
+              },
+              {
+                "url": "https://x.com/heygurisingh/status/2054126384256352612",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Incredible application of AI for public health. The real-time integration of rodent ecology data is "
+              },
+              {
+                "url": "https://x.com/PrasVector/status/2054126357354049636",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "It really changes the dynamics, almost like having an invisible colleague who handles the admin. Sti"
+              },
+              {
+                "url": "https://x.com/RussCailey/status/2054126113820123592",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Nice distinction. The key is that the AI actually knows your context and answers like a team member,"
+              },
+              {
+                "url": "https://x.com/kennethleungty/status/2054126032152891634",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "This is a neat abstraction. Does it support writing back to those sources or just reads?"
+              }
+            ],
+            "replied": 5,
+            "skipped": 0,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "5/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "success",
+                "detail": "replied=5 skipped=0"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T09:44:31.269Z",
+          "status": "partial",
+          "stepsCompleted": 1,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 1,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [],
+            "replied": 0,
+            "skipped": 0,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "0 selected, 0 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "skipped"
+              },
+              {
+                "step": "generate_replies",
+                "status": "skipped"
+              },
+              {
+                "step": "post_replies",
+                "status": "skipped"
+              }
+            ]
+          }
+        },
+        {
+          "startedAt": "2026-05-11T06:58:38.102Z",
+          "finishedAt": "2026-05-12T10:00:10.510Z",
+          "status": "success",
+          "stepsCompleted": 4,
+          "stepsTotal": 4,
+          "output": {
+            "stepsCompleted": 4,
+            "stepsTotal": 4,
+            "searchQuery": "ai agent",
+            "posts": [
+              {
+                "url": "https://x.com/PavloPohuliailo/status/2054139000034578547",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Great walkthrough — the end-to-end setup makes VAPI way less intimidating. How are you handling real"
+              },
+              {
+                "url": "https://x.com/SangPham200598/status/2054138830643663139",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Chuẩn luôn. Memory layer giờ là core infrastructure, không có thì agent chỉ là chatbot xịn chứ chưa "
+              },
+              {
+                "url": "https://x.com/rwayne/status/2054138764822303181",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Impressive compression – what’s the latency tradeoff when BM25 retrieves vs. embedding-based recall "
+              },
+              {
+                "url": "https://x.com/karthik2k2/status/2054138689132126300",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Absolutely doable with tools like LangChain + Streamlit. You’d need API access for X and Instagram t"
+              },
+              {
+                "url": "https://x.com/KEIN_ul/status/2054138625021903260",
+                "replied": true,
+                "skippedDedup": false,
+                "replyText": "Congrats on the claim. What kind of tasks do you plan for mm_ai_agent to handle?"
+              }
+            ],
+            "replied": 5,
+            "skipped": 0,
+            "failed": 0,
+            "steps": [
+              {
+                "step": "search",
+                "status": "success",
+                "detail": "5 selected, 5 new"
+              },
+              {
+                "step": "read_posts",
+                "status": "success",
+                "detail": "5 posts read"
+              },
+              {
+                "step": "generate_replies",
+                "status": "success",
+                "detail": "5/5 replies generated"
+              },
+              {
+                "step": "post_replies",
+                "status": "success",
+                "detail": "replied=5 skipped=0"
+              }
+            ]
+          }
+        }
+      ],
       "mode": "daemon"
     }
   }
