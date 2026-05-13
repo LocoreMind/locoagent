@@ -3,6 +3,7 @@
 </p>
 
 <p align="center">
+  <a href="https://youtu.be/QesPS8xPaDA"><img src="https://img.shields.io/badge/demo-YouTube-red" alt="Demo"></a>
   <a href="#installation"><img src="https://img.shields.io/badge/runtime-Bun-f472b6" alt="Bun"></a>
   <a href="#installation"><img src="https://img.shields.io/badge/language-TypeScript-3178c6" alt="TypeScript"></a>
   <a href="#model-providers"><img src="https://img.shields.io/badge/LLM-multi--provider-00b4aa" alt="Multi-Provider"></a>
