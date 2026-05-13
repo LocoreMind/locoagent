@@ -157,10 +157,10 @@ bun start -p "/x-com like 5 posts about 'large language models', then follow the
 ### Adding a New Platform
 
 ```bash
-mkdir -p .claude/skills/linkedin
+mkdir -p skills/linkedin
 ```
 
-Create `.claude/skills/linkedin/SKILL.md`:
+Create `skills/linkedin/SKILL.md`:
 
 ```markdown
 ---
