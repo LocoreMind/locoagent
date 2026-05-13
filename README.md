@@ -13,7 +13,7 @@
 
 ## What is LocoAgent?
 
-LocoAgent is an AI-powered social media agent that autonomously operates social media accounts through real browser automation. It combines an LLM-driven agentic loop with [`agent-browser`](https://github.com/nicepkg/agent-browser) CLI to perceive, decide, and act on live web pages — performing tasks like liking posts, writing replies, following users, and publishing content.
+LocoAgent is an AI-powered social media agent that autonomously operates social media accounts through real browser automation. It combines an LLM-driven agentic loop with [`agent-browser`](https://github.com/vercel-labs/agent-browser) CLI to perceive, decide, and act on live web pages — performing tasks like liking posts, writing replies, following users, and publishing content.
 
 **Key differentiators:**
 
@@ -33,7 +33,7 @@ LocoAgent is an AI-powered social media agent that autonomously operates social 
 |-------------|---------|-------|
 | [Bun](https://bun.sh) | Latest | Runtime and package manager |
 | Node.js | >= 18 | Required by some dependencies |
-| [agent-browser](https://github.com/nicepkg/agent-browser) | Latest | Browser automation CLI |
+| [agent-browser](https://github.com/vercel-labs/agent-browser) | Latest | Browser automation CLI |
 | Git | Any | For context features |
 
 ### Setup
