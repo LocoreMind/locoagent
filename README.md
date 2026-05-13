@@ -39,7 +39,7 @@ LocoAgent is an AI-powered social media agent that autonomously operates social 
 ### Setup
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/LocoreMind/locoagent.git
 cd locoagent
 bun install
 ```
