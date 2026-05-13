@@ -1,549 +1,383 @@
-# LocoAgent
+<p align="center">
+  <img src="assets/banner.svg" alt="LocoAgent" width="800">
+</p>
 
-**An AI-powered social media agent by LocoreMind, built on a privacy-focused Claude Code fork, with browser automation capabilities via `agent-browser` CLI.**
-
-[![License](https://img.shields.io/badge/license-See%20Original-blue)](https://github.com/anthropics/claude-code)
-[![Privacy](https://img.shields.io/badge/privacy-100%25-green)](https://github.com/IIIIQIIII/claude-code-clean)
-[![Telemetry](https://img.shields.io/badge/telemetry-removed-red)](https://github.com/IIIIQIIII/claude-code-clean)
-
----
-
-## 🔒 Privacy First
-
-This fork removes **all tracking and remote control mechanisms** found in the original Claude Code:
-
-- ❌ **No telemetry** - Zero data sent to Anthropic's servers
-- ❌ **No analytics** - No usage tracking or event logging
-- ❌ **No fingerprinting** - No user or environment identification
-- ❌ **No auto-updates** - No remote version control or forced updates
-- ✅ **100% user control** - You own your installation
+<p align="center">
+  <a href="#installation"><img src="https://img.shields.io/badge/runtime-Bun-f472b6" alt="Bun"></a>
+  <a href="#installation"><img src="https://img.shields.io/badge/language-TypeScript-3178c6" alt="TypeScript"></a>
+  <a href="#model-providers"><img src="https://img.shields.io/badge/LLM-multi--provider-00b4aa" alt="Multi-Provider"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
+</p>
 
 ---
 
-## 📊 What Was Removed
+## What is LocoAgent?
 
-### Telemetry Infrastructure (~8,500+ lines)
-- BigQuery metrics exporter
-- Event logging to `api.anthropic.com/api/event_logging/batch`
-- Session tracking and user identification
-- Environment fingerprinting
-- Performance tracing (Perfetto/OpenTelemetry)
+LocoAgent is an AI-powered social media agent that autonomously operates social media accounts through real browser automation. It combines an LLM-driven agentic loop with [`agent-browser`](https://github.com/nicepkg/agent-browser) CLI to perceive, decide, and act on live web pages — performing tasks like liking posts, writing replies, following users, and publishing content.
 
-### Anti-Distillation Tracking
-- Message content fingerprinting (SHA256 of user prompts)
-- Attribution tags sent with every API request
+**Key differentiators:**
 
-### Auto-Update & Remote Control
-- Automatic downloads from Google Cloud Storage
-- Remote version enforcement (can force-quit your app)
-- Version kill switches
-- Update notifications
-
+- **Real browser, real sessions** — Operates through Chrome CDP with your actual login cookies, not API hacks
+- **Platform skill system** — Injects full platform operation playbooks (32+ operations for X.com) so the agent completes composite tasks in one pass
+- **Workflow engine** — Pure browser-automation pipelines that run without LLM involvement, controlled by the agent as a supervisor
+- **Operation log** — Persistent deduplication across sessions prevents repeated actions
+- **Multi-provider LLM** — Works with any OpenAI-compatible API (OpenRouter, DeepSeek, Ollama, etc.)
 
 ---
 
-## 🚀 Installation
+## Installation
 
 ### Prerequisites
 
-- [Bun](https://bun.sh) (v1.3+)
-- macOS, Linux, or WSL2
+| Requirement | Version | Notes |
+|-------------|---------|-------|
+| [Bun](https://bun.sh) | Latest | Runtime and package manager |
+| Node.js | >= 18 | Required by some dependencies |
+| [agent-browser](https://github.com/nicepkg/agent-browser) | Latest | Browser automation CLI |
+| Git | Any | For context features |
 
-### Quick Start
+### Setup
 
 ```bash
-# Clone the repository
-git clone https://github.com/IIIIQIIII/claude-code-clean.git
-cd claude-code-clean
-
-# Install dependencies
+git clone <repo-url>
+cd locoagent
 bun install
-
-# Run
-bun start
 ```
 
 ### Configuration
 
-Create a `.env` file in the project root (automatically loaded at startup):
+Create a `.env` file in the project root (auto-loaded at startup):
 
 ```env
-# OpenAI-compatible provider (recommended: OpenRouter)
-CLAUDE_CODE_USE_OPENAI=1
+# LLM Provider (pick one)
+
+# Option A: OpenRouter (access 200+ models)
+CLAUDE_CODE_USE_OPENAI=1        # Enable OpenAI-compatible provider
 OPENAI_API_KEY=sk-or-v1-...
 OPENAI_BASE_URL=https://openrouter.ai/api/v1
 OPENAI_MODEL=anthropic/claude-sonnet-4.5
+
+# Option B: DeepSeek (with thinking mode support)
+CLAUDE_CODE_USE_OPENAI=1
+OPENAI_API_KEY=sk-...
+OPENAI_BASE_URL=https://api.deepseek.com
+OPENAI_MODEL=deepseek-v4-flash
+
+# Option C: Anthropic direct (omit CLAUDE_CODE_USE_OPENAI)
+ANTHROPIC_API_KEY=sk-ant-...
+
+# Agent behavior
+SKIP_PERMISSIONS=1               # Required for non-interactive/automated mode
 ```
 
-Then just run:
+### Run
 
 ```bash
+# Interactive mode
 bun start
+
+# Single query (headless)
+bun start -p "open X.com and like the first post about AI agents"
+
+# With specific model
+bun start --model anthropic/claude-sonnet-4.5
 ```
-
-No need to pass environment variables on the command line — `.env` is loaded automatically via `stubs/globals.ts` preload.
-
-> For direct Anthropic API access, use `ANTHROPIC_API_KEY` instead (omit `CLAUDE_CODE_USE_OPENAI`).
 
 ---
 
-## ✅ Verification
+## Model Providers
 
-All privacy claims are **verifiable**:
+LocoAgent supports any OpenAI-compatible API through a built-in translation shim. The rest of the system is provider-agnostic.
+
+| Provider | Base URL | Notes |
+|----------|----------|-------|
+| OpenRouter | `https://openrouter.ai/api/v1` | Access 200+ models |
+| DeepSeek | `https://api.deepseek.com` | Thinking mode (`reasoning_content`) fully supported |
+| OpenAI | `https://api.openai.com/v1` | GPT-4o, o1, etc. |
+| Ollama | `http://localhost:11434/v1` | Local models |
+| LM Studio | `http://localhost:1234/v1` | Local models |
+| Anthropic | (native SDK) | Set `ANTHROPIC_API_KEY` only |
+| AWS Bedrock | (native SDK) | AWS credentials |
+| Google Vertex AI | (native SDK) | GCP credentials |
+
+---
+
+## Browser Automation
+
+LocoAgent uses `agent-browser` CLI to control a real Chrome browser via CDP (Chrome DevTools Protocol).
+
+### Why Chrome CDP?
+
+Social media platforms detect and block headless browsers and API-based automation. LocoAgent operates through a copy of your real Chrome profile — same cookies, same login sessions, same fingerprint.
+
+### Setup
 
 ```bash
-# Run automated privacy tests (25 checks)
-./tests/verify-privacy.sh
+# One-time: copy Chrome profile + launch with CDP
+bun run setup-chrome
 
-# Run runtime tests
-./tests/simple-runtime-test.sh
-
-# Monitor network traffic (requires mitmproxy)
-# See tests/test-network-monitoring.md
+# agent-browser connects to the running Chrome
+agent-browser connect 9222
 ```
 
-**Test Results:** 100% pass rate ✅
-
----
-
-## 🔍 What's Different
-
-### Original Claude Code
-- ✅ Telemetry enabled by default for API/Enterprise users
-- ✅ Sends metrics every 5 minutes to BigQuery
-- ✅ Tracks user ID, email, session IDs
-- ✅ Fingerprints your environment
-- ✅ Can be remotely disabled by Anthropic
-- ✅ Auto-downloads updates
-
-### Claude Code Clean
-- ❌ All telemetry removed
-- ❌ No data collection
-- ❌ No user tracking
-- ❌ No fingerprinting
-- ❌ Cannot be remotely controlled
-- ❌ No auto-updates (you control versions)
-
----
-
-## 🛡️ Privacy Guarantees
-
-### What This Fork Does NOT Do
-
-- ❌ Send telemetry to Anthropic or third parties
-- ❌ Collect session IDs or user identifiers
-- ❌ Fingerprint your system or environment
-- ❌ Track your usage patterns
-- ❌ Extract characters from prompts for tracking
-- ❌ Store failed telemetry events for retry
-- ❌ Auto-update without your permission
-- ❌ Phone home to any server (except Claude API for inference)
-
-### What This Fork DOES Do
-
-- ✅ Makes necessary API calls to Claude (required for functionality)
-- ✅ Stores conversation history locally (user-controlled)
-- ✅ Maintains all core Claude Code features
-- ✅ Built-in computer use via open-source MCP server (no proprietary native modules)
-- ✅ Respects your privacy and data ownership
-
----
-
-## 🔧 Technical Details
-
-### Implementation
-
-- **Files deleted:** 19 (telemetry/analytics modules)
-- **Files modified:** 408+ (import statements updated)
-- **Lines removed:** ~8,500+ (tracking code)
-- **Stub files created:** 4 (no-op replacements)
-
-### Verification Methods
-
-1. **Static Analysis** - `./tests/verify-privacy.sh` (25 automated checks)
-2. **Runtime Testing** - `./tests/simple-runtime-test.sh`
-3. **Network Monitoring** - mitmproxy/tcpdump/Wireshark guides provided
-4. **Code Review** - All changes documented
-
----
-
-## 🖥️ Computer Use (Screen Control)
-
-Claude Code Clean includes built-in computer use support via [computer-use-mcp](https://github.com/domdomegg/computer-use-mcp), pre-configured in `.mcp.json`. This allows Claude to take screenshots, move the mouse, click, type, scroll, and drag on your desktop.
-
-### Prerequisites
-
-- **Node.js** (v18+) — required for the MCP server (runs via `npx`)
-- **macOS Accessibility permission** — grant your terminal app access in System Settings > Privacy & Security > Accessibility
-
-### How It Works
-
-On startup, Claude Code Clean automatically launches the `computer-control` MCP server. No manual setup needed — just start a session and ask Claude to interact with your screen:
-
-```
-> Take a screenshot and tell me what you see
-> Open Safari and navigate to github.com
-> Click on the search bar and type "claude code"
-```
-
-The tool is exposed as `mcp__computer-control__computer` with actions: `get_screenshot`, `left_click`, `right_click`, `middle_click`, `double_click`, `mouse_move`, `left_click_drag`, `scroll`, `key`, `type`, `get_cursor_position`.
-
-### Safety Notes
-
-- The MCP server controls your real mouse and keyboard — **no sandbox isolation**
-- Always supervise Claude during computer use sessions
-- Use `Ctrl+C` to stop at any time
-- Consider using a dedicated macOS user account for testing
-
----
-
-## 🌍 Browser Automation via agent-browser
-
-LocoAgent uses [`agent-browser`](https://github.com/browserbase/agent-browser) CLI as the primary browser automation tool for social media interactions. The agent has full knowledge of the CLI built into its system prompt.
-
-### Prerequisites
-
-Install agent-browser:
+### How the Agent Uses It
 
 ```bash
-npm install -g agent-browser
-agent-browser install   # Download Chrome binaries (first time)
+agent-browser open https://x.com/home        # Navigate
+agent-browser snapshot -i                      # Perceive: get interactive elements with @ref IDs
+agent-browser click @e5                        # Act: click a like button
+agent-browser fill @e3 "Great research!"       # Act: type in a reply box
+agent-browser screenshot result.png            # Verify: capture result
 ```
 
-### How It Works
-
-The agent uses `agent-browser` via the `Bash` tool. The core workflow is:
-
-```bash
-agent-browser open <url>         # Navigate
-agent-browser snapshot -i        # Perceive: get interactive elements with @ref IDs
-agent-browser click @e2          # Act by @ref
-agent-browser fill @e3 "text"
-```
-
-**Recommended: Chrome CDP mode** (operates with real login sessions):
-
-```bash
-bun run setup-chrome             # One-time: copy profile + launch Chrome with CDP
-agent-browser connect 9222       # Connect to running Chrome
-agent-browser open https://x.com # All commands reuse the authenticated session
-```
-
-Full CLI reference is available at `docs/agent-browser-help.txt`.
+The full `agent-browser` CLI reference is embedded in the agent's system prompt, so it knows every command natively.
 
 ---
 
-## 🎯 Platform Skills
+## Platform Skills
 
-Platform-specific operation playbooks are loaded on-demand via slash commands using the skills system. Each skill injects a complete operation manual into the agent's context, enabling reliable one-pass composite task execution (e.g. like + reply + repost in a single run).
+Skills are operation playbooks loaded on demand via slash commands. Each skill injects a complete manual into the agent's context, enabling composite task execution in one pass.
 
 ### Available Skills
 
-| Skill | Command | Sections | Operations |
-|-------|---------|----------|-----------|
-| X.com | `/x-com` | 7 | 32+ (browse, engage, post, social graph, profile, navigation, lists) |
+| Platform | Command | Operations | Description |
+|----------|---------|------------|-------------|
+| X.com | `/x-com` | 32+ | Browse, engage, post, social graph, profile, navigation, lists |
 
 ### Usage
 
-In interactive mode or `--print`:
-
 ```bash
-# Load x.com playbook and run a composite task
-bun run --preload ./stubs/globals.ts ./src/entrypoints/cli.tsx --print \
-  "/x-com open home timeline, like the first post, then reply 'Great post!'"
+# Interactive: load skill then give task
+> /x-com open home timeline, like first 3 posts about AI, reply to the best one
+
+# Headless
+bun start -p "/x-com like 5 posts about 'large language models', then follow the authors"
 ```
 
-The full playbook is injected into context so the agent completes composite tasks in one pass without needing to look up individual operation steps.
-
-### Adding a New Platform Skill
+### Adding a New Platform
 
 ```bash
 mkdir -p .claude/skills/linkedin
 ```
 
+Create `.claude/skills/linkedin/SKILL.md`:
+
 ```markdown
-# .claude/skills/linkedin/SKILL.md
 ---
-description: "LinkedIn platform operations playbook for agent-browser."
+description: "LinkedIn platform operations playbook"
 allowed-tools:
   - Bash
 user-invocable: true
 ---
 
-# LinkedIn Playbook content...
+# LinkedIn Operations
+
+## 1. Navigation
+...
 ```
 
-Auto-discovered at startup, available as `/linkedin`. See `docs/architecture.md` section 5.3 for details.
+The skill auto-discovers at startup and becomes available as `/linkedin`.
 
 ---
 
-## 🔑 Chrome CDP Setup
+## Workflow Engine
 
-For operating real social accounts with existing login sessions:
+Workflows are **deterministic browser-automation pipelines** that run without any LLM involvement. The agent acts as a supervisor — it can inspect status, start/stop workflows, but the execution is pure scripted automation.
+
+### Built-in Workflows
+
+| Workflow | ID | Schedule | Description |
+|----------|----|----------|-------------|
+| HuggingFace Papers Fetcher | `hf-daily-papers` | Daily | Fetch paper list, abstracts, and thumbnails from HuggingFace |
+| HuggingFace → X.com | `hf-papers-to-x` | Daily | Full pipeline: fetch HF papers → download thumbnails → post as tweets |
+| X.com Search & Reply | `x-search-reply` | Daemon | Search X.com → read posts → generate AI reply → post reply |
+
+### CLI
 
 ```bash
-# Launch Chrome with CDP on port 9222 using a copy of your real Chrome profile
-bun run setup-chrome
+bun run workflow list                          # List all workflows + status
+bun run workflow run --id hf-papers-to-x       # Run once (blocking)
+bun run workflow start --id hf-papers-to-x     # Run once (background)
+bun run workflow daemon --id x-search-reply --interval 3   # Run every 3 min
+bun run workflow stop --id x-search-reply      # Stop at next checkpoint
+bun run workflow status                        # Show status of all workflows
+bun run workflow history --id hf-papers-to-x   # Show execution history
 ```
 
-This copies your Chrome profile (with all cookies/sessions) to a working directory and launches Chrome with remote debugging enabled. All agent-browser commands then reuse this authenticated session.
+### Adding a Workflow
 
-Configuration in `.env`:
-
-```env
-# CHROME_SOURCE_PROFILE=/Users/you/Library/Application Support/Google/Chrome/Default
-# CHROME_WORK_PROFILE=/tmp/locoagent-chrome-profile
-# CHROME_DEBUG_PORT=9222
-```
-
-See `docs/architecture.md` section 5.7 for full details.
+1. Create `workflows/<id>.json` (definition with config)
+2. Create `workflows/executors/<script>.ts` (executor that outputs JSON summary to stdout)
+3. Test: `bun run workflow run --id <id>`
 
 ---
 
-## 📋 Operation Log
+## Operation Log
 
-Persistent deduplication state to prevent repeating actions across sessions:
+Persistent memory across sessions. The agent checks the log before acting and records every action after — preventing duplicate likes, follows, and replies.
 
 ```bash
-# Check before acting
-bun run scripts/log-operation.ts check --platform x --action like --url "https://x.com/..."
+# Check before acting (exit 0 = already done, exit 1 = not done)
+bun run scripts/log-operation.ts check \
+  --platform x --action like --url "https://x.com/.../status/123"
 
 # Record after acting
-bun run scripts/log-operation.ts add --platform x --action like --url "https://x.com/..." --status success
+bun run scripts/log-operation.ts add \
+  --platform x --action like --url "https://x.com/.../status/123" \
+  --status success --note "AI agents research post"
 
-# View recent history
+# View recent operations
 bun run scripts/log-operation.ts recent --limit 20
 
-# Summary (injected into system prompt at startup)
+# 30-day summary (auto-injected into system prompt at startup)
 bun run scripts/log-operation.ts summary --days 30
 ```
 
-State stored in `persona/operation-log.json` (human-readable, editable).
+State stored in `persona/operation-log.json` (human-readable JSON).
 
 ---
 
-## 🌐 OpenAI-Compatible Model Support
+## Task Scheduling
 
-LocoAgent supports **any OpenAI-compatible API** as the backend LLM, including OpenAI, OpenRouter, DeepSeek, Ollama, LM Studio, Together AI, Groq, Mistral, Azure OpenAI, and more.
+Structured daily/weekly task execution replaces ad-hoc prompts.
 
-### Environment Variables
+### Define Tasks
 
-| Variable | Required | Description |
-|---|---|---|
-| `CLAUDE_CODE_USE_OPENAI` | Yes | Set to `1` to enable |
-| `OPENAI_API_KEY` | Yes* | API key (* optional for local models) |
-| `OPENAI_BASE_URL` | No | API base URL (default: `https://api.openai.com/v1`) |
-| `OPENAI_MODEL` | No | Model ID (default: `gpt-4o`) |
+Edit `persona/tasks.md`:
 
-### Examples
+```markdown
+## Daily Tasks
+1. Engage with relevant content (like posts matching topic queries)
+2. Monitor own project mentions
+3. Leave 1 technical comment on the most relevant post
 
-**OpenAI directly:**
+## Weekly Tasks (Monday)
+4. Follow 3-5 relevant researchers
+5. Post 1 original tweet about recent research findings
 
-```env
-CLAUDE_CODE_USE_OPENAI=1
-OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-4o
+## Session Constraints
+| Action   | Max per session |
+|----------|----------------|
+| Likes    | 10             |
+| Comments | 2              |
+| Follows  | 5              |
+| Posts    | 1              |
 ```
 
-All other provider examples below also use `.env` file configuration. Create `.env` in the project root and run `bun start`.
-
-**OpenRouter (access 200+ models):**
-
-```env
-CLAUDE_CODE_USE_OPENAI=1
-OPENAI_API_KEY=sk-or-v1-...
-OPENAI_BASE_URL=https://openrouter.ai/api/v1
-OPENAI_MODEL=anthropic/claude-sonnet-4.5
-```
-
-**DeepSeek:**
-
-```env
-CLAUDE_CODE_USE_OPENAI=1
-OPENAI_API_KEY=sk-...
-OPENAI_BASE_URL=https://api.deepseek.com/v1
-OPENAI_MODEL=deepseek-chat
-```
-
-**Ollama (local):**
-
-```env
-CLAUDE_CODE_USE_OPENAI=1
-OPENAI_BASE_URL=http://localhost:11434/v1
-OPENAI_MODEL=llama3.3
-```
-
-**LM Studio (local):**
-
-```env
-CLAUDE_CODE_USE_OPENAI=1
-OPENAI_BASE_URL=http://localhost:1234/v1
-OPENAI_MODEL=your-model-name
-```
-
-**Azure OpenAI:**
-
-```env
-CLAUDE_CODE_USE_OPENAI=1
-OPENAI_API_KEY=your-azure-key
-OPENAI_BASE_URL=https://your-resource.openai.azure.com/openai/deployments/your-deployment
-OPENAI_MODEL=gpt-4o
-AZURE_OPENAI_API_VERSION=2024-12-01-preview
-```
-
-### How It Works
-
-An API shim layer (`src/services/api/openaiShim.ts`) transparently translates between Anthropic message format and OpenAI Chat Completions format. All Claude Code tools (bash, file read/write, grep, glob, agents, MCP, etc.) work normally -- only the underlying LLM changes.
-
----
-
-## 📝 Usage
-
-### Interactive Mode (default)
+### Run
 
 ```bash
-bun start
-```
-
-### Print Mode (single query)
-
-```bash
-bun start -p "Explain quantum computing"
-```
-
-### With Specific Model
-
-```bash
-bun start --model claude-sonnet-4-6
-```
-
-### Resume Previous Session
-
-```bash
-bun start --continue
+bun run run-tasks              # Execute today's tasks
+bun run run-tasks:dry          # Preview the prompt without running
+bun run run-tasks -- --platform x   # Restrict to one platform
 ```
 
 ---
 
-## 🔍 Realtime Trajectory Monitor
+## Realtime Trajectory Monitor
 
-`--print` mode runs the agent as a black box — you only see the final output. `tail-agent.ts` fixes this by watching the session `.jsonl` file in real-time (100ms flush) and printing live execution status.
+`--print` mode is a black box. The trajectory monitor watches the session log and prints live execution status.
 
 ```bash
-# Terminal 1: start the monitor (waits for new entries)
+# Terminal 1: start the monitor
 bun run tail
 
-# Terminal 2: launch the agent
-bun run --preload ./stubs/globals.ts ./src/entrypoints/cli.tsx --print \
-  "/x-com open timeline, like first post"
+# Terminal 2: run the agent
+bun start -p "/x-com open timeline, like first post"
 ```
 
-Terminal 1 shows each step as it happens:
+Output:
+
 ```
 ═══ New Task ═══
 /x-com open timeline, like first post
 
-[6:30:47 PM] 💭 The user wants me to connect CDP and open timeline...
 [6:30:47 PM] ⚡ Bash: agent-browser connect 9222
-[6:30:47 PM] ✓ Result: ✓ Done
+[6:30:47 PM] ✓ Result: Done
 [6:31:10 PM] ⚡ Bash: agent-browser open https://x.com/home
 [6:31:27 PM] ⚡ Bash: agent-browser snapshot -i -c -s 'article'
-[6:31:44 PM] ● Agent: 找到第一条帖子，点赞按钮 ref=e136
+[6:31:44 PM] ● Agent: Found first post, like button ref=e136
 [6:31:44 PM] ⚡ Bash: agent-browser click e136
-[6:31:45 PM] ✓ Result: ✓ Done
+[6:31:45 PM] ✓ Result: Done
 ```
-
-Additional commands:
 
 ```bash
-bun run tail:history   # replay latest session from the beginning
-bun run tail:list      # list recent sessions with timestamps
-bun run tail <id> --from-start  # replay specific session
+bun run tail:history           # Replay latest session from beginning
+bun run tail:list              # List recent sessions
+bun run tail <id>              # Watch specific session
 ```
 
-See `docs/architecture.md` section 5.11 for full details.
+---
+
+## Project Structure
+
+```
+locoagent/
+├── src/
+│   ├── entrypoints/         # CLI entry point
+│   ├── services/api/        # LLM provider layer (multi-provider shim)
+│   ├── tools/               # 43 tool implementations
+│   ├── skills/              # Bundled skills (20)
+│   ├── commands/            # Slash commands (90+)
+│   ├── components/          # Terminal UI components (130+)
+│   ├── screens/             # REPL screen
+│   ├── hooks/               # React hooks (80+)
+│   ├── services/mcp/        # MCP server management
+│   ├── query.ts             # Agentic loop engine
+│   └── constants/prompts.ts # System prompt assembly
+├── scripts/
+│   ├── setup-chrome.sh      # Chrome CDP setup
+│   ├── log-operation.ts     # Operation log CLI
+│   ├── run-tasks.ts         # Task scheduler
+│   ├── tail-agent.ts        # Trajectory monitor
+│   └── workflow-engine.ts   # Workflow lifecycle manager
+├── workflows/
+│   ├── *.json               # Workflow definitions
+│   ├── executors/           # Workflow executor scripts
+│   └── state.json           # Workflow state persistence
+├── persona/
+│   ├── tasks.md             # Task schedule definitions
+│   └── operation-log.json   # Action history for dedup
+├── docs/
+│   └── architecture.md      # Full architecture documentation
+├── .env                     # Local config (auto-loaded)
+└── package.json
+```
 
 ---
 
-## ⚠️ Disclaimer
+## Tech Stack
 
-This is an **independent fork** and is **not affiliated with or endorsed by Anthropic**.
-
-- Original Claude Code: Copyright Anthropic
-- Privacy modifications: Community-maintained fork
-- Use at your own risk
-
-This fork removes telemetry but functionality may differ from official releases.
-
----
-
-## 🤝 Contributing
-
-Contributions welcome! Please ensure:
-
-1. ✅ No telemetry, analytics, or tracking code is re-introduced
-2. ✅ Privacy-respecting implementations only
-3. ✅ All network requests are transparent and documented
-4. ✅ Tests pass: `./tests/verify-privacy.sh`
+| Component | Technology |
+|-----------|-----------|
+| Runtime | Bun |
+| Language | TypeScript (TSX) |
+| UI | React + Ink (terminal rendering, custom fork) |
+| CLI | Commander.js |
+| Browser automation | agent-browser + Chrome CDP |
+| LLM integration | Multi-provider (Anthropic SDK + OpenAI-compatible shim) |
+| Extension protocol | MCP (Model Context Protocol) |
 
 ---
 
-## 📜 License
+## Documentation
 
-This is a derivative work of Anthropic's Claude Code. Please refer to the original license terms.
-
-**Privacy modifications:** MIT License (see LICENSE file)
-
----
-
-## 🙏 Credits
-
-- **Anthropic** - For creating Claude Code
-- **[@Fried_rice](https://x.com/Fried_rice)** - For discovering the source map exposure
-- **Community** - For valuing privacy and transparency
+- **[Architecture Guide](docs/architecture.md)** — Comprehensive deep dive into every subsystem, with recipes for common modifications
+- **[agent-browser Reference](docs/agent-browser-help.txt)** — Full CLI reference for browser automation
 
 ---
 
-## 🔗 Links
+## Contributing
 
-- **Original Source Discovery:** [Twitter/X Post](https://x.com/Fried_rice/status/2038894956459290963)
-- **Original Claude Code:** [Anthropic Claude Code](https://claude.ai/code)
-- **Issue Tracker:** [GitHub Issues](https://github.com/IIIIQIIII/claude-code-clean/issues)
+Contributions welcome. Key areas:
 
----
-
-## ❓ FAQ
-
-### Q: Will this break functionality?
-**A:** No. All tracking was side-effect code. Core features work normally.
-
-### Q: Can I use my Anthropic API key?
-**A:** Yes. Authentication and API access work as expected.
-
-### Q: Is this legal?
-**A:** This is a derivative work. The original source was publicly exposed. Check Claude Code's license for distribution terms.
-
-### Q: How can I verify the privacy claims?
-**A:** Run `./tests/verify-privacy.sh` or review the code yourself. All changes are documented.
-
-### Q: Will you maintain this?
-**A:** Community-maintained. Pull requests welcome.
-
-### Q: What about future Claude Code updates?
-**A:** You control when/if to merge upstream changes. No forced updates.
+- **New platform skills** — Add playbooks for LinkedIn, Reddit, etc.
+- **New workflows** — Automated pipelines for content creation/distribution
+- **New tools** — Extend agent capabilities
+- **Bug fixes** — Especially in browser automation edge cases
 
 ---
 
-**Privacy matters. Your code, your data, your choice.** 🔒
+## License
 
----
-
-## Star History
-
-If you find this project useful, please consider giving it a star ⭐
-
----
-
-**Version:** 1.0.0
-**Last Updated:** 2026-05-03
-**Status:** ✅ Active Development
+MIT License. See [LICENSE](LICENSE) for details.

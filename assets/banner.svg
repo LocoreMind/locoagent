@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" width="800" height="200">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0a0a"/>
+      <stop offset="100%" stop-color="#111111"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="200" rx="12" fill="url(#bg)"/>
+
+  <!-- L logo mark -->
+  <g transform="translate(220, 40)">
+    <rect x="0" y="0" width="120" height="120" rx="24" fill="none" stroke="rgb(0,180,170)" stroke-width="2.5"/>
+    <text x="34" y="95" font-family="'SF Pro Display', 'Helvetica Neue', Arial, sans-serif" font-size="88" font-weight="800" fill="rgb(0,180,170)">L</text>
+  </g>
+
+  <!-- Title -->
+  <text x="370" y="90" font-family="'SF Pro Display', 'Helvetica Neue', Arial, sans-serif" font-size="52" font-weight="700" fill="#ffffff" letter-spacing="-1">LocoAgent</text>
+
+  <!-- Tagline -->
+  <text x="372" y="122" font-family="'SF Pro Display', 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="rgb(153,153,153)" letter-spacing="2">AI-Powered Social Media Agent</text>
+
+  <!-- by LocoreMind -->
+  <text x="372" y="148" font-family="'SF Pro Display', 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="rgb(80,80,80)">by LocoreMind</text>
+</svg>
