@@ -41,6 +41,7 @@ test-output.log
 # Claude Code specific — exclude session data but track skills
 .claude/*
 !.claude/skills/
+.aclaude/
 *.pcap
 /tmp/
 
