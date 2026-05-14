@@ -1,68 +1,16 @@
-# Contributing to Claude Code Clean
+# Contributing to LocoAgent
 
-Thank you for your interest in contributing! This project maintains a strict **privacy-first** philosophy.
-
----
-
-## 🔒 Privacy Guidelines
-
-### ❌ Absolutely Prohibited
-
-The following will **never** be accepted:
-
-1. **Telemetry/Analytics**
-   - No data collection
-   - No usage tracking
-   - No event logging to external services
-   - No user identification
-
-2. **Fingerprinting**
-   - No device fingerprinting
-   - No environment tracking
-   - No user profiling
-   - No unique identifiers
-
-3. **Auto-Updates**
-   - No automatic downloads
-   - No remote version enforcement
-   - No kill switches
-   - No forced updates
-
-4. **Remote Control**
-   - No remote configuration
-   - No feature flags from servers
-   - No A/B testing
-   - No server-side policy enforcement
-
-### ✅ Always Required
-
-All contributions must:
-
-1. **Respect Privacy**
-   - No new network requests (except Claude API)
-   - All behavior user-controlled
-   - No hidden functionality
-
-2. **Pass Tests**
-   ```bash
-   ./tests/verify-privacy.sh
-   ./tests/simple-runtime-test.sh
-   ```
-
-3. **Document Changes**
-   - Clear commit messages
-   - Update relevant documentation
-   - Explain any new dependencies
+Thank you for your interest in contributing to LocoAgent! We welcome contributions that help improve the agent's capabilities, reliability, and platform coverage.
 
 ---
 
-## 🚀 How to Contribute
+## How to Contribute
 
 ### 1. Setup Development Environment
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/claude-code-clean.git
-cd claude-code-clean
+git clone https://github.com/LocoreMind/locoagent.git
+cd locoagent
 bun install
 ```
 
@@ -81,15 +29,12 @@ git checkout -b feature/your-feature-name
 ### 4. Run Tests
 
 ```bash
-# Privacy verification
-./tests/verify-privacy.sh
-
-# Runtime tests
-./tests/simple-runtime-test.sh
-
 # Manual testing
 bun start --help
 bun start --version
+
+# Test with a simple task
+bun start -p "open X.com and take a screenshot"
 ```
 
 ### 5. Commit Changes
@@ -117,51 +62,77 @@ Then create a Pull Request on GitHub.
 
 ---
 
-## 📝 Pull Request Guidelines
+## Pull Request Guidelines
 
 ### PR Description Must Include
 
 1. **What** - What does this PR do?
 2. **Why** - Why is this change needed?
 3. **How** - How does it work?
-4. **Privacy Impact** - Does it affect privacy? How?
-5. **Testing** - What tests did you run?
+4. **Testing** - What tests did you run?
 
 ### Example PR Description
 
 ```markdown
 ## What
-Adds support for custom system prompts via CLI flag
+Adds LinkedIn platform skill with 15+ operations
 
 ## Why
-Users requested ability to customize system behavior without editing files
+Users requested LinkedIn support for automated engagement
 
 ## How
-- Added --system-prompt flag
-- Reads from file or inline string
-- No default prompt tracking
-
-## Privacy Impact
-✅ No privacy impact
-- No data sent to servers
-- All processing local
-- User-provided data only
+- Created skills/linkedin/SKILL.md with operation playbooks
+- Added navigation, engagement, and profile operations
+- Tested with real LinkedIn sessions
 
 ## Testing
-- [x] ./tests/verify-privacy.sh (passed)
-- [x] ./tests/simple-runtime-test.sh (passed)
-- [x] Manual testing with various prompts
+- [x] Manual testing with interactive mode
+- [x] Verified all operations complete successfully
+- [x] Tested edge cases (private profiles, rate limits)
 ```
 
 ---
 
-## 🐛 Bug Reports
+## Key Contribution Areas
+
+### New Platform Skills
+
+Add playbooks for new social media platforms:
+
+1. Create `skills/<platform>/SKILL.md`
+2. Document all supported operations with step-by-step browser automation instructions
+3. Include element selectors, navigation flows, and error handling
+4. Test thoroughly with real browser sessions
+
+### New Workflows
+
+Add automated pipelines:
+
+1. Create `workflows/<id>.json` (definition with config)
+2. Create `workflows/executors/<script>.ts` (executor script)
+3. Test with `bun run workflow run --id <id>`
+
+### New Tools
+
+Extend agent capabilities by adding tool implementations in `src/tools/`.
+
+### Bug Fixes
+
+Especially welcome in:
+- Browser automation edge cases
+- Platform-specific element selector changes
+- Workflow execution reliability
+- LLM provider compatibility
+
+---
+
+## Bug Reports
 
 ### Before Reporting
 
 1. Check existing issues
-2. Run privacy tests to verify it's not a telemetry issue
-3. Try with `--debug` flag
+2. Try with `--debug` flag
+3. Check if the issue is platform-specific (e.g., X.com UI change)
 
 ### Bug Report Template
 
@@ -182,38 +153,27 @@ What actually happens
 
 **Environment**
 - OS: macOS/Linux/Windows
-- Bun version: 1.3.5
-- Claude Code Clean version: 1.0.0-clean
-
-**Privacy Check**
-- [ ] Ran ./tests/verify-privacy.sh
-- [ ] No telemetry-related errors
+- Bun version:
+- LocoAgent version:
+- Browser: Chrome version
+- Platform: X.com / LinkedIn / etc.
 
 **Logs**
-```
 paste relevant logs here
-```
 ```
 
 ---
 
-## 💡 Feature Requests
+## Feature Requests
 
-### What We'll Consider
+### What We Welcome
 
-✅ **Privacy-respecting features:**
-- Better offline support
-- Local caching improvements
-- UI/UX enhancements
+- New platform skills (LinkedIn, Reddit, Bluesky, etc.)
+- New workflow types
+- Better browser automation reliability
+- UI/UX enhancements for the trajectory monitor
 - Performance optimizations
-- Better error messages
-
-❌ **What we won't add:**
-- Any telemetry/analytics
-- Cloud sync features
-- Usage tracking
-- Auto-updates
-- Remote configuration
+- Better error messages and recovery
 
 ### Feature Request Template
 
@@ -224,93 +184,40 @@ Clear description of the feature
 **Use Case**
 Why is this needed?
 
-**Privacy Impact**
-How does this affect privacy?
-
 **Implementation Ideas**
 (Optional) How might this work?
 ```
 
 ---
 
-## 🔍 Code Review Process
+## Code Review Process
 
 ### What Reviewers Check
 
-1. **Privacy compliance** - No tracking code
-2. **Functionality** - Does it work?
-3. **Tests** - Do tests pass?
-4. **Documentation** - Is it documented?
-5. **Code quality** - Is it maintainable?
+1. **Functionality** - Does it work?
+2. **Reliability** - Does it handle edge cases?
+3. **Documentation** - Is it documented?
+4. **Code quality** - Is it maintainable?
 
 ### Approval Requirements
 
 - At least 1 maintainer approval
 - All tests passing
-- No privacy violations
 - Documentation updated
 
 ---
 
-## 🧪 Testing Guidelines
+## Development Principles
 
-### Required Tests
-
-1. **Privacy Tests**
-   ```bash
-   ./tests/verify-privacy.sh
-   ```
-   Must show 100% pass rate
-
-2. **Runtime Tests**
-   ```bash
-   ./tests/simple-runtime-test.sh
-   ```
-
-3. **Manual Testing**
-   - Test with `bun start --help`
-   - Test with actual API calls (if applicable)
-   - Test error cases
-
-### Adding New Tests
-
-If your PR adds new functionality:
-
-1. Add test cases to `tests/verify-privacy.sh`
-2. Document test procedures in `TESTING.md`
-3. Show test results in PR description
+1. **Real Browser, Real Sessions** - Always operate through actual Chrome sessions
+2. **Platform Skills First** - Encode platform knowledge as reusable playbooks
+3. **Deduplication** - Always check the operation log before acting
+4. **Simplicity** - Simple is better than complex
+5. **Multi-Provider** - Support any LLM provider, don't lock in
 
 ---
 
-## 📖 Documentation
-
-### What to Document
-
-- New features
-- Changed behavior
-- New configuration options
-- Breaking changes
-
-### Where to Document
-
-- `README.md` - Overview and getting started
-- `PRIVACY_README.md` - Privacy-related changes
-- `TESTING.md` - Test procedures
-- Code comments - Implementation details
-
----
-
-## 🎯 Development Principles
-
-1. **Privacy First** - No compromises
-2. **User Control** - User decides everything
-3. **Transparency** - No hidden behavior
-4. **Simplicity** - Simple is better
-5. **Offline-First** - Work without internet (except API calls)
-
----
-
-## ❓ Questions?
+## Questions?
 
 - Open an issue for general questions
 - Tag maintainers for urgent matters
@@ -318,8 +225,4 @@ If your PR adds new functionality:
 
 ---
 
-## 🙏 Thank You!
-
-Every contribution helps make Claude Code Clean better for everyone.
-
-Your commitment to privacy is appreciated! 🔒
+Thank you for helping make LocoAgent better!
