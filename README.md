@@ -192,6 +192,7 @@ Workflows are **deterministic browser-automation pipelines** that run without an
 | HuggingFace Papers Fetcher | `hf-daily-papers` | Daily | Fetch paper list, abstracts, and thumbnails from HuggingFace |
 | HuggingFace → X.com | `hf-papers-to-x` | Daily | Full pipeline: fetch HF papers → download thumbnails → post as tweets |
 | X.com Search & Reply | `x-search-reply` | Daemon | Search X.com → read posts → generate AI reply → post reply |
+| LinkedIn Search & Comment | `linkedin-search-reply` | Daemon | Search LinkedIn → read posts → generate AI comment → post comment |
 
 ### CLI
 
@@ -205,11 +206,61 @@ bun run workflow status                        # Show status of all workflows
 bun run workflow history --id hf-papers-to-x   # Show execution history
 ```
 
-### Adding a Workflow
+### Creating a Custom Workflow
 
-1. Create `workflows/<id>.json` (definition with config)
-2. Create `workflows/executors/<script>.ts` (executor that outputs JSON summary to stdout)
-3. Test: `bun run workflow run --id <id>`
+Workflows are code-driven pipelines that can include browser automation, LLM API calls, or any scripted logic. You can create your own in two files:
+
+**Step 1.** Create the definition — `workflows/<id>.json`:
+
+```json
+{
+  "id": "my-workflow",
+  "name": "My Custom Workflow",
+  "description": "What this workflow does",
+  "schedule": "daily",
+  "executor": "executors/my-workflow.ts",
+  "config": {
+    "searchQuery": "ai agent",
+    "maxPosts": 5,
+    "cdpPort": 9222
+  }
+}
+```
+
+**Step 2.** Create the executor — `workflows/executors/my-workflow.ts`:
+
+```typescript
+#!/usr/bin/env bun
+import { execSync } from 'node:child_process'
+
+// Parse config from workflow engine
+const configArg = process.argv.find((_, i, a) => a[i - 1] === '--config')
+const config = JSON.parse(configArg!)
+
+// agent-browser helper
+function ab(cmd: string): string {
+  return execSync(`agent-browser --cdp ${config.cdpPort} ${cmd}`, {
+    encoding: 'utf-8', timeout: 30000,
+  }).trim()
+}
+
+// Logs go to stderr (visible during execution)
+console.error('[my-workflow] Step 1: ...')
+// ... your automation logic using ab() ...
+
+// Final JSON summary goes to stdout (last line, required)
+console.log(JSON.stringify({ stepsCompleted: 1, stepsTotal: 1 }))
+```
+
+**Step 3.** Test:
+
+```bash
+bun run workflow run --id my-workflow
+```
+
+The executor contract: accept `--config <json>`, log to `stderr`, output a JSON summary with `stepsCompleted` and `stepsTotal` as the last line on `stdout`.
+
+For the full development guide covering deduplication, checkpoint protocol, LLM integration, and daemon mode, see [docs/workflow-development-guide.md](docs/workflow-development-guide.md).
 
 ---
 
@@ -339,8 +390,8 @@ locoagent/
 ├── persona/
 │   ├── tasks.md             # Task schedule definitions
 │   └── operation-log.json   # Action history for dedup
-├── docs/
-│   └── architecture.md      # Full architecture documentation
+├── docs/                       # Public documentation (tracked in git)
+├── internal-docs/              # Internal documentation (gitignored)
 ├── .env                     # Local config (auto-loaded)
 └── package.json
 ```
@@ -361,19 +412,12 @@ locoagent/
 
 ---
 
-## Documentation
-
-- **[Architecture Guide](docs/architecture.md)** — Comprehensive deep dive into every subsystem, with recipes for common modifications
-- **[agent-browser Reference](docs/agent-browser-help.txt)** — Full CLI reference for browser automation
-
----
-
 ## Contributing
 
 Contributions welcome. Key areas:
 
 - **New platform skills** — Add playbooks for LinkedIn, Reddit, etc.
-- **New workflows** — Automated pipelines for content creation/distribution
+- **New workflows** — Automated pipelines for content creation/distribution ([development guide](docs/workflow-development-guide.md))
 - **New tools** — Extend agent capabilities
 - **Bug fixes** — Especially in browser automation edge cases
 

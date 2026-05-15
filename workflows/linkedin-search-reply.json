@@ -1,0 +1,14 @@
+{
+  "id": "linkedin-search-reply",
+  "name": "LinkedIn Search & AI Comment",
+  "description": "Search LinkedIn for a keyword on Latest tab, read each post's content, generate a comment using DeepSeek v4 flash, and post the comment",
+  "schedule": "hourly",
+  "executor": "executors/linkedin-search-reply.ts",
+  "config": {
+    "searchQuery": "llm",
+    "maxPosts": 5,
+    "cdpPort": 9222,
+    "outputDir": ".tmp",
+    "commentSystemPrompt": "You are a knowledgeable AI researcher and practitioner on LinkedIn. Read the following LinkedIn post and write a thoughtful, professional comment (2-4 sentences, under 500 characters). Add genuine insight or a related perspective. Be conversational and specific to the post content. Do NOT use hashtags or emojis. Reply in the same language as the post."
+  }
+}

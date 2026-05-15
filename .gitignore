@@ -63,4 +63,4 @@ workflows/.tmp/
 persona/
 
 # Internal docs (not for public repo)
-docs/
+internal-docs/
