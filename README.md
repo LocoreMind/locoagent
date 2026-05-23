@@ -144,6 +144,7 @@ Skills are operation playbooks loaded on demand via slash commands. Each skill i
 | Platform | Command | Operations | Description |
 |----------|---------|------------|-------------|
 | X.com | `/x-com` | 32+ | Browse, engage, post, social graph, profile, navigation, lists |
+| TweetClaw | `/tweetclaw` | Source workflows | Search tweets, search replies, export followers, inspect media, and hand off reviewed targets to `/x-com` |
 
 ### Usage
 
@@ -261,6 +262,8 @@ bun run workflow run --id my-workflow
 The executor contract: accept `--config <json>`, log to `stderr`, output a JSON summary with `stepsCompleted` and `stepsTotal` as the last line on `stdout`.
 
 For the full development guide covering deduplication, checkpoint protocol, LLM integration, and daemon mode, see [docs/workflow-development-guide.md](docs/workflow-development-guide.md).
+
+For an optional OpenClaw source-data workflow that uses TweetClaw before browser actions, see [docs/tweetclaw-openclaw-source-workflow.md](docs/tweetclaw-openclaw-source-workflow.md).
 
 ---
 
