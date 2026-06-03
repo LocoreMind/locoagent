@@ -65,6 +65,12 @@ Each operation documents: preconditions, step-by-step agent-browser commands, ve
 
 ---
 
+> **Device targeting:** Operations run against desktop Chrome by default. To
+> operate the mobile web surface, set `DEVICE_PROFILE=ios|android` in `.env` or
+> prefix agent-browser commands with `-p ios|android`. When logging an action,
+> pass `--device <target>` for provenance (it does not change dedup — a like is
+> account-level).
+
 ## 1. Browse & Read
 
 ### 1.1 Open Home Timeline

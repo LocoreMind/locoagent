@@ -114,8 +114,11 @@ Social media platforms detect and block headless browsers and API-based automati
 ### Setup
 
 ```bash
-# One-time: copy Chrome profile + launch with CDP
+# One-time: copy Chrome profile + launch with CDP (same command on Windows & macOS)
 bun run setup-chrome
+
+# Verify your environment (Bun, agent-browser, Chrome, .env); add --check-cdp to probe the port
+bun run doctor
 
 # agent-browser connects to the running Chrome
 agent-browser connect 9222
