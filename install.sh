@@ -7,7 +7,25 @@ set -u
 
 REPO_SLUG="LocoreMind/locoagent"
 BRANCH="${LOCO_BRANCH:-main}"
-INSTALL_DIR="${1:-${LOCO_DIR:-$HOME/locoagent}}"
+
+is_loco_repo() { [ -f "$1/install.sh" ] && [ -d "$1/src" ]; }
+
+# Install target: honor the positional arg or $LOCO_DIR; otherwise install into
+# the *current directory* (where the user ran the command). An empty dir is used
+# directly; a dir that already holds the LocoAgent checkout updates in place;
+# any other non-empty dir gets a ./locoagent subfolder so we never clobber files.
+AUTO_DIR=0
+if [ "${1:-}" ]; then
+  INSTALL_DIR="$1"
+elif [ "${LOCO_DIR:-}" ]; then
+  INSTALL_DIR="$LOCO_DIR"
+else
+  AUTO_DIR=1
+  cwd="$(pwd)"
+  if is_loco_repo "$cwd"; then INSTALL_DIR="$cwd"
+  elif [ -z "$(ls -A "$cwd" 2>/dev/null)" ]; then INSTALL_DIR="$cwd"
+  else INSTALL_DIR="$cwd/locoagent"; fi
+fi
 
 if [ -t 2 ]; then
   C_B=$'\033[1m'; C_G=$'\033[32m'; C_Y=$'\033[33m'; C_R=$'\033[31m'; C_0=$'\033[0m'
@@ -52,6 +70,13 @@ case "$OS" in
 esac
 WSL_NOTE=""
 if [ "$HOST" = linux ] && grep -qi microsoft /proc/version 2>/dev/null; then WSL_NOTE=" (WSL)"; fi
+
+# Let the user confirm/redirect where files land (the #1 "where did my install
+# go?" confusion). Enter accepts the shown default. Skip when the path was given
+# explicitly or when updating an in-place checkout.
+if [ -n "$TTY" ] && [ "$AUTO_DIR" = 1 ] && ! is_loco_repo "$INSTALL_DIR"; then
+  INSTALL_DIR="$(ask 'Install location' "$INSTALL_DIR")"
+fi
 info "LocoAgent installer — host=$HOST$WSL_NOTE  ->  $INSTALL_DIR"
 
 # 2. Bun
@@ -143,20 +168,22 @@ set_env() { # set_env KEY VALUE — pure-bash line rewrite (no sed escaping pitf
   printf '%s' "$out" > "$ENV_FILE"
 }
 if [ -n "$TTY" ]; then
-  info "Configure your LLM provider (press Enter to accept defaults)."
-  prov="$(ask 'Provider — 1) OpenAI-compatible (DeepSeek etc.)  2) Anthropic' '1')"
+  info "Configure your LLM provider."
+  prov="$(ask 'Provider — 1) DeepSeek (OpenAI-compatible)  2) Anthropic' '1')"
   if [ "$prov" = "2" ]; then
+    # base URL + model are fixed for the native Anthropic path; only the key is asked.
     set_env CLAUDE_CODE_USE_OPENAI ""
-    key="$(ask_secret 'ANTHROPIC_API_KEY (blank to keep/skip)')"
-    [ -n "$key" ] && set_env ANTHROPIC_API_KEY "$key"
+    key="$(ask_secret 'ANTHROPIC_API_KEY (Enter to keep existing)')"
+    if [ -n "$key" ]; then set_env ANTHROPIC_API_KEY "$key"
+    elif [ -z "$(get_env ANTHROPIC_API_KEY)" ]; then warn 'No API key entered — add ANTHROPIC_API_KEY to .env before running.'; fi
   else
+    # base URL + model are fixed DeepSeek defaults; the user only types the key.
     set_env CLAUDE_CODE_USE_OPENAI "1"
-    base_def="$(get_env OPENAI_BASE_URL)"; [ -z "$base_def" ] && base_def="https://api.deepseek.com"
-    model_def="$(get_env OPENAI_MODEL)"; [ -z "$model_def" ] && model_def="deepseek-chat"
-    set_env OPENAI_BASE_URL "$(ask 'OPENAI_BASE_URL' "$base_def")"
-    set_env OPENAI_MODEL "$(ask 'OPENAI_MODEL' "$model_def")"
-    key="$(ask_secret 'OPENAI_API_KEY (blank to keep/skip)')"
-    [ -n "$key" ] && set_env OPENAI_API_KEY "$key"
+    [ -z "$(get_env OPENAI_BASE_URL)" ] && set_env OPENAI_BASE_URL "https://api.deepseek.com"
+    [ -z "$(get_env OPENAI_MODEL)" ] && set_env OPENAI_MODEL "deepseek-chat"
+    key="$(ask_secret 'OPENAI_API_KEY (Enter to keep existing)')"
+    if [ -n "$key" ]; then set_env OPENAI_API_KEY "$key"
+    elif [ -z "$(get_env OPENAI_API_KEY)" ]; then warn 'No API key entered — add OPENAI_API_KEY to .env before running.'; fi
   fi
   ok ".env configured"
 else

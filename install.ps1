@@ -6,7 +6,6 @@ $ErrorActionPreference = 'Stop'
 
 $RepoSlug   = 'LocoreMind/locoagent'
 $Branch     = if ($env:LOCO_BRANCH) { $env:LOCO_BRANCH } else { 'main' }
-$InstallDir = if ($env:LOCO_DIR) { $env:LOCO_DIR } else { Join-Path $HOME 'locoagent' }
 
 function Info($m){ Write-Host "==> $m" -ForegroundColor Cyan }
 function Ok($m){   Write-Host "OK  $m" -ForegroundColor Green }
@@ -14,8 +13,34 @@ function Warn($m){ Write-Host "!!  $m" -ForegroundColor Yellow }
 function Die($m){  Write-Host "XX  $m" -ForegroundColor Red; exit 1 }
 function Have($c){ [bool](Get-Command $c -ErrorAction SilentlyContinue) }
 function Refresh-BunPath { $b = Join-Path $HOME '.bun\bin'; if (Test-Path $b) { $env:PATH = "$b;$env:PATH" } }
+function Dir-IsEmpty($p){ if (-not (Test-Path -LiteralPath $p)) { return $true }; -not (Get-ChildItem -LiteralPath $p -Force -ErrorAction SilentlyContinue | Select-Object -First 1) }
+function Is-LocoRepo($p){ (Test-Path -LiteralPath (Join-Path $p 'install.ps1')) -and (Test-Path -LiteralPath (Join-Path $p 'src')) }
+
+# Install target: honor $env:LOCO_DIR; otherwise install into the *current
+# directory* (where the user ran the command). An empty dir is used directly;
+# a dir that already holds the LocoAgent checkout updates in place; any other
+# non-empty dir gets a ./locoagent subfolder so we never clobber existing files.
+$cwd = (Get-Location).Path
+$AutoDir = -not [bool]$env:LOCO_DIR
+$InPlace = $false
+if ($env:LOCO_DIR) {
+  $InstallDir = $env:LOCO_DIR
+} elseif (Is-LocoRepo $cwd) {
+  $InstallDir = $cwd; $InPlace = $true
+} elseif (Dir-IsEmpty $cwd) {
+  $InstallDir = $cwd
+} else {
+  $InstallDir = Join-Path $cwd 'locoagent'
+}
 
 $Interactive = -not [Console]::IsInputRedirected
+# Let the user confirm/redirect where files land (this is the #1 source of
+# "where did my install go?" confusion). Enter accepts the shown default.
+if ($Interactive -and $AutoDir -and -not $InPlace) {
+  try { $a = Read-Host "Install location [$InstallDir]" } catch { $a = '' }
+  if (-not [string]::IsNullOrWhiteSpace($a)) { $InstallDir = $a }
+}
+$InstallDir = [System.IO.Path]::GetFullPath($InstallDir)
 Info "LocoAgent installer  ->  $InstallDir (branch $Branch)"
 
 # 1. Bun
@@ -123,20 +148,24 @@ function Read-Secret($prompt){
   } catch { return '' }
 }
 if ($Interactive) {
-  Info "Configure your LLM provider (press Enter to accept defaults)."
-  $prov = Read-Default 'Provider - 1) OpenAI-compatible (DeepSeek etc.)  2) Anthropic' '1'
+  Info "Configure your LLM provider."
+  $prov = Read-Default 'Provider - 1) DeepSeek (OpenAI-compatible)  2) Anthropic' '1'
   if ($prov -eq '2') {
+    # base URL + model are fixed for the native Anthropic path; only the key is asked.
     Set-EnvVal 'CLAUDE_CODE_USE_OPENAI' ''
-    $k = Read-Secret 'ANTHROPIC_API_KEY (blank to keep/skip)'
+    $existing = Get-EnvVal 'ANTHROPIC_API_KEY'
+    $k = Read-Secret 'ANTHROPIC_API_KEY (Enter to keep existing)'
     if ($k) { Set-EnvVal 'ANTHROPIC_API_KEY' $k }
+    elseif (-not $existing) { Warn 'No API key entered - add ANTHROPIC_API_KEY to .env before running.' }
   } else {
+    # base URL + model are fixed DeepSeek defaults; the user only types the key.
     Set-EnvVal 'CLAUDE_CODE_USE_OPENAI' '1'
-    $baseDef = Get-EnvVal 'OPENAI_BASE_URL'; if (-not $baseDef) { $baseDef = 'https://api.deepseek.com' }
-    $modelDef = Get-EnvVal 'OPENAI_MODEL'; if (-not $modelDef) { $modelDef = 'deepseek-chat' }
-    Set-EnvVal 'OPENAI_BASE_URL' (Read-Default 'OPENAI_BASE_URL' $baseDef)
-    Set-EnvVal 'OPENAI_MODEL'    (Read-Default 'OPENAI_MODEL' $modelDef)
-    $k = Read-Secret 'OPENAI_API_KEY (blank to keep/skip)'
+    if (-not (Get-EnvVal 'OPENAI_BASE_URL')) { Set-EnvVal 'OPENAI_BASE_URL' 'https://api.deepseek.com' }
+    if (-not (Get-EnvVal 'OPENAI_MODEL'))    { Set-EnvVal 'OPENAI_MODEL'    'deepseek-chat' }
+    $existing = Get-EnvVal 'OPENAI_API_KEY'
+    $k = Read-Secret 'OPENAI_API_KEY (Enter to keep existing)'
     if ($k) { Set-EnvVal 'OPENAI_API_KEY' $k }
+    elseif (-not $existing) { Warn 'No API key entered - add OPENAI_API_KEY to .env before running.' }
   }
   Ok ".env configured"
 } else {

@@ -105,7 +105,7 @@ flowchart LR
 
 ### ⚡ 一键安装（推荐）
 
-一条命令即可安装 Bun + agent-browser、克隆仓库、生成 `.env` 并运行健康检查。在终端中运行时会提示你输入 API Key。
+一条命令即可安装 Bun + agent-browser、克隆仓库、生成 `.env` 并运行健康检查。在终端中运行时只需输入 API Key —— base URL 与 model 已使用合理默认值（DeepSeek）。
 
 **macOS / Linux / WSL2**
 ```bash
@@ -117,7 +117,7 @@ curl -fsSL https://raw.githubusercontent.com/LocoreMind/locoagent/main/install.s
 irm https://raw.githubusercontent.com/LocoreMind/locoagent/main/install.ps1 | iex
 ```
 
-默认安装到 `~/locoagent`（可用 `LOCO_DIR` 覆盖）。重复运行会更新已有的检出。完成后：`cd locoagent && bun run setup-chrome && bun start`。Chrome 与 Git 仅检测、不自动安装——若脚本提示缺失，请自行安装。
+安装到**当前目录**（空目录直接使用；非空目录则创建 `./locoagent` 子目录；可用 `LOCO_DIR` 覆盖）。安装器会打印确切的目标路径并让你确认。在检出目录内重复运行会就地更新。完成后：`bun run setup-chrome && bun start`。Chrome 与 Git 仅检测、不自动安装——若脚本提示缺失，请自行安装。
 
 ### 📥 手动安装步骤
 
