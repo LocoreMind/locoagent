@@ -7,7 +7,25 @@ set -u
 
 REPO_SLUG="LocoreMind/locoagent"
 BRANCH="${LOCO_BRANCH:-main}"
-INSTALL_DIR="${1:-${LOCO_DIR:-$HOME/locoagent}}"
+
+is_loco_repo() { [ -f "$1/install.sh" ] && [ -d "$1/src" ]; }
+
+# Install target: honor the positional arg or $LOCO_DIR; otherwise install into
+# the *current directory* (where the user ran the command). An empty dir is used
+# directly; a dir that already holds the LocoAgent checkout updates in place;
+# any other non-empty dir gets a ./locoagent subfolder so we never clobber files.
+AUTO_DIR=0
+if [ "${1:-}" ]; then
+  INSTALL_DIR="$1"
+elif [ "${LOCO_DIR:-}" ]; then
+  INSTALL_DIR="$LOCO_DIR"
+else
+  AUTO_DIR=1
+  cwd="$(pwd)"
+  if is_loco_repo "$cwd"; then INSTALL_DIR="$cwd"
+  elif [ -z "$(ls -A "$cwd" 2>/dev/null)" ]; then INSTALL_DIR="$cwd"
+  else INSTALL_DIR="$cwd/locoagent"; fi
+fi
 
 if [ -t 2 ]; then
   C_B=$'\033[1m'; C_G=$'\033[32m'; C_Y=$'\033[33m'; C_R=$'\033[31m'; C_0=$'\033[0m'
@@ -42,6 +60,43 @@ ask_secret() { # ask_secret <prompt>  (hidden input)
   fi
   printf '%s' "$ans"
 }
+# choose_model DESC  VAL1 LABEL1  VAL2 LABEL2 ...   (VAL1 is the default)
+# Prints the numbered menu to stderr and reads a choice from the terminal; the
+# chosen model id is the only thing written to stdout (so it is capturable).
+# Enter keeps the default; 'c' types a custom name; a number picks; any other
+# free-form input is taken literally as a model id.
+choose_model() {
+  local desc="$1"; shift
+  local def="$1" n=1 ans=""
+  local vals=()
+  {
+    printf 'Select %s model (Enter = default):\n' "$desc"
+    while [ "$#" -ge 2 ]; do
+      vals+=("$1")
+      if [ "$n" = 1 ]; then printf '  %d) %-28s %s  [default]\n' "$n" "$1" "$2"
+      else printf '  %d) %-28s %s\n' "$n" "$1" "$2"; fi
+      n=$((n + 1)); shift 2
+    done
+    printf '  c) custom - type any model name\n'
+  } >&2
+  local total=$((n - 1))
+  if [ -n "$TTY" ]; then
+    printf 'Choice [1]: ' >&2
+    IFS= read -r ans < "$TTY" || ans=""
+  fi
+  case "$ans" in
+    "")          printf '%s' "$def" ;;
+    c|C|custom)
+      printf 'Custom model name: ' >&2
+      IFS= read -r ans < "$TTY" || ans=""
+      [ -z "$ans" ] && ans="$def"
+      printf '%s' "$ans" ;;
+    *[!0-9]*)    printf '%s' "$ans" ;;   # free-form input → literal model id
+    *)
+      if [ "$ans" -ge 1 ] && [ "$ans" -le "$total" ]; then printf '%s' "${vals[$((ans - 1))]}"
+      else printf '%s' "$def"; fi ;;
+  esac
+}
 
 # 1. Detect OS
 OS="$(uname -s 2>/dev/null || echo unknown)"
@@ -52,6 +107,13 @@ case "$OS" in
 esac
 WSL_NOTE=""
 if [ "$HOST" = linux ] && grep -qi microsoft /proc/version 2>/dev/null; then WSL_NOTE=" (WSL)"; fi
+
+# Let the user confirm/redirect where files land (the #1 "where did my install
+# go?" confusion). Enter accepts the shown default. Skip when the path was given
+# explicitly or when updating an in-place checkout.
+if [ -n "$TTY" ] && [ "$AUTO_DIR" = 1 ] && ! is_loco_repo "$INSTALL_DIR"; then
+  INSTALL_DIR="$(ask 'Install location' "$INSTALL_DIR")"
+fi
 info "LocoAgent installer — host=$HOST$WSL_NOTE  ->  $INSTALL_DIR"
 
 # 2. Bun
@@ -142,22 +204,44 @@ set_env() { # set_env KEY VALUE — pure-bash line rewrite (no sed escaping pitf
   [ "$found" = 0 ] && out="${out}${key}=${val}"$'\n'
   printf '%s' "$out" > "$ENV_FILE"
 }
+ask_key() { # ask_key KEY — prompt for an API key; warn only if none ends up set
+  local k="$1" v
+  v="$(ask_secret "$k (Enter to keep existing)")"
+  if [ -n "$v" ]; then set_env "$k" "$v"
+  elif [ -z "$(get_env "$k")" ]; then warn "No API key entered — add $k to .env before running."; fi
+}
 if [ -n "$TTY" ]; then
-  info "Configure your LLM provider (press Enter to accept defaults)."
-  prov="$(ask 'Provider — 1) OpenAI-compatible (DeepSeek etc.)  2) Anthropic' '1')"
-  if [ "$prov" = "2" ]; then
-    set_env CLAUDE_CODE_USE_OPENAI ""
-    key="$(ask_secret 'ANTHROPIC_API_KEY (blank to keep/skip)')"
-    [ -n "$key" ] && set_env ANTHROPIC_API_KEY "$key"
-  else
-    set_env CLAUDE_CODE_USE_OPENAI "1"
-    base_def="$(get_env OPENAI_BASE_URL)"; [ -z "$base_def" ] && base_def="https://api.deepseek.com"
-    model_def="$(get_env OPENAI_MODEL)"; [ -z "$model_def" ] && model_def="deepseek-chat"
-    set_env OPENAI_BASE_URL "$(ask 'OPENAI_BASE_URL' "$base_def")"
-    set_env OPENAI_MODEL "$(ask 'OPENAI_MODEL' "$model_def")"
-    key="$(ask_secret 'OPENAI_API_KEY (blank to keep/skip)')"
-    [ -n "$key" ] && set_env OPENAI_API_KEY "$key"
-  fi
+  info "Configure your LLM provider."
+  # Flow per provider: pick provider -> enter API key -> pick model.
+  # base_url is fixed per provider (no prompt); model has a menu + custom option.
+  prov="$(ask 'Provider — 1) DeepSeek  2) Anthropic  3) OpenAI' '1')"
+  case "$prov" in
+    2)
+      set_env CLAUDE_CODE_USE_OPENAI ""
+      ask_key ANTHROPIC_API_KEY
+      set_env ANTHROPIC_MODEL "$(choose_model 'Anthropic' \
+        claude-sonnet-4-6 'balanced (recommended)' \
+        claude-opus-4-8 'most capable' \
+        claude-haiku-4-5-20251001 'fast')"
+      ;;
+    3)
+      set_env CLAUDE_CODE_USE_OPENAI "1"
+      set_env OPENAI_BASE_URL "https://api.openai.com/v1"
+      ask_key OPENAI_API_KEY
+      set_env OPENAI_MODEL "$(choose_model 'OpenAI' \
+        gpt-5.5 'latest' \
+        gpt-4o 'multimodal' \
+        gpt-4.1 'general')"
+      ;;
+    *)
+      set_env CLAUDE_CODE_USE_OPENAI "1"
+      set_env OPENAI_BASE_URL "https://api.deepseek.com"
+      ask_key OPENAI_API_KEY
+      set_env OPENAI_MODEL "$(choose_model 'DeepSeek' \
+        deepseek-chat 'V3 general' \
+        deepseek-reasoner 'R1 reasoning')"
+      ;;
+  esac
   ok ".env configured"
 else
   warn "Non-interactive install — edit $ENV_FILE and set your API key before running."

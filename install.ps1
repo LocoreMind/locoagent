@@ -6,7 +6,6 @@ $ErrorActionPreference = 'Stop'
 
 $RepoSlug   = 'LocoreMind/locoagent'
 $Branch     = if ($env:LOCO_BRANCH) { $env:LOCO_BRANCH } else { 'main' }
-$InstallDir = if ($env:LOCO_DIR) { $env:LOCO_DIR } else { Join-Path $HOME 'locoagent' }
 
 function Info($m){ Write-Host "==> $m" -ForegroundColor Cyan }
 function Ok($m){   Write-Host "OK  $m" -ForegroundColor Green }
@@ -14,8 +13,34 @@ function Warn($m){ Write-Host "!!  $m" -ForegroundColor Yellow }
 function Die($m){  Write-Host "XX  $m" -ForegroundColor Red; exit 1 }
 function Have($c){ [bool](Get-Command $c -ErrorAction SilentlyContinue) }
 function Refresh-BunPath { $b = Join-Path $HOME '.bun\bin'; if (Test-Path $b) { $env:PATH = "$b;$env:PATH" } }
+function Dir-IsEmpty($p){ if (-not (Test-Path -LiteralPath $p)) { return $true }; -not (Get-ChildItem -LiteralPath $p -Force -ErrorAction SilentlyContinue | Select-Object -First 1) }
+function Is-LocoRepo($p){ (Test-Path -LiteralPath (Join-Path $p 'install.ps1')) -and (Test-Path -LiteralPath (Join-Path $p 'src')) }
+
+# Install target: honor $env:LOCO_DIR; otherwise install into the *current
+# directory* (where the user ran the command). An empty dir is used directly;
+# a dir that already holds the LocoAgent checkout updates in place; any other
+# non-empty dir gets a ./locoagent subfolder so we never clobber existing files.
+$cwd = (Get-Location).Path
+$AutoDir = -not [bool]$env:LOCO_DIR
+$InPlace = $false
+if ($env:LOCO_DIR) {
+  $InstallDir = $env:LOCO_DIR
+} elseif (Is-LocoRepo $cwd) {
+  $InstallDir = $cwd; $InPlace = $true
+} elseif (Dir-IsEmpty $cwd) {
+  $InstallDir = $cwd
+} else {
+  $InstallDir = Join-Path $cwd 'locoagent'
+}
 
 $Interactive = -not [Console]::IsInputRedirected
+# Let the user confirm/redirect where files land (this is the #1 source of
+# "where did my install go?" confusion). Enter accepts the shown default.
+if ($Interactive -and $AutoDir -and -not $InPlace) {
+  try { $a = Read-Host "Install location [$InstallDir]" } catch { $a = '' }
+  if (-not [string]::IsNullOrWhiteSpace($a)) { $InstallDir = $a }
+}
+$InstallDir = [System.IO.Path]::GetFullPath($InstallDir)
 Info "LocoAgent installer  ->  $InstallDir (branch $Branch)"
 
 # 1. Bun
@@ -122,21 +147,73 @@ function Read-Secret($prompt){
     return $p
   } catch { return '' }
 }
+# Choose-Model: print a numbered menu (first entry = default), read a choice from
+# the terminal. Enter keeps the default; 'c' types a custom name; a bare number
+# picks; anything else is taken literally as a model id. Menu goes to the host so
+# only the chosen id is returned.
+function Choose-Model($desc, $opts, $def){
+  Write-Host "Select $desc model (Enter = default):" -ForegroundColor Cyan
+  for ($i = 0; $i -lt $opts.Count; $i++) {
+    $mark = if ($i -eq 0) { '  [default]' } else { '' }
+    Write-Host ("  {0}) {1,-28} {2}{3}" -f ($i + 1), $opts[$i].Val, $opts[$i].Label, $mark)
+  }
+  Write-Host "  c) custom - type any model name"
+  try { $ans = Read-Host 'Choice [1]' } catch { $ans = '' }
+  if ([string]::IsNullOrWhiteSpace($ans)) { return $def }
+  if ('c','C','custom' -contains $ans) {
+    try { $c = Read-Host 'Custom model name' } catch { $c = '' }
+    if ([string]::IsNullOrWhiteSpace($c)) { return $def } else { return $c.Trim() }
+  }
+  $num = 0
+  if ([int]::TryParse($ans, [ref]$num)) {
+    if ($num -ge 1 -and $num -le $opts.Count) { return $opts[$num - 1].Val }
+    return $def   # out-of-range number → default (treat as a typo, not a model id)
+  }
+  return $ans.Trim()   # non-numeric free-form → literal model id
+}
+function Ask-ApiKey($key){
+  $existing = Get-EnvVal $key
+  $v = Read-Secret "$key (Enter to keep existing)"
+  if ($v) { Set-EnvVal $key $v }
+  elseif (-not $existing) { Warn "No API key entered - add $key to .env before running." }
+}
 if ($Interactive) {
-  Info "Configure your LLM provider (press Enter to accept defaults)."
-  $prov = Read-Default 'Provider - 1) OpenAI-compatible (DeepSeek etc.)  2) Anthropic' '1'
-  if ($prov -eq '2') {
-    Set-EnvVal 'CLAUDE_CODE_USE_OPENAI' ''
-    $k = Read-Secret 'ANTHROPIC_API_KEY (blank to keep/skip)'
-    if ($k) { Set-EnvVal 'ANTHROPIC_API_KEY' $k }
-  } else {
-    Set-EnvVal 'CLAUDE_CODE_USE_OPENAI' '1'
-    $baseDef = Get-EnvVal 'OPENAI_BASE_URL'; if (-not $baseDef) { $baseDef = 'https://api.deepseek.com' }
-    $modelDef = Get-EnvVal 'OPENAI_MODEL'; if (-not $modelDef) { $modelDef = 'deepseek-chat' }
-    Set-EnvVal 'OPENAI_BASE_URL' (Read-Default 'OPENAI_BASE_URL' $baseDef)
-    Set-EnvVal 'OPENAI_MODEL'    (Read-Default 'OPENAI_MODEL' $modelDef)
-    $k = Read-Secret 'OPENAI_API_KEY (blank to keep/skip)'
-    if ($k) { Set-EnvVal 'OPENAI_API_KEY' $k }
+  Info "Configure your LLM provider."
+  # Flow per provider: pick provider -> enter API key -> pick model.
+  # base_url is fixed per provider (no prompt); model has a menu + custom option.
+  $prov = Read-Default 'Provider - 1) DeepSeek  2) Anthropic  3) OpenAI' '1'
+  switch ($prov) {
+    '2' {
+      Set-EnvVal 'CLAUDE_CODE_USE_OPENAI' ''
+      Ask-ApiKey 'ANTHROPIC_API_KEY'
+      $opts = @(
+        @{ Val = 'claude-sonnet-4-6';           Label = 'balanced (recommended)' },
+        @{ Val = 'claude-opus-4-8';             Label = 'most capable' },
+        @{ Val = 'claude-haiku-4-5-20251001';   Label = 'fast' }
+      )
+      Set-EnvVal 'ANTHROPIC_MODEL' (Choose-Model 'Anthropic' $opts 'claude-sonnet-4-6')
+    }
+    '3' {
+      Set-EnvVal 'CLAUDE_CODE_USE_OPENAI' '1'
+      Set-EnvVal 'OPENAI_BASE_URL' 'https://api.openai.com/v1'
+      Ask-ApiKey 'OPENAI_API_KEY'
+      $opts = @(
+        @{ Val = 'gpt-5.5';  Label = 'latest' },
+        @{ Val = 'gpt-4o';   Label = 'multimodal' },
+        @{ Val = 'gpt-4.1';  Label = 'general' }
+      )
+      Set-EnvVal 'OPENAI_MODEL' (Choose-Model 'OpenAI' $opts 'gpt-5.5')
+    }
+    default {
+      Set-EnvVal 'CLAUDE_CODE_USE_OPENAI' '1'
+      Set-EnvVal 'OPENAI_BASE_URL' 'https://api.deepseek.com'
+      Ask-ApiKey 'OPENAI_API_KEY'
+      $opts = @(
+        @{ Val = 'deepseek-chat';     Label = 'V3 general' },
+        @{ Val = 'deepseek-reasoner'; Label = 'R1 reasoning' }
+      )
+      Set-EnvVal 'OPENAI_MODEL' (Choose-Model 'DeepSeek' $opts 'deepseek-chat')
+    }
   }
   Ok ".env configured"
 } else {
