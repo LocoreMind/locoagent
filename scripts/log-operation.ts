@@ -26,7 +26,7 @@
  *   bun run scripts/log-operation.ts summary [--days 7]
  */
 
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -56,6 +56,9 @@ function loadLog(): LogFile {
 }
 
 function saveLog(log: LogFile): void {
+  // persona/ is gitignored and absent from a fresh clone; create it so the
+  // first `add` on a new machine doesn't crash with ENOENT (cross-platform).
+  mkdirSync(dirname(LOG_PATH), { recursive: true })
   writeFileSync(LOG_PATH, JSON.stringify(log, null, 2) + '\n', 'utf-8')
 }
 
