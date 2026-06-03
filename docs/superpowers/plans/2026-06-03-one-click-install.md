@@ -236,14 +236,16 @@ if [ ! -f "$ENV_FILE" ]; then
   else warn ".env.example missing; creating empty .env"; : > "$ENV_FILE"; fi
 fi
 get_env() { grep "^$1=" "$ENV_FILE" 2>/dev/null | head -n1 | cut -d= -f2-; }
-set_env() { # set_env KEY VALUE
-  local key="$1" val="$2" esc
-  if grep -q "^${key}=" "$ENV_FILE" 2>/dev/null; then
-    esc="$(printf '%s' "$val" | sed -e 's/[\/&|]/\\&/g')"
-    sed "s|^${key}=.*|${key}=${esc}|" "$ENV_FILE" > "$ENV_FILE.tmp" && mv "$ENV_FILE.tmp" "$ENV_FILE"
-  else
-    printf '%s=%s\n' "$key" "$val" >> "$ENV_FILE"
-  fi
+set_env() { # set_env KEY VALUE — pure-bash line rewrite (no sed escaping pitfalls)
+  local key="$1" val="$2" line out="" found=0
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      "${key}="*) out="${out}${key}=${val}"$'\n'; found=1 ;;
+      *)          out="${out}${line}"$'\n' ;;
+    esac
+  done < "$ENV_FILE"
+  [ "$found" = 0 ] && out="${out}${key}=${val}"$'\n'
+  printf '%s' "$out" > "$ENV_FILE"
 }
 if [ -n "$TTY" ]; then
   info "Configure your LLM provider (press Enter to accept defaults)."
