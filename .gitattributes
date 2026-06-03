@@ -1,0 +1,4 @@
+# Shell scripts must keep LF endings — they are fetched via raw URL and piped
+# straight into `bash`, where CRLF (\r) breaks the shebang and every command.
+*.sh text eol=lf
+install.sh text eol=lf
