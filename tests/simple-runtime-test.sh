@@ -1,4 +1,6 @@
 #!/bin/bash
+# NOTE: bash-only smoke test (macOS/Linux). On Windows use `bun run doctor`,
+# which is the cross-platform health-check equivalent.
 # Simple Runtime Test for claude-code-clean
 # Verifies basic functionality and no telemetry
 

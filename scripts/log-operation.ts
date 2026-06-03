@@ -26,12 +26,16 @@
  *   bun run scripts/log-operation.ts summary [--days 7]
  */
 
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const LOG_PATH = resolve(__dirname, '../persona/operation-log.json')
+// LOCO_OP_LOG_PATH lets doctor/tests target an isolated log without touching
+// the real persona/operation-log.json. Default unchanged.
+const LOG_PATH = process.env.LOCO_OP_LOG_PATH
+  ? resolve(process.env.LOCO_OP_LOG_PATH)
+  : resolve(__dirname, '../persona/operation-log.json')
 
 interface Operation {
   ts: string          // ISO timestamp
@@ -39,6 +43,7 @@ interface Operation {
   action: string     // like, comment, repost, follow, upvote, reply, post
   url: string        // canonical URL of the target content/user
   status: string     // success, failed, skipped, restricted
+  device?: string    // desktop | ios | android — provenance only, NOT a dedup key
   note?: string      // optional free-text context
 }
 
@@ -56,6 +61,9 @@ function loadLog(): LogFile {
 }
 
 function saveLog(log: LogFile): void {
+  // persona/ is gitignored and absent from a fresh clone; create it so the
+  // first `add` on a new machine doesn't crash with ENOENT (cross-platform).
+  mkdirSync(dirname(LOG_PATH), { recursive: true })
   writeFileSync(LOG_PATH, JSON.stringify(log, null, 2) + '\n', 'utf-8')
 }
 
@@ -76,7 +84,7 @@ const flags = parseArgs(rest ?? [])
 
 // ── add ───────────────────────────────────────────────────────────────────────
 if (command === 'add') {
-  const { platform, action, url, status, note } = flags
+  const { platform, action, url, status, device, note } = flags
   if (!platform || !action || !url || !status) {
     console.error('Usage: log-operation.ts add --platform <p> --action <a> --url <u> --status <s> [--note <n>]')
     process.exit(2)
@@ -88,6 +96,7 @@ if (command === 'add') {
     action,
     url,
     status,
+    ...(device ? { device } : {}),
     ...(note ? { note } : {}),
   }
   log.operations.push(op)

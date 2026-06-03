@@ -1,4 +1,6 @@
 #!/bin/bash
+# NOTE: bash-only smoke test (macOS/Linux). On Windows use `bun run doctor`,
+# which is the cross-platform health-check equivalent.
 # Privacy Verification Test Suite for claude-code-clean
 # This script verifies that all telemetry, analytics, and fingerprinting code has been removed
 

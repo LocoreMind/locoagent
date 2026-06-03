@@ -114,8 +114,11 @@ Social media platforms detect and block headless browsers and API-based automati
 ### Setup
 
 ```bash
-# One-time: copy Chrome profile + launch with CDP
+# One-time: copy Chrome profile + launch with CDP (same command on Windows & macOS)
 bun run setup-chrome
+
+# Verify your environment (Bun, agent-browser, Chrome, .env); add --check-cdp to probe the port
+bun run doctor
 
 # agent-browser connects to the running Chrome
 agent-browser connect 9222
@@ -378,7 +381,9 @@ locoagent/
 │   ├── query.ts             # Agentic loop engine
 │   └── constants/prompts.ts # System prompt assembly
 ├── scripts/
-│   ├── setup-chrome.sh      # Chrome CDP setup
+│   ├── setup-chrome.ts      # Chrome CDP setup (cross-platform)
+│   ├── doctor.ts            # Cross-platform health check
+│   ├── lib/                 # Platform layer (host/device/config)
 │   ├── log-operation.ts     # Operation log CLI
 │   ├── run-tasks.ts         # Task scheduler
 │   ├── tail-agent.ts        # Trajectory monitor

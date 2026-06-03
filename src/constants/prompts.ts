@@ -292,13 +292,14 @@ function getOperationLogSection(): string {
     const { existsSync } = require('node:fs')
     const { join, dirname } = require('node:path')
     const { fileURLToPath } = require('node:url')
-    const { execSync } = require('node:child_process')
+    const { execFileSync } = require('node:child_process')
     const __dirname = dirname(fileURLToPath(import.meta.url))
     const logPath = join(__dirname, '../../persona/operation-log.json')
     const scriptPath = join(__dirname, '../../scripts/log-operation.ts')
     if (!existsSync(logPath) || !existsSync(scriptPath)) return ''
-    const summary = execSync(
-      `bun run ${scriptPath} summary --days 30`,
+    const summary = execFileSync(
+      process.execPath,
+      ['run', scriptPath, 'summary', '--days', '30'],
       { encoding: 'utf-8', timeout: 5000 }
     ).trim()
     if (!summary) return ''
@@ -313,12 +314,13 @@ function getWorkflowStatusSection(): string {
     const { existsSync } = require('node:fs')
     const { join, dirname } = require('node:path')
     const { fileURLToPath } = require('node:url')
-    const { execSync } = require('node:child_process')
+    const { execFileSync } = require('node:child_process')
     const __dirname = dirname(fileURLToPath(import.meta.url))
     const scriptPath = join(__dirname, '../../scripts/workflow-engine.ts')
     if (!existsSync(scriptPath)) return ''
-    const summary = execSync(
-      `bun run ${scriptPath} summary`,
+    const summary = execFileSync(
+      process.execPath,
+      ['run', scriptPath, 'summary'],
       { encoding: 'utf-8', timeout: 5000 }
     ).trim()
     if (!summary) return ''
@@ -1178,7 +1180,7 @@ export function getScratchpadInstructions(): string | null {
 
   return `# Scratchpad Directory
 
-IMPORTANT: Always use this scratchpad directory for temporary files instead of \`/tmp\` or other system temp directories:
+IMPORTANT: Always use this scratchpad directory for temporary files instead of the system temporary directory:
 \`${scratchpadDir}\`
 
 Use this directory for ALL temporary file needs:
@@ -1186,9 +1188,9 @@ Use this directory for ALL temporary file needs:
 - Writing temporary scripts or configuration files
 - Saving outputs that don't belong in the user's project
 - Creating working files during analysis or processing
-- Any file that would otherwise go to \`/tmp\`
+- Any file that would otherwise go to a system temporary directory
 
-Only use \`/tmp\` if the user explicitly requests it.
+Only use a system temporary directory if the user explicitly requests it.
 
 The scratchpad directory is session-specific, isolated from the user's project, and can be used freely without permission prompts.`
 }

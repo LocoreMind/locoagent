@@ -8,7 +8,9 @@
   },
   "scripts": {
     "start": "bun run --preload ./stubs/globals.ts ./src/entrypoints/cli.tsx",
-    "setup-chrome": "bash ./scripts/setup-chrome.sh",
+    "setup-chrome": "bun run scripts/setup-chrome.ts",
+    "setup-chrome:win": "bun run scripts/setup-chrome.ts",
+    "doctor": "bun run scripts/doctor.ts",
     "run-tasks": "bun run scripts/run-tasks.ts",
     "run-tasks:dry": "bun run scripts/run-tasks.ts --dry-run",
     "tail": "bun run scripts/tail-agent.ts",
@@ -20,7 +22,8 @@
     "workflow:summary": "bun run scripts/workflow-engine.ts summary",
     "workflow:run": "bun run scripts/workflow-engine.ts run",
     "workflow:daemon": "bun run scripts/workflow-engine.ts daemon",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "bun test scripts"
   },
   "dependencies": {
     "@alcalzone/ansi-tokenize": "^0.1.0",
