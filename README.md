@@ -103,7 +103,23 @@ The agent **perceives** a page with `agent-browser snapshot`, the **LLM decides*
 | 🔵 Google Chrome | Latest | Driven over CDP |
 | 🌿 Git | Any | Powers context features |
 
-### 📥 Setup
+### ⚡ One-click install (recommended)
+
+One command installs Bun + agent-browser, clones the repo, scaffolds `.env`, and runs the health check. It prompts for your API key when run in a terminal.
+
+**macOS / Linux / WSL2**
+```bash
+curl -fsSL https://raw.githubusercontent.com/LocoreMind/locoagent/main/install.sh | bash
+```
+
+**Windows (PowerShell)**
+```powershell
+irm https://raw.githubusercontent.com/LocoreMind/locoagent/main/install.ps1 | iex
+```
+
+Installs to `~/locoagent` (override with `LOCO_DIR`). Re-running updates an existing checkout. Afterwards: `cd locoagent && bun run setup-chrome && bun start`. Chrome and Git are detected (not auto-installed) — install them if the script warns.
+
+### 📥 Manual setup
 
 ```bash
 git clone https://github.com/LocoreMind/locoagent.git

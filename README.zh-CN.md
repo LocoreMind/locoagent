@@ -103,7 +103,23 @@ flowchart LR
 | 🔵 Google Chrome | 最新版 | 通过 CDP 驱动 |
 | 🌿 Git | 任意 | 驱动上下文功能 |
 
-### 📥 安装步骤
+### ⚡ 一键安装（推荐）
+
+一条命令即可安装 Bun + agent-browser、克隆仓库、生成 `.env` 并运行健康检查。在终端中运行时会提示你输入 API Key。
+
+**macOS / Linux / WSL2**
+```bash
+curl -fsSL https://raw.githubusercontent.com/LocoreMind/locoagent/main/install.sh | bash
+```
+
+**Windows（PowerShell）**
+```powershell
+irm https://raw.githubusercontent.com/LocoreMind/locoagent/main/install.ps1 | iex
+```
+
+默认安装到 `~/locoagent`（可用 `LOCO_DIR` 覆盖）。重复运行会更新已有的检出。完成后：`cd locoagent && bun run setup-chrome && bun start`。Chrome 与 Git 仅检测、不自动安装——若脚本提示缺失，请自行安装。
+
+### 📥 手动安装步骤
 
 ```bash
 git clone https://github.com/LocoreMind/locoagent.git
