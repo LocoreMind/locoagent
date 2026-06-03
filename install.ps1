@@ -147,25 +147,73 @@ function Read-Secret($prompt){
     return $p
   } catch { return '' }
 }
+# Choose-Model: print a numbered menu (first entry = default), read a choice from
+# the terminal. Enter keeps the default; 'c' types a custom name; a bare number
+# picks; anything else is taken literally as a model id. Menu goes to the host so
+# only the chosen id is returned.
+function Choose-Model($desc, $opts, $def){
+  Write-Host "Select $desc model (Enter = default):" -ForegroundColor Cyan
+  for ($i = 0; $i -lt $opts.Count; $i++) {
+    $mark = if ($i -eq 0) { '  [default]' } else { '' }
+    Write-Host ("  {0}) {1,-28} {2}{3}" -f ($i + 1), $opts[$i].Val, $opts[$i].Label, $mark)
+  }
+  Write-Host "  c) custom - type any model name"
+  try { $ans = Read-Host 'Choice [1]' } catch { $ans = '' }
+  if ([string]::IsNullOrWhiteSpace($ans)) { return $def }
+  if ('c','C','custom' -contains $ans) {
+    try { $c = Read-Host 'Custom model name' } catch { $c = '' }
+    if ([string]::IsNullOrWhiteSpace($c)) { return $def } else { return $c.Trim() }
+  }
+  $num = 0
+  if ([int]::TryParse($ans, [ref]$num)) {
+    if ($num -ge 1 -and $num -le $opts.Count) { return $opts[$num - 1].Val }
+    return $def   # out-of-range number → default (treat as a typo, not a model id)
+  }
+  return $ans.Trim()   # non-numeric free-form → literal model id
+}
+function Ask-ApiKey($key){
+  $existing = Get-EnvVal $key
+  $v = Read-Secret "$key (Enter to keep existing)"
+  if ($v) { Set-EnvVal $key $v }
+  elseif (-not $existing) { Warn "No API key entered - add $key to .env before running." }
+}
 if ($Interactive) {
   Info "Configure your LLM provider."
-  $prov = Read-Default 'Provider - 1) DeepSeek (OpenAI-compatible)  2) Anthropic' '1'
-  if ($prov -eq '2') {
-    # base URL + model are fixed for the native Anthropic path; only the key is asked.
-    Set-EnvVal 'CLAUDE_CODE_USE_OPENAI' ''
-    $existing = Get-EnvVal 'ANTHROPIC_API_KEY'
-    $k = Read-Secret 'ANTHROPIC_API_KEY (Enter to keep existing)'
-    if ($k) { Set-EnvVal 'ANTHROPIC_API_KEY' $k }
-    elseif (-not $existing) { Warn 'No API key entered - add ANTHROPIC_API_KEY to .env before running.' }
-  } else {
-    # base URL + model are fixed DeepSeek defaults; the user only types the key.
-    Set-EnvVal 'CLAUDE_CODE_USE_OPENAI' '1'
-    if (-not (Get-EnvVal 'OPENAI_BASE_URL')) { Set-EnvVal 'OPENAI_BASE_URL' 'https://api.deepseek.com' }
-    if (-not (Get-EnvVal 'OPENAI_MODEL'))    { Set-EnvVal 'OPENAI_MODEL'    'deepseek-chat' }
-    $existing = Get-EnvVal 'OPENAI_API_KEY'
-    $k = Read-Secret 'OPENAI_API_KEY (Enter to keep existing)'
-    if ($k) { Set-EnvVal 'OPENAI_API_KEY' $k }
-    elseif (-not $existing) { Warn 'No API key entered - add OPENAI_API_KEY to .env before running.' }
+  # Flow per provider: pick provider -> enter API key -> pick model.
+  # base_url is fixed per provider (no prompt); model has a menu + custom option.
+  $prov = Read-Default 'Provider - 1) DeepSeek  2) Anthropic  3) OpenAI' '1'
+  switch ($prov) {
+    '2' {
+      Set-EnvVal 'CLAUDE_CODE_USE_OPENAI' ''
+      Ask-ApiKey 'ANTHROPIC_API_KEY'
+      $opts = @(
+        @{ Val = 'claude-sonnet-4-6';           Label = 'balanced (recommended)' },
+        @{ Val = 'claude-opus-4-8';             Label = 'most capable' },
+        @{ Val = 'claude-haiku-4-5-20251001';   Label = 'fast' }
+      )
+      Set-EnvVal 'ANTHROPIC_MODEL' (Choose-Model 'Anthropic' $opts 'claude-sonnet-4-6')
+    }
+    '3' {
+      Set-EnvVal 'CLAUDE_CODE_USE_OPENAI' '1'
+      Set-EnvVal 'OPENAI_BASE_URL' 'https://api.openai.com/v1'
+      Ask-ApiKey 'OPENAI_API_KEY'
+      $opts = @(
+        @{ Val = 'gpt-5.5';  Label = 'latest' },
+        @{ Val = 'gpt-4o';   Label = 'multimodal' },
+        @{ Val = 'gpt-4.1';  Label = 'general' }
+      )
+      Set-EnvVal 'OPENAI_MODEL' (Choose-Model 'OpenAI' $opts 'gpt-5.5')
+    }
+    default {
+      Set-EnvVal 'CLAUDE_CODE_USE_OPENAI' '1'
+      Set-EnvVal 'OPENAI_BASE_URL' 'https://api.deepseek.com'
+      Ask-ApiKey 'OPENAI_API_KEY'
+      $opts = @(
+        @{ Val = 'deepseek-chat';     Label = 'V3 general' },
+        @{ Val = 'deepseek-reasoner'; Label = 'R1 reasoning' }
+      )
+      Set-EnvVal 'OPENAI_MODEL' (Choose-Model 'DeepSeek' $opts 'deepseek-chat')
+    }
   }
   Ok ".env configured"
 } else {

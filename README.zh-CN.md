@@ -105,7 +105,7 @@ flowchart LR
 
 ### ⚡ 一键安装（推荐）
 
-一条命令即可安装 Bun + agent-browser、克隆仓库、生成 `.env` 并运行健康检查。在终端中运行时只需输入 API Key —— base URL 与 model 已使用合理默认值（DeepSeek）。
+一条命令即可安装 Bun + agent-browser、克隆仓库、生成 `.env` 并运行健康检查。在终端中运行时会让你选择 provider（DeepSeek / Anthropic / OpenAI）、输入 API Key，再选择模型（按 Enter 取最新默认；输入 `c` 可自定义模型名）。base URL 按 provider 固定——无需手动输入。
 
 **macOS / Linux / WSL2**
 ```bash

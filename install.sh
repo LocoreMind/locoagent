@@ -60,6 +60,43 @@ ask_secret() { # ask_secret <prompt>  (hidden input)
   fi
   printf '%s' "$ans"
 }
+# choose_model DESC  VAL1 LABEL1  VAL2 LABEL2 ...   (VAL1 is the default)
+# Prints the numbered menu to stderr and reads a choice from the terminal; the
+# chosen model id is the only thing written to stdout (so it is capturable).
+# Enter keeps the default; 'c' types a custom name; a number picks; any other
+# free-form input is taken literally as a model id.
+choose_model() {
+  local desc="$1"; shift
+  local def="$1" n=1 ans=""
+  local vals=()
+  {
+    printf 'Select %s model (Enter = default):\n' "$desc"
+    while [ "$#" -ge 2 ]; do
+      vals+=("$1")
+      if [ "$n" = 1 ]; then printf '  %d) %-28s %s  [default]\n' "$n" "$1" "$2"
+      else printf '  %d) %-28s %s\n' "$n" "$1" "$2"; fi
+      n=$((n + 1)); shift 2
+    done
+    printf '  c) custom - type any model name\n'
+  } >&2
+  local total=$((n - 1))
+  if [ -n "$TTY" ]; then
+    printf 'Choice [1]: ' >&2
+    IFS= read -r ans < "$TTY" || ans=""
+  fi
+  case "$ans" in
+    "")          printf '%s' "$def" ;;
+    c|C|custom)
+      printf 'Custom model name: ' >&2
+      IFS= read -r ans < "$TTY" || ans=""
+      [ -z "$ans" ] && ans="$def"
+      printf '%s' "$ans" ;;
+    *[!0-9]*)    printf '%s' "$ans" ;;   # free-form input → literal model id
+    *)
+      if [ "$ans" -ge 1 ] && [ "$ans" -le "$total" ]; then printf '%s' "${vals[$((ans - 1))]}"
+      else printf '%s' "$def"; fi ;;
+  esac
+}
 
 # 1. Detect OS
 OS="$(uname -s 2>/dev/null || echo unknown)"
@@ -167,24 +204,44 @@ set_env() { # set_env KEY VALUE — pure-bash line rewrite (no sed escaping pitf
   [ "$found" = 0 ] && out="${out}${key}=${val}"$'\n'
   printf '%s' "$out" > "$ENV_FILE"
 }
+ask_key() { # ask_key KEY — prompt for an API key; warn only if none ends up set
+  local k="$1" v
+  v="$(ask_secret "$k (Enter to keep existing)")"
+  if [ -n "$v" ]; then set_env "$k" "$v"
+  elif [ -z "$(get_env "$k")" ]; then warn "No API key entered — add $k to .env before running."; fi
+}
 if [ -n "$TTY" ]; then
   info "Configure your LLM provider."
-  prov="$(ask 'Provider — 1) DeepSeek (OpenAI-compatible)  2) Anthropic' '1')"
-  if [ "$prov" = "2" ]; then
-    # base URL + model are fixed for the native Anthropic path; only the key is asked.
-    set_env CLAUDE_CODE_USE_OPENAI ""
-    key="$(ask_secret 'ANTHROPIC_API_KEY (Enter to keep existing)')"
-    if [ -n "$key" ]; then set_env ANTHROPIC_API_KEY "$key"
-    elif [ -z "$(get_env ANTHROPIC_API_KEY)" ]; then warn 'No API key entered — add ANTHROPIC_API_KEY to .env before running.'; fi
-  else
-    # base URL + model are fixed DeepSeek defaults; the user only types the key.
-    set_env CLAUDE_CODE_USE_OPENAI "1"
-    [ -z "$(get_env OPENAI_BASE_URL)" ] && set_env OPENAI_BASE_URL "https://api.deepseek.com"
-    [ -z "$(get_env OPENAI_MODEL)" ] && set_env OPENAI_MODEL "deepseek-chat"
-    key="$(ask_secret 'OPENAI_API_KEY (Enter to keep existing)')"
-    if [ -n "$key" ]; then set_env OPENAI_API_KEY "$key"
-    elif [ -z "$(get_env OPENAI_API_KEY)" ]; then warn 'No API key entered — add OPENAI_API_KEY to .env before running.'; fi
-  fi
+  # Flow per provider: pick provider -> enter API key -> pick model.
+  # base_url is fixed per provider (no prompt); model has a menu + custom option.
+  prov="$(ask 'Provider — 1) DeepSeek  2) Anthropic  3) OpenAI' '1')"
+  case "$prov" in
+    2)
+      set_env CLAUDE_CODE_USE_OPENAI ""
+      ask_key ANTHROPIC_API_KEY
+      set_env ANTHROPIC_MODEL "$(choose_model 'Anthropic' \
+        claude-sonnet-4-6 'balanced (recommended)' \
+        claude-opus-4-8 'most capable' \
+        claude-haiku-4-5-20251001 'fast')"
+      ;;
+    3)
+      set_env CLAUDE_CODE_USE_OPENAI "1"
+      set_env OPENAI_BASE_URL "https://api.openai.com/v1"
+      ask_key OPENAI_API_KEY
+      set_env OPENAI_MODEL "$(choose_model 'OpenAI' \
+        gpt-5.5 'latest' \
+        gpt-4o 'multimodal' \
+        gpt-4.1 'general')"
+      ;;
+    *)
+      set_env CLAUDE_CODE_USE_OPENAI "1"
+      set_env OPENAI_BASE_URL "https://api.deepseek.com"
+      ask_key OPENAI_API_KEY
+      set_env OPENAI_MODEL "$(choose_model 'DeepSeek' \
+        deepseek-chat 'V3 general' \
+        deepseek-reasoner 'R1 reasoning')"
+      ;;
+  esac
   ok ".env configured"
 else
   warn "Non-interactive install — edit $ENV_FILE and set your API key before running."

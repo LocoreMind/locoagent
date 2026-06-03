@@ -105,7 +105,7 @@ The agent **perceives** a page with `agent-browser snapshot`, the **LLM decides*
 
 ### ⚡ One-click install (recommended)
 
-One command installs Bun + agent-browser, clones the repo, scaffolds `.env`, and runs the health check. When run in a terminal it only asks for your API key — base URL and model use sensible defaults (DeepSeek).
+One command installs Bun + agent-browser, clones the repo, scaffolds `.env`, and runs the health check. When run in a terminal it asks you to pick a provider (DeepSeek / Anthropic / OpenAI), enter your API key, then pick a model (Enter takes the latest; `c` lets you type any model name). The base URL is fixed per provider — no need to type it.
 
 **macOS / Linux / WSL2**
 ```bash
