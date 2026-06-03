@@ -381,7 +381,9 @@ locoagent/
 │   ├── query.ts             # Agentic loop engine
 │   └── constants/prompts.ts # System prompt assembly
 ├── scripts/
-│   ├── setup-chrome.sh      # Chrome CDP setup
+│   ├── setup-chrome.ts      # Chrome CDP setup (cross-platform)
+│   ├── doctor.ts            # Cross-platform health check
+│   ├── lib/                 # Platform layer (host/device/config)
 │   ├── log-operation.ts     # Operation log CLI
 │   ├── run-tasks.ts         # Task scheduler
 │   ├── tail-agent.ts        # Trajectory monitor

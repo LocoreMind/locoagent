@@ -1114,7 +1114,7 @@ agent-browser press Escape
 **Known Issues**:
 - Multiple types of login prompts exist (bottom bar, full modal, interstitial)
 - When using CDP with a logged-in profile, these should not appear
-- If they do appear, it usually means the session cookies have expired — re-run `setup-chrome.sh`
+- If they do appear, it usually means the session cookies have expired — re-run `bun run setup-chrome`
 
 ---
 
