@@ -64,3 +64,6 @@ persona/
 
 # Internal docs (not for public repo)
 internal-docs/
+
+# Project-local Claude instructions (not for public repo)
+CLAUDE.md
