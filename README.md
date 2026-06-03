@@ -3,168 +3,240 @@
 </p>
 
 <p align="center">
-  <a href="https://youtu.be/QesPS8xPaDA"><img src="https://img.shields.io/badge/demo-YouTube-red" alt="Demo"></a>
-  <a href="#installation"><img src="https://img.shields.io/badge/runtime-Bun-f472b6" alt="Bun"></a>
-  <a href="#installation"><img src="https://img.shields.io/badge/language-TypeScript-3178c6" alt="TypeScript"></a>
-  <a href="#model-providers"><img src="https://img.shields.io/badge/LLM-multi--provider-00b4aa" alt="Multi-Provider"></a>
+  <b>English</b> &nbsp;|&nbsp; <a href="README.zh-CN.md">简体中文</a>
+</p>
+
+<p align="center">
+  <em>🤖 An AI agent that autonomously operates social media through a <b>real</b> browser.</em>
+</p>
+
+<p align="center">
+  <a href="https://youtu.be/QesPS8xPaDA"><img src="https://img.shields.io/badge/▶_demo-YouTube-red" alt="Demo"></a>
+  <a href="#-installation"><img src="https://img.shields.io/badge/runtime-Bun-f472b6?logo=bun&logoColor=white" alt="Bun"></a>
+  <a href="#-installation"><img src="https://img.shields.io/badge/language-TypeScript-3178c6?logo=typescript&logoColor=white" alt="TypeScript"></a>
+  <a href="#-model-providers"><img src="https://img.shields.io/badge/LLM-multi--provider-00b4aa" alt="Multi-Provider"></a>
+  <a href="#-browser-automation"><img src="https://img.shields.io/badge/browser-Chrome_CDP-4285F4?logo=googlechrome&logoColor=white" alt="Chrome CDP"></a>
+  <img src="https://img.shields.io/badge/platform-Windows_·_macOS_·_Linux-555" alt="Platforms">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
 </p>
 
 ---
 
-## What is LocoAgent?
+## 📑 Table of Contents
 
-LocoAgent is an AI-powered social media agent that autonomously operates social media accounts through real browser automation. It combines an LLM-driven agentic loop with [`agent-browser`](https://github.com/vercel-labs/agent-browser) CLI to perceive, decide, and act on live web pages — performing tasks like liking posts, writing replies, following users, and publishing content.
-
-**Key differentiators:**
-
-- **Real browser, real sessions** — Operates through Chrome CDP with your actual login cookies, not API hacks
-- **Platform skill system** — Injects full platform operation playbooks (32+ operations for X.com) so the agent completes composite tasks in one pass
-- **Workflow engine** — Pure browser-automation pipelines that run without LLM involvement, controlled by the agent as a supervisor
-- **Operation log** — Persistent deduplication across sessions prevents repeated actions
-- **Multi-provider LLM** — Works with any OpenAI-compatible API (OpenRouter, DeepSeek, Ollama, etc.)
+- [✨ What is LocoAgent?](#-what-is-locoagent)
+- [🏗️ How It Works](#️-how-it-works)
+- [🚀 Installation](#-installation)
+- [⚙️ Configuration](#️-configuration)
+- [🧠 Model Providers](#-model-providers)
+- [🌐 Browser Automation](#-browser-automation)
+- [🎯 Platform Skills](#-platform-skills)
+- [🔁 Workflow Engine](#-workflow-engine)
+- [📒 Operation Log](#-operation-log)
+- [🗓️ Task Scheduling](#️-task-scheduling)
+- [📡 Trajectory Monitor](#-trajectory-monitor)
+- [🩺 Doctor — Health Check](#-doctor--health-check)
+- [📁 Project Structure](#-project-structure)
+- [🧩 Tech Stack](#-tech-stack)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
 
 ---
 
-## Installation
+## ✨ What is LocoAgent?
 
-### Prerequisites
+**LocoAgent** is an AI-powered social-media agent that autonomously operates real accounts through **genuine browser automation**. It pairs an LLM-driven agentic loop with the [`agent-browser`](https://github.com/vercel-labs/agent-browser) CLI to **perceive → decide → act** on live web pages — liking posts, writing replies, following users, and publishing content the way a human would.
+
+Under the hood it is a fork of the **Claude Code CLI** source tree, re-purposed for social automation: the battle-tested agent loop, ~40 tools, ~90 slash commands, and Ink/React terminal UI are reused, with a thin LocoAgent-specific layer (skills, workflows, persona, operation log) layered on top.
+
+### 🌟 Why LocoAgent?
+
+| | Feature | Description |
+|:--:|---------|-------------|
+| 🖥️ | **Real browser, real sessions** | Drives Chrome via CDP with your actual login cookies — no fragile API hacks, no headless fingerprint |
+| 🎯 | **Platform skill system** | Loads complete operation playbooks (**37** operations for X.com) so the agent finishes composite tasks in a single pass |
+| 🔁 | **Workflow engine** | Deterministic, LLM-free browser pipelines that the agent supervises — start, stop, schedule as a daemon |
+| 📒 | **Operation log** | Persistent cross-session deduplication so the agent never repeats a like, follow, or reply |
+| 🧠 | **Multi-provider LLM** | Any OpenAI-compatible API — OpenRouter, DeepSeek (thinking mode), OpenAI, Ollama, LM Studio, plus native Anthropic / Bedrock / Vertex |
+| 🌍 | **Cross-platform** | One codebase runs on Windows, macOS, and Linux via a host/device abstraction layer |
+
+---
+
+## 🏗️ How It Works
+
+```mermaid
+flowchart LR
+    User([👤 User / Task]) --> Loop
+
+    subgraph Agent["🤖 LocoAgent Core"]
+        Loop["Agentic Loop<br/>(query.ts)"]
+        Prompt["System Prompt<br/>(prompts.ts)"]
+        Loop <--> Prompt
+    end
+
+    Loop <-->|"Anthropic / OpenAI shim"| LLM["🧠 LLM Provider"]
+    Loop --> Tools["🛠️ Tools · Bash"]
+    Tools --> AB["🌐 agent-browser CLI"]
+    AB --> CDP["Chrome CDP :9222"]
+    CDP --> Web[("🌍 Live Web Page")]
+
+    Skills["🎯 Platform Skills"] -. inject playbook .-> Prompt
+    Persona["🪪 persona/"] -. persona + tasks .-> Prompt
+    OpLog[("📒 Operation Log")] -. dedup .-> Prompt
+
+    WF["🔁 Workflow Engine"] --> AB
+```
+
+The agent **perceives** a page with `agent-browser snapshot`, the **LLM decides** the next action, a **tool acts** (`click`, `fill`, `open`), and the result is **verified** before the loop continues — checking the operation log first so nothing gets done twice.
+
+---
+
+## 🚀 Installation
+
+### ✅ Prerequisites
 
 | Requirement | Version | Notes |
 |-------------|---------|-------|
-| [Bun](https://bun.sh) | Latest | Runtime and package manager |
-| Node.js | >= 18 | Required by some dependencies |
-| [agent-browser](https://github.com/vercel-labs/agent-browser) | Latest | Browser automation CLI |
-| Git | Any | For context features |
+| 🥟 [Bun](https://bun.sh) | Latest | Runtime **and** package manager (Node is not enough) |
+| 🟩 Node.js | ≥ 18 | Required by some dependencies |
+| 🌐 [agent-browser](https://github.com/vercel-labs/agent-browser) | Latest | Browser-automation CLI |
+| 🔵 Google Chrome | Latest | Driven over CDP |
+| 🌿 Git | Any | Powers context features |
 
-### Setup
+### 📥 Setup
 
 ```bash
 git clone https://github.com/LocoreMind/locoagent.git
 cd locoagent
 bun install
+
+# Verify your environment before first run
+bun run doctor
 ```
 
-### Configuration
+### ▶️ Run
 
-Create a `.env` file in the project root (auto-loaded at startup):
+```bash
+# Interactive REPL
+bun start
+
+# Single query (headless / print mode)
+bun start -p "open X.com and like the first post about AI agents"
+
+# With a specific model
+bun start --model anthropic/claude-sonnet-4.5
+```
+
+> [!TIP]
+> `bun run doctor` checks Bun, agent-browser, Chrome, and your `.env` in one shot. Add `--check-cdp` to probe the CDP port too.
+
+---
+
+## ⚙️ Configuration
+
+Create a `.env` file in the project root — it is **auto-loaded at startup** (via the preloaded `stubs/globals.ts`):
 
 ```env
-# LLM Provider (pick one)
+# ── LLM Provider — pick ONE ──────────────────────────────
 
-# Option A: OpenRouter (access 200+ models)
-CLAUDE_CODE_USE_OPENAI=1        # Enable OpenAI-compatible provider
+# Option A · OpenRouter (access 200+ models)
+CLAUDE_CODE_USE_OPENAI=1                       # enable OpenAI-compatible provider
 OPENAI_API_KEY=sk-or-v1-...
 OPENAI_BASE_URL=https://openrouter.ai/api/v1
 OPENAI_MODEL=anthropic/claude-sonnet-4.5
 
-# Option B: DeepSeek (with thinking mode support)
-CLAUDE_CODE_USE_OPENAI=1
-OPENAI_API_KEY=sk-...
-OPENAI_BASE_URL=https://api.deepseek.com
-OPENAI_MODEL=deepseek-v4-flash
+# Option B · DeepSeek (thinking mode supported)
+# CLAUDE_CODE_USE_OPENAI=1
+# OPENAI_API_KEY=sk-...
+# OPENAI_BASE_URL=https://api.deepseek.com
+# OPENAI_MODEL=deepseek-chat
 
-# Option C: Anthropic direct (omit CLAUDE_CODE_USE_OPENAI)
-ANTHROPIC_API_KEY=sk-ant-...
+# Option C · Anthropic direct (omit CLAUDE_CODE_USE_OPENAI)
+# ANTHROPIC_API_KEY=sk-ant-...
 
-# Agent behavior
-SKIP_PERMISSIONS=1               # Required for non-interactive/automated mode
+# ── Agent behavior ───────────────────────────────────────
+SKIP_PERMISSIONS=1                             # required for non-interactive / automated runs
 ```
 
-### Run
-
-```bash
-# Interactive mode
-bun start
-
-# Single query (headless)
-bun start -p "open X.com and like the first post about AI agents"
-
-# With specific model
-bun start --model anthropic/claude-sonnet-4.5
-```
+> [!NOTE]
+> `SKIP_PERMISSIONS=1` makes `stubs/globals.ts` inject `--dangerously-skip-permissions` into argv so automated/headless runs don't stop on permission prompts.
 
 ---
 
-## Model Providers
+## 🧠 Model Providers
 
-LocoAgent supports any OpenAI-compatible API through a built-in translation shim. The rest of the system is provider-agnostic.
+LocoAgent talks to any **OpenAI-compatible API** through a built-in translation shim (`src/services/api/openaiShim.ts`), keeping the rest of the system provider-agnostic.
 
 | Provider | Base URL | Notes |
 |----------|----------|-------|
-| OpenRouter | `https://openrouter.ai/api/v1` | Access 200+ models |
-| DeepSeek | `https://api.deepseek.com` | Thinking mode (`reasoning_content`) fully supported |
-| OpenAI | `https://api.openai.com/v1` | GPT-4o, o1, etc. |
-| Ollama | `http://localhost:11434/v1` | Local models |
-| LM Studio | `http://localhost:1234/v1` | Local models |
-| Anthropic | (native SDK) | Set `ANTHROPIC_API_KEY` only |
-| AWS Bedrock | (native SDK) | AWS credentials |
-| Google Vertex AI | (native SDK) | GCP credentials |
+| 🔀 **OpenRouter** | `https://openrouter.ai/api/v1` | Access 200+ models with one key |
+| 🐳 **DeepSeek** | `https://api.deepseek.com` | Thinking mode (`reasoning_content`) fully supported |
+| 🟢 **OpenAI** | `https://api.openai.com/v1` | GPT-4o, o-series, etc. |
+| 🦙 **Ollama** | `http://localhost:11434/v1` | Local models |
+| 💻 **LM Studio** | `http://localhost:1234/v1` | Local models |
+| 🅰️ **Anthropic** | *(native SDK)* | Set `ANTHROPIC_API_KEY` only |
+| ☁️ **AWS Bedrock** | *(native SDK)* | AWS credentials |
+| 🌥️ **Google Vertex AI** | *(native SDK)* | GCP credentials |
+
+Enable the shim with `CLAUDE_CODE_USE_OPENAI=1`; omit it to use the native Anthropic SDK path.
 
 ---
 
-## Browser Automation
+## 🌐 Browser Automation
 
-LocoAgent uses `agent-browser` CLI to control a real Chrome browser via CDP (Chrome DevTools Protocol).
+LocoAgent controls a **real Chrome browser** over CDP (Chrome DevTools Protocol) using `agent-browser`.
 
-### Why Chrome CDP?
+### 🔒 Why Chrome CDP?
 
-Social media platforms detect and block headless browsers and API-based automation. LocoAgent operates through a copy of your real Chrome profile — same cookies, same login sessions, same fingerprint.
+Social platforms detect and block headless browsers and API automation. LocoAgent runs through a copy of your **real Chrome profile** — same cookies, same login sessions, same fingerprint — so it behaves like you actually do.
 
-### Setup
+### 🛠️ Setup
 
 ```bash
-# One-time: copy Chrome profile + launch with CDP (same command on Windows & macOS)
+# One-time: copy Chrome profile + launch with CDP (same command on Windows / macOS / Linux)
 bun run setup-chrome
-
-# Verify your environment (Bun, agent-browser, Chrome, .env); add --check-cdp to probe the port
-bun run doctor
 
 # agent-browser connects to the running Chrome
 agent-browser connect 9222
 ```
 
-### How the Agent Uses It
+### 👀 The Perceive → Act → Verify Loop
 
 ```bash
-agent-browser open https://x.com/home        # Navigate
-agent-browser snapshot -i                      # Perceive: get interactive elements with @ref IDs
-agent-browser click @e5                        # Act: click a like button
-agent-browser fill @e3 "Great research!"       # Act: type in a reply box
-agent-browser screenshot result.png            # Verify: capture result
+agent-browser open https://x.com/home     # 🧭 Navigate
+agent-browser snapshot -i                  # 👀 Perceive — interactive elements with @ref IDs
+agent-browser click @e5                     # 👆 Act — click a like button
+agent-browser fill @e3 "Great research!"   # ⌨️  Act — type into a reply box
+agent-browser screenshot result.png        # ✅ Verify — capture the result
 ```
 
-The full `agent-browser` CLI reference is embedded in the agent's system prompt, so it knows every command natively.
+The full `agent-browser` CLI reference is **embedded in the agent's system prompt**, so it knows every command natively — skills and workflows reference operations by name rather than re-explaining them.
 
 ---
 
-## Platform Skills
+## 🎯 Platform Skills
 
-Skills are operation playbooks loaded on demand via slash commands. Each skill injects a complete manual into the agent's context, enabling composite task execution in one pass.
+Skills are **operation playbooks** loaded on demand via slash commands. Loading one injects a complete manual into the agent's context, enabling composite task execution in a single pass.
 
-### Available Skills
+### 📚 Available Skills
 
-| Platform | Command | Operations | Description |
-|----------|---------|------------|-------------|
-| X.com | `/x-com` | 32+ | Browse, engage, post, social graph, profile, navigation, lists |
+| Platform | Command | Operations | Coverage |
+|----------|---------|:----------:|----------|
+| 🐦 **X.com** (Twitter) | `/x-com` | **37** | Browse · Engagement · Content creation · Social graph · Profile · Navigation · Lists |
 
-### Usage
+### 💬 Usage
 
 ```bash
-# Interactive: load skill then give task
+# Interactive — load the skill, then give a task
 > /x-com open home timeline, like first 3 posts about AI, reply to the best one
 
 # Headless
 bun start -p "/x-com like 5 posts about 'large language models', then follow the authors"
 ```
 
-### Adding a New Platform
+### ➕ Adding a New Platform
 
-```bash
-mkdir -p skills/linkedin
-```
-
-Create `skills/linkedin/SKILL.md`:
+Create `skills/<platform>/SKILL.md` with YAML frontmatter:
 
 ```markdown
 ---
@@ -178,42 +250,43 @@ user-invocable: true
 
 ## 1. Navigation
 ...
+## 2. Engagement
+...
 ```
 
-The skill auto-discovers at startup and becomes available as `/linkedin`.
+The skill **auto-discovers at startup** and becomes available as `/linkedin`. Design each operation as a self-contained section with preconditions, agent-browser commands, a verification step, and known pitfalls (see `skills/x-com/SKILL.md` for the established format).
 
 ---
 
-## Workflow Engine
+## 🔁 Workflow Engine
 
-Workflows are **deterministic browser-automation pipelines** that run without any LLM involvement. The agent acts as a supervisor — it can inspect status, start/stop workflows, but the execution is pure scripted automation.
+Workflows are **deterministic browser-automation pipelines** that run **without any LLM in the control flow** (an LLM may still be called as a single *step*). The agent acts as a supervisor — it can inspect status and start/stop runs, while execution stays scripted and reproducible.
 
-### Built-in Workflows
+### 📦 Built-in Workflows
 
 | Workflow | ID | Schedule | Description |
-|----------|----|----------|-------------|
-| HuggingFace Papers Fetcher | `hf-daily-papers` | Daily | Fetch paper list, abstracts, and thumbnails from HuggingFace |
-| HuggingFace → X.com | `hf-papers-to-x` | Daily | Full pipeline: fetch HF papers → download thumbnails → post as tweets |
-| X.com Search & Reply | `x-search-reply` | Daemon | Search X.com → read posts → generate AI reply → post reply |
-| LinkedIn Search & Comment | `linkedin-search-reply` | Daemon | Search LinkedIn → read posts → generate AI comment → post comment |
+|----------|----|:--------:|-------------|
+| 📰 **HuggingFace Daily Papers** | `hf-daily-papers` | `daily` | Fetch top papers — titles, abstracts, thumbnails — and save to local data files |
+| 🐦 **HF Papers → X.com** | `hf-papers-to-x` | `daily` | Full pipeline: fetch HF papers → download thumbnails → post each as an image + text tweet |
+| 🔍 **X.com Search & AI Reply** | `x-search-reply` | `hourly` | Search X.com *Latest* → read each post → generate a reply via LLM → post reply |
+| 💼 **LinkedIn Search & AI Comment** | `linkedin-search-reply` | `hourly` | Search LinkedIn *Latest* → read each post → generate a comment via LLM → post comment |
 
-### CLI
+### 🖥️ CLI
 
 ```bash
-bun run workflow list                          # List all workflows + status
-bun run workflow run --id hf-papers-to-x       # Run once (blocking)
-bun run workflow start --id hf-papers-to-x     # Run once (background)
-bun run workflow daemon --id x-search-reply --interval 3   # Run every 3 min
-bun run workflow stop --id x-search-reply      # Stop at next checkpoint
-bun run workflow status                        # Show status of all workflows
-bun run workflow history --id hf-papers-to-x   # Show execution history
+bun run workflow list                          # 📋 List all workflows + status
+bun run workflow run    --id hf-papers-to-x    # ▶️  Run once (blocking)
+bun run workflow start  --id hf-papers-to-x    # 🚀 Run once (background)
+bun run workflow daemon --id x-search-reply --interval 3   # 🔄 Run every 3 minutes
+bun run workflow stop   --id x-search-reply    # 🛑 Stop at next checkpoint
+bun run workflow reset  --id x-search-reply    # ♻️  Clear stopped state → idle
+bun run workflow status                        # 📊 Status of all workflows
+bun run workflow history --id hf-papers-to-x   # 🕘 Execution history
 ```
 
-### Creating a Custom Workflow
+### 🧱 Creating a Custom Workflow
 
-Workflows are code-driven pipelines that can include browser automation, LLM API calls, or any scripted logic. You can create your own in two files:
-
-**Step 1.** Create the definition — `workflows/<id>.json`:
+**Step 1 — Definition** (`workflows/<id>.json`):
 
 ```json
 {
@@ -222,83 +295,74 @@ Workflows are code-driven pipelines that can include browser automation, LLM API
   "description": "What this workflow does",
   "schedule": "daily",
   "executor": "executors/my-workflow.ts",
-  "config": {
-    "searchQuery": "ai agent",
-    "maxPosts": 5,
-    "cdpPort": 9222
-  }
+  "config": { "searchQuery": "ai agent", "maxPosts": 5, "cdpPort": 9222 }
 }
 ```
 
-**Step 2.** Create the executor — `workflows/executors/my-workflow.ts`:
+**Step 2 — Executor** (`workflows/executors/my-workflow.ts`):
 
 ```typescript
 #!/usr/bin/env bun
 import { execSync } from 'node:child_process'
 
-// Parse config from workflow engine
 const configArg = process.argv.find((_, i, a) => a[i - 1] === '--config')
 const config = JSON.parse(configArg!)
 
-// agent-browser helper
 function ab(cmd: string): string {
   return execSync(`agent-browser --cdp ${config.cdpPort} ${cmd}`, {
     encoding: 'utf-8', timeout: 30000,
   }).trim()
 }
 
-// Logs go to stderr (visible during execution)
-console.error('[my-workflow] Step 1: ...')
+console.error('[my-workflow] Step 1: ...')        // 📝 logs → stderr
 // ... your automation logic using ab() ...
 
-// Final JSON summary goes to stdout (last line, required)
-console.log(JSON.stringify({ stepsCompleted: 1, stepsTotal: 1 }))
+console.log(JSON.stringify({ stepsCompleted: 1, stepsTotal: 1 }))   // 📤 summary → last line of stdout
 ```
 
-**Step 3.** Test:
+**Step 3 — Test:**
 
 ```bash
 bun run workflow run --id my-workflow
 ```
 
-The executor contract: accept `--config <json>`, log to `stderr`, output a JSON summary with `stepsCompleted` and `stepsTotal` as the last line on `stdout`.
+> [!IMPORTANT]
+> **Executor contract:** accept `--config <json>`, log to **stderr**, and emit a single JSON object (`{stepsCompleted, stepsTotal}`) as the **last line of stdout**. Missing or malformed output marks the run as failed.
 
-For the full development guide covering deduplication, checkpoint protocol, LLM integration, and daemon mode, see [docs/workflow-development-guide.md](docs/workflow-development-guide.md).
+📖 Full guide: [`docs/workflow-development-guide.md`](docs/workflow-development-guide.md) — covers deduplication, the checkpoint/stop protocol, LLM integration, and daemon mode.
 
 ---
 
-## Operation Log
+## 📒 Operation Log
 
-Persistent memory across sessions. The agent checks the log before acting and records every action after — preventing duplicate likes, follows, and replies.
+Persistent memory across sessions. The agent **checks the log before acting** and **records every action after** — preventing duplicate likes, follows, and replies. This dedup contract is the core of the agent's identity.
 
 ```bash
-# Check before acting (exit 0 = already done, exit 1 = not done)
+# 🔍 Check before acting (exit 0 = already done → skip; exit 1 = not done → proceed)
 bun run scripts/log-operation.ts check \
   --platform x --action like --url "https://x.com/.../status/123"
 
-# Record after acting
+# ✅ Record after a successful action
 bun run scripts/log-operation.ts add \
   --platform x --action like --url "https://x.com/.../status/123" \
   --status success --note "AI agents research post"
 
-# View recent operations
+# 🕘 View recent operations
 bun run scripts/log-operation.ts recent --limit 20
 
-# 30-day summary (auto-injected into system prompt at startup)
+# 📊 30-day summary (auto-injected into the system prompt at startup)
 bun run scripts/log-operation.ts summary --days 30
 ```
 
-State stored in `persona/operation-log.json` (human-readable JSON).
+State lives in `persona/operation-log.json` (human-readable JSON). The 30-day summary is injected into every session's system prompt so the agent always knows its recent history.
 
 ---
 
-## Task Scheduling
+## 🗓️ Task Scheduling
 
-Structured daily/weekly task execution replaces ad-hoc prompts.
+Replace ad-hoc prompts with structured daily/weekly task execution.
 
-### Define Tasks
-
-Edit `persona/tasks.md`:
+### 📝 Define Tasks — `persona/tasks.md`
 
 ```markdown
 ## Daily Tasks
@@ -312,38 +376,39 @@ Edit `persona/tasks.md`:
 
 ## Session Constraints
 | Action   | Max per session |
-|----------|----------------|
-| Likes    | 10             |
-| Comments | 2              |
-| Follows  | 5              |
-| Posts    | 1              |
+|----------|:---------------:|
+| Likes    | 10              |
+| Comments | 2               |
+| Follows  | 5               |
+| Posts    | 1               |
 ```
 
-### Run
+### ▶️ Run
 
 ```bash
-bun run run-tasks              # Execute today's tasks
-bun run run-tasks:dry          # Preview the prompt without running
+bun run run-tasks                   # Execute today's tasks
+bun run run-tasks:dry               # Preview the generated prompt without running
 bun run run-tasks -- --platform x   # Restrict to one platform
 ```
 
+> [!NOTE]
+> `persona/` is gitignored and absent from a fresh clone. The agent runs fine without it — just without persona, task, and operation-history context in the prompt.
+
 ---
 
-## Realtime Trajectory Monitor
+## 📡 Trajectory Monitor
 
-`--print` mode is a black box. The trajectory monitor watches the session log and prints live execution status.
+`--print` mode is a black box. The trajectory monitor watches the session log and prints **live execution status**.
 
 ```bash
-# Terminal 1: start the monitor
+# Terminal 1 — start the monitor
 bun run tail
 
-# Terminal 2: run the agent
+# Terminal 2 — run the agent
 bun start -p "/x-com open timeline, like first post"
 ```
 
-Output:
-
-```
+```text
 ═══ New Task ═══
 /x-com open timeline, like first post
 
@@ -357,77 +422,98 @@ Output:
 ```
 
 ```bash
-bun run tail:history           # Replay latest session from beginning
-bun run tail:list              # List recent sessions
-bun run tail <id>              # Watch specific session
+bun run tail:history     # 🔁 Replay latest session from the beginning
+bun run tail:list        # 📋 List recent sessions
+bun run tail <id>        # 🎯 Watch a specific session
 ```
 
 ---
 
-## Project Structure
+## 🩺 Doctor — Health Check
 
+A cross-platform preflight check and onboarding aid. Run it before your first session or whenever something feels off.
+
+```bash
+bun run doctor               # Check Bun, agent-browser, Chrome, .env
+bun run doctor --check-cdp   # …also probe the CDP port (:9222)
 ```
+
+It detects your host OS (Windows / macOS / Linux), resolves the Chrome binary path, and reports anything missing or misconfigured.
+
+---
+
+## 📁 Project Structure
+
+```text
 locoagent/
-├── src/
-│   ├── entrypoints/         # CLI entry point
-│   ├── services/api/        # LLM provider layer (multi-provider shim)
-│   ├── tools/               # 43 tool implementations
-│   ├── skills/              # Bundled skills (20)
-│   ├── commands/            # Slash commands (90+)
-│   ├── components/          # Terminal UI components (130+)
-│   ├── screens/             # REPL screen
-│   ├── hooks/               # React hooks (80+)
-│   ├── services/mcp/        # MCP server management
-│   ├── query.ts             # Agentic loop engine
-│   └── constants/prompts.ts # System prompt assembly
-├── scripts/
-│   ├── setup-chrome.ts      # Chrome CDP setup (cross-platform)
-│   ├── doctor.ts            # Cross-platform health check
-│   ├── lib/                 # Platform layer (host/device/config)
-│   ├── log-operation.ts     # Operation log CLI
-│   ├── run-tasks.ts         # Task scheduler
-│   ├── tail-agent.ts        # Trajectory monitor
-│   └── workflow-engine.ts   # Workflow lifecycle manager
+├── src/                          # ⬆️ Vendored Claude Code CLI source — treat as a dependency
+│   ├── entrypoints/cli.tsx       #    CLI entry point
+│   ├── services/api/             #    Multi-provider LLM shim (openaiShim / codexShim)
+│   ├── services/mcp/             #    MCP server management
+│   ├── tools/                    #    ~40 tool implementations
+│   ├── commands/                 #    ~90 slash commands
+│   ├── components/ · hooks/      #    Ink/React terminal UI
+│   ├── query.ts                  #    Agentic loop engine
+│   └── constants/prompts.ts      #    🔌 The seam — injects LocoAgent state into the prompt
+├── scripts/                      # 🧩 LocoAgent-specific tooling
+│   ├── setup-chrome.ts           #    Chrome + CDP launcher (cross-platform)
+│   ├── doctor.ts                 #    Health check / onboarding
+│   ├── log-operation.ts          #    Operation-log CLI (dedup)
+│   ├── run-tasks.ts              #    Task scheduler
+│   ├── tail-agent.ts             #    Live trajectory monitor
+│   ├── workflow-engine.ts        #    Workflow lifecycle manager
+│   └── lib/                      #    Platform layer — host · device · config
+├── skills/<platform>/SKILL.md    # 🎯 Platform operation playbooks (→ /<platform>)
 ├── workflows/
-│   ├── *.json               # Workflow definitions
-│   ├── executors/           # Workflow executor scripts
-│   └── state.json           # Workflow state persistence
-├── persona/
-│   ├── tasks.md             # Task schedule definitions
-│   └── operation-log.json   # Action history for dedup
-├── docs/                       # Public documentation (tracked in git)
-├── internal-docs/              # Internal documentation (gitignored)
-├── .env                     # Local config (auto-loaded)
+│   ├── <id>.json                 #    Workflow definitions
+│   ├── executors/<id>.ts         #    Scripted pipelines
+│   └── state.json                #    Runtime state (gitignored)
+├── persona/                      # 🪪 Persona, tasks, operation log (gitignored)
+├── docs/                         # 📖 Public docs (workflow guide, cross-platform guide)
+├── stubs/                        #    Preloaded globals + local package stubs
+├── .env                          #    Local config (auto-loaded)
 └── package.json
 ```
 
----
-
-## Tech Stack
-
-| Component | Technology |
-|-----------|-----------|
-| Runtime | Bun |
-| Language | TypeScript (TSX) |
-| UI | React + Ink (terminal rendering, custom fork) |
-| CLI | Commander.js |
-| Browser automation | agent-browser + Chrome CDP |
-| LLM integration | Multi-provider (Anthropic SDK + OpenAI-compatible shim) |
-| Extension protocol | MCP (Model Context Protocol) |
+> [!TIP]
+> The **LocoAgent layer** is small and lives outside `src/`. The seam is `src/constants/prompts.ts`, which shells out to inject persona, tasks, operation-log summary, and workflow status into every session's system prompt.
 
 ---
 
-## Contributing
+## 🧩 Tech Stack
 
-Contributions welcome. Key areas:
-
-- **New platform skills** — Add playbooks for LinkedIn, Reddit, etc.
-- **New workflows** — Automated pipelines for content creation/distribution ([development guide](docs/workflow-development-guide.md))
-- **New tools** — Extend agent capabilities
-- **Bug fixes** — Especially in browser automation edge cases
+| | Component | Technology |
+|:--:|-----------|-----------|
+| 🥟 | Runtime | **Bun** (Node not supported) |
+| 🟦 | Language | TypeScript (TSX) |
+| ⚛️ | UI | React + [Ink](https://github.com/vadimdemedes/ink) terminal renderer |
+| ⌨️ | CLI | Commander.js |
+| 🌐 | Browser automation | agent-browser + Chrome CDP |
+| 🧠 | LLM integration | Anthropic SDK + OpenAI-compatible shim |
+| 🔌 | Extension protocol | MCP (Model Context Protocol) |
 
 ---
 
-## License
+## 🤝 Contributing
 
-MIT License. See [LICENSE](LICENSE) for details.
+Contributions welcome! High-impact areas:
+
+- 🎯 **New platform skills** — LinkedIn, Reddit, Instagram playbooks
+- 🔁 **New workflows** — automated content pipelines ([development guide](docs/workflow-development-guide.md))
+- 🛠️ **New tools** — extend agent capabilities
+- 🐛 **Bug fixes** — especially browser-automation edge cases
+
+Branch → change → `bun run typecheck` → commit (`feat:` / `fix:` / `docs:`) → PR with **What / Why / How / Testing**. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide.
+
+> [!NOTE]
+> There is no unit-test suite. Verify with `bun run typecheck` and a real `bun start -p "..."` run. `bun test scripts` runs the platform-layer unit tests.
+
+---
+
+## 📄 License
+
+[MIT](LICENSE) © [LocoreMind](https://github.com/LocoreMind)
+
+<p align="center">
+  <sub>Built with 🤖 by LocoreMind · <a href="README.zh-CN.md">简体中文</a></sub>
+</p>
