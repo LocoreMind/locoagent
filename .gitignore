@@ -33,6 +33,9 @@ lerna-debug.log*
 .env.local
 .env.*.local
 
+# Machine-local exported CA bundle (Windows TLS / NODE_EXTRA_CA_CERTS)
+certs/
+
 # Testing
 coverage/
 .nyc_output/

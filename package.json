@@ -9,6 +9,7 @@
   "scripts": {
     "start": "bun run --preload ./stubs/globals.ts ./src/entrypoints/cli.tsx",
     "setup-chrome": "bash ./scripts/setup-chrome.sh",
+    "setup-chrome:win": "pwsh -NoProfile -ExecutionPolicy Bypass -File ./scripts/setup-chrome.ps1",
     "run-tasks": "bun run scripts/run-tasks.ts",
     "run-tasks:dry": "bun run scripts/run-tasks.ts --dry-run",
     "tail": "bun run scripts/tail-agent.ts",
