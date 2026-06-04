@@ -25,6 +25,14 @@ test('acquireLock steals a stale lock whose pid is dead', () => {
   expect(acquireLock('x', 'wf-a', r)).toBe(true)
 })
 
+test('acquireLock steals an unreadable/corrupt lock', () => {
+  const r = root()
+  const path = lockPath('x', r)
+  mkdirSync(join(r, 'workflows', '.locks'), { recursive: true })
+  writeFileSync(path, 'not-json')
+  expect(acquireLock('x', 'wf-a', r)).toBe(true)
+})
+
 test('releaseLock removes only a lock this process owns', () => {
   const r = root()
   expect(acquireLock('x', 'wf-a', r)).toBe(true)
@@ -32,7 +40,7 @@ test('releaseLock removes only a lock this process owns', () => {
   expect(existsSync(lockPath('x', r))).toBe(false)
 })
 
-test('releaseLock leaves a lock owned by another pid intact', () => {
+test('releaseLock leaves a lock owned by a different workflow intact', () => {
   const r = root()
   const path = lockPath('x', r)
   mkdirSync(join(r, 'workflows', '.locks'), { recursive: true })

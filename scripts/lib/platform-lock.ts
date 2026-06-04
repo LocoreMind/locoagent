@@ -16,13 +16,16 @@ import { fileURLToPath } from 'node:url'
 
 const PROJECT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 
+/** A lock older than this is considered stale even if its pid looks alive (pid reuse). Executors time out at 10 min. */
+const STALE_LOCK_MS = 15 * 60 * 1000
+
 interface LockData {
   pid: number
   workflowId: string
   acquiredAt: string
 }
 
-export function lockDir(root: string = PROJECT_ROOT): string {
+function lockDir(root: string = PROJECT_ROOT): string {
   return join(root, 'workflows', '.locks')
 }
 
@@ -41,6 +44,12 @@ function isAlive(pid: number): boolean {
   }
 }
 
+/** True if the lock's acquiredAt is older than STALE_LOCK_MS (guards against pid reuse). */
+function isStale(holder: LockData): boolean {
+  const ts = Date.parse(holder.acquiredAt)
+  return Number.isFinite(ts) && Date.now() - ts > STALE_LOCK_MS
+}
+
 function writeLock(path: string, workflowId: string): boolean {
   try {
     const fd = openSync(path, 'wx') // atomic: fails with EEXIST if present
@@ -57,8 +66,11 @@ function writeLock(path: string, workflowId: string): boolean {
 }
 
 /**
- * Try to acquire the platform lock. Returns false if a LIVE process holds it.
- * A stale lock (dead pid) is stolen. Caller MUST releaseLock in a finally block.
+ * Try to acquire the platform lock. Returns true on success. Returns false when a
+ * live, non-stale process holds it — or, in the rare case of stealing a stale lock,
+ * when a concurrent process won the re-acquire race. A stale lock (dead pid, or
+ * older than STALE_LOCK_MS) is stolen via the same atomic openSync('wx').
+ * Caller MUST releaseLock in a finally block.
  */
 export function acquireLock(
   platform: string,
@@ -78,7 +90,7 @@ export function acquireLock(
   } catch {
     /* unreadable lock → treat as stale */
   }
-  if (holder && isAlive(holder.pid)) return false
+  if (holder && isAlive(holder.pid) && !isStale(holder)) return false
 
   // Stale: remove and recreate.
   rmSync(path, { force: true })
