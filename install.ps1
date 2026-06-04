@@ -260,6 +260,19 @@ Push-Location $InstallDir
 try { bun run doctor } catch { Warn "doctor reported issues - usually just a missing API key or Chrome." }
 Pop-Location
 
+# 7b. Offer to launch the isolated CDP Chrome now, so the user can log into their
+# accounts once before starting. This is the step that creates the persistent,
+# isolated profile; skipping it is why automation can fall back to a throwaway
+# browser. Interactive only.
+if ($Interactive) {
+  $launch = Read-Default 'Launch the isolated CDP Chrome now to log into your accounts? (Y/n)' 'Y'
+  if ($launch -notmatch '^[Nn]') {
+    Push-Location $InstallDir
+    try { bun run setup-chrome } catch { Warn "setup-chrome reported issues; run it later with: bun run setup-chrome" }
+    Pop-Location
+  }
+}
+
 # 8. Next steps
 Write-Host ""
 Ok "LocoAgent installed at $InstallDir"

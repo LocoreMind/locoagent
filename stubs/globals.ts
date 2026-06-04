@@ -72,6 +72,19 @@ function normalizeProviderEnv() {
 }
 normalizeProviderEnv()
 
+// Pin agent-browser at our isolated CDP profile regardless of the working
+// directory a command runs from. The project-level agent-browser.json sets
+// `cdp` (the port of the isolated Chrome from `bun run setup-chrome`); pointing
+// AGENT_BROWSER_CONFIG at it makes every agent-browser invocation attach there.
+// Without this pin agent-browser launches its OWN bundled "Chrome for Testing"
+// on a random port, so social logins land in a throwaway profile and never
+// persist. Guarded on existsSync so a missing file never trips agent-browser's
+// "invalid --config" error; an explicit user override always wins.
+const agentBrowserPin = resolve(__dirname, '../agent-browser.json')
+if (existsSync(agentBrowserPin) && !process.env.AGENT_BROWSER_CONFIG) {
+  process.env.AGENT_BROWSER_CONFIG = agentBrowserPin
+}
+
 // Inject --dangerously-skip-permissions into argv when SKIP_PERMISSIONS=1
 if (process.env.SKIP_PERMISSIONS === '1') {
   const flag = '--dangerously-skip-permissions'
