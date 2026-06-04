@@ -245,6 +245,55 @@ function finalizeRun(state: StateFile, ws: WorkflowState, stdout: string, exitCo
   return run
 }
 
+/**
+ * Run one workflow to completion (async, lock-guarded). Used by `orchestrate`.
+ * Acquires the platform lock, spawns the executor, finalizes state, releases.
+ * Returns a labelled result for aggregation.
+ */
+async function executeWorkflow(def: WorkflowDefinition): Promise<{ id: string; platform: string | null; run: WorkflowRun | null; skipped?: string }> {
+  const platform = def.platform ?? null
+  if (platform && !acquireLock(platform, def.id)) {
+    return { id: def.id, platform, run: null, skipped: 'platform busy' }
+  }
+  try {
+    const executorPath = resolve(WORKFLOWS_DIR, def.executor)
+    if (!existsSync(executorPath)) {
+      return { id: def.id, platform, run: null, skipped: `executor not found: ${executorPath}` }
+    }
+    const state = loadState()
+    if (!state.workflows[def.id]) state.workflows[def.id] = getDefaultWorkflowState()
+    state.workflows[def.id]!.status = 'running'
+    saveState(state)
+
+    let stdout = ''
+    let exitCode: number | null = null
+    try {
+      const proc = Bun.spawn(['bun', 'run', executorPath, '--config', buildConfigJson(def)], {
+        cwd: ROOT,
+        stdin: 'inherit',
+        stdout: 'pipe',
+        stderr: 'inherit',
+      })
+      const timeoutId = setTimeout(() => { proc.kill() }, 10 * 60 * 1000)
+      stdout = await new Response(proc.stdout).text()
+      exitCode = await proc.exited
+      clearTimeout(timeoutId)
+    } catch (e: any) {
+      console.error(`[orchestrate] ${def.id} executor error: ${e.message}`)
+      exitCode = 1
+    }
+
+    const freshState = loadState()
+    const freshWs = freshState.workflows[def.id] ?? getDefaultWorkflowState()
+    const run = finalizeRun(freshState, freshWs, stdout, exitCode)
+    delete (freshWs as any).pid
+    saveState(freshState)
+    return { id: def.id, platform, run }
+  } finally {
+    if (platform) releaseLock(platform, def.id)
+  }
+}
+
 // ── run (synchronous, blocking) ──────────────────────────────────────────────
 
 if (command === 'run') {
@@ -661,9 +710,77 @@ if (command === 'daemon') {
   // The process will exit when daemonLoop() returns or throws
 }
 
+// ── orchestrate ──────────────────────────────────────────────────────────────
+// Run multiple workflows grouped by platform: SERIAL within a platform (one
+// active tab per profile), PARALLEL across platforms. Aggregates a combined
+// report. Interruptible: each platform queue checks the stop signal between runs.
+//
+// Usage: bun run workflow orchestrate --ids id1,id2,id3
+
+if (command === 'orchestrate') {
+  const idsArg = flags['ids']
+  if (!idsArg) {
+    console.error('Usage: workflow-engine.ts orchestrate --ids <id1,id2,...>')
+    process.exit(2)
+  }
+  const ids = idsArg.split(',').map(s => s.trim()).filter(Boolean)
+  const defs = loadWorkflowDefinitions()
+  const byId = new Map(defs.map(d => [d.id, d]))
+
+  // Group requested workflows by platform (unknown ids reported, not fatal).
+  const groups = new Map<string, WorkflowDefinition[]>()
+  const missing: string[] = []
+  for (const id of ids) {
+    const def = byId.get(id)
+    if (!def) { missing.push(id); continue }
+    const key = def.platform ?? '_none'
+    if (!groups.has(key)) groups.set(key, [])
+    groups.get(key)!.push(def)
+  }
+  for (const m of missing) console.error(`[orchestrate] Unknown workflow id: ${m}`)
+
+  console.error(`[orchestrate] platforms: ${[...groups.keys()].join(', ')}`)
+
+  // One serial queue per platform; run all queues in parallel.
+  const results: Array<{ id: string; platform: string | null; run: WorkflowRun | null; skipped?: string }> = []
+  await Promise.all(
+    [...groups.entries()].map(async ([platform, list]) => {
+      for (const def of list) {
+        // Stop signal: a `stop --id <thisId>` flips status to 'stopped'.
+        const st = loadState().workflows[def.id]
+        if (st?.status === 'stopped') {
+          results.push({ id: def.id, platform: def.platform ?? null, run: null, skipped: 'stopped' })
+          continue
+        }
+        console.error(`[orchestrate] [${platform}] running ${def.id} ...`)
+        results.push(await executeWorkflow(def))
+      }
+    }),
+  )
+
+  // Aggregate report — last stdout line is JSON for callers.
+  const summary = {
+    requested: ids.length,
+    missing,
+    results: results.map(r => ({
+      id: r.id,
+      platform: r.platform,
+      status: r.run?.status ?? 'skipped',
+      stepsCompleted: r.run?.stepsCompleted ?? 0,
+      stepsTotal: r.run?.stepsTotal ?? 0,
+      skipped: r.skipped,
+    })),
+  }
+  for (const r of summary.results) {
+    console.error(`[orchestrate] ${r.id} (${r.platform ?? '-'}): ${r.status}${r.skipped ? ` (${r.skipped})` : ''} ${r.stepsCompleted}/${r.stepsTotal}`)
+  }
+  console.log(JSON.stringify(summary))
+  process.exit(summary.results.some(r => r.status === 'failed') ? 1 : 0)
+}
+
 // ── unknown ──────────────────────────────────────────────────────────────────
 
-if (command !== 'daemon') {
-  console.error(`Unknown command: ${command}. Use: list | status | start | stop | reset | run | history | summary | daemon`)
+if (command !== 'daemon' && command !== 'orchestrate') {
+  console.error(`Unknown command: ${command}. Use: list | status | start | stop | reset | run | history | summary | daemon | orchestrate`)
   process.exit(2)
 }
