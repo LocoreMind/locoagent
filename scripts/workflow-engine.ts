@@ -21,6 +21,8 @@ import { existsSync, readFileSync, writeFileSync, readdirSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawn, spawnSync } from 'node:child_process'
+import { resolveTarget } from './lib/browser-targets'
+import { acquireLock, releaseLock } from './lib/platform-lock'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
@@ -34,6 +36,7 @@ interface WorkflowDefinition {
   name: string
   description: string
   schedule: string
+  platform?: string
   executor: string
   config: Record<string, unknown>
 }
@@ -90,6 +93,25 @@ function loadWorkflowDefinitions(): WorkflowDefinition[] {
 function getWorkflowDef(id: string): WorkflowDefinition | null {
   const defs = loadWorkflowDefinitions()
   return defs.find(d => d.id === id) ?? null
+}
+
+/**
+ * Build the --config JSON for an executor. When the workflow declares a platform,
+ * the resolved target's cdpPort/profile/proxy/device are injected so the port
+ * lives in exactly one place (the registry). Workflows without a platform fall
+ * back to their own config (back-compat).
+ */
+function buildConfigJson(def: WorkflowDefinition): string {
+  if (!def.platform) return JSON.stringify(def.config)
+  const t = resolveTarget(def.platform)
+  const merged: Record<string, unknown> = {
+    ...def.config,
+    cdpPort: t.cdpPort,
+    profile: t.profile,
+    device: t.device,
+  }
+  if (t.proxy) merged['proxy'] = t.proxy
+  return JSON.stringify(merged)
 }
 
 // ── Arg parsing ──────────────────────────────────────────────────────────────
@@ -182,7 +204,7 @@ function prepareRun(id: string): { def: WorkflowDefinition; ws: WorkflowState; s
   ws.status = 'running'
   saveState(state)
 
-  return { def, ws, state, executorPath, configJson: JSON.stringify(def.config) }
+  return { def, ws, state, executorPath, configJson: buildConfigJson(def) }
 }
 
 function finalizeRun(state: StateFile, ws: WorkflowState, stdout: string, exitCode: number | null, stderr?: string): WorkflowRun {
@@ -232,26 +254,35 @@ if (command === 'run') {
     process.exit(2)
   }
 
-  const { def, ws, state, executorPath, configJson } = prepareRun(id)
-  console.log(`[workflow] Starting: ${def.name}`)
+  const peek = getWorkflowDef(id)
+  const platform = peek?.platform
+  if (platform && !acquireLock(platform, id)) {
+    console.error(`[workflow] Platform "${platform}" is busy (another workflow holds the lock). Try later.`)
+    process.exit(1)
+  }
+  try {
+    const { def, ws, state, executorPath, configJson } = prepareRun(id)
+    console.log(`[workflow] Starting: ${def.name}`)
 
-  const result = spawnSync('bun', ['run', executorPath, '--config', configJson], {
-    stdio: ['inherit', 'pipe', 'inherit'],
-    encoding: 'utf-8',
-    cwd: ROOT,
-    timeout: 10 * 60 * 1000, // 10 min max
-  })
+    const result = spawnSync('bun', ['run', executorPath, '--config', configJson], {
+      stdio: ['inherit', 'pipe', 'inherit'],
+      encoding: 'utf-8',
+      cwd: ROOT,
+      timeout: 10 * 60 * 1000, // 10 min max
+    })
 
-  // Re-read state (may have been modified by `stop` during execution)
-  const freshState = loadState()
-  const freshWs = freshState.workflows[id] ?? getDefaultWorkflowState()
-  const run = finalizeRun(freshState, freshWs, result.stdout ?? '', result.status, result.stderr ?? '')
-  // Clean up background-start metadata if present
-  delete (freshWs as any).pid
-  delete (freshWs as any).startedAt
-  saveState(freshState)
-  console.log(`[workflow] Finished: ${run.status} (${run.stepsCompleted}/${run.stepsTotal} steps)`)
-  process.exit(run.status === 'failed' ? 1 : 0)
+    // Re-read state (may have been modified by `stop` during execution)
+    const freshState = loadState()
+    const freshWs = freshState.workflows[id] ?? getDefaultWorkflowState()
+    const run = finalizeRun(freshState, freshWs, result.stdout ?? '', result.status, result.stderr ?? '')
+    delete (freshWs as any).pid
+    delete (freshWs as any).startedAt
+    saveState(freshState)
+    console.log(`[workflow] Finished: ${run.status} (${run.stepsCompleted}/${run.stepsTotal} steps)`)
+    process.exit(run.status === 'failed' ? 1 : 0)
+  } finally {
+    if (platform) releaseLock(platform, id)
+  }
 }
 
 // ── start (background, non-blocking) ────────────────────────────────────────

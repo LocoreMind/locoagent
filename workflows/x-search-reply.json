@@ -3,11 +3,11 @@
   "name": "X.com Search & AI Reply",
   "description": "Search X.com for a keyword on Latest tab, read each post, generate a reply using DeepSeek v4 flash, and post the reply",
   "schedule": "hourly",
+  "platform": "x",
   "executor": "executors/x-search-reply.ts",
   "config": {
     "searchQuery": "ai agent",
     "maxPosts": 5,
-    "cdpPort": 9222,
     "xUsername": "mashijiann",
     "outputDir": ".tmp",
     "replySystemPrompt": "You are a knowledgeable AI enthusiast on X.com (Twitter). Read the following post and write a short, thoughtful reply (1-2 sentences, under 200 characters). Be conversational, add value, and avoid generic responses. Do NOT use hashtags or emojis. Reply in the same language as the post."
