@@ -150,29 +150,29 @@ bun start --model anthropic/claude-sonnet-4.5
 
 ## ⚙️ 配置
 
-在项目根目录创建 `.env` 文件——它会在**启动时自动加载**（通过预加载的 `stubs/globals.ts`）：
+在项目根目录创建 `.env` 文件——它会在**启动时自动加载**（通过预加载的 `stubs/globals.ts`）。用四个中立的 `LLM_*` 变量配置提供商即可；它们会在启动时被翻译成对应的内部设置，你无需再纠结各家提供商各自的变量名：
 
 ```env
-# ── LLM 提供商 —— 三选一 ──────────────────────────────────
+# ── LLM 提供商 —— 任选其一 ────────────────────────────────
+LLM_PROVIDER=deepseek        # deepseek | openai | anthropic | custom
+LLM_API_KEY=sk-...
+LLM_MODEL=deepseek-chat      # 留空 = 使用该提供商默认模型
+LLM_BASE_URL=                # 仅 custom / 自建 OpenAI 兼容 API 才需要
 
-# 方案 A · OpenRouter（接入 200+ 模型）
-CLAUDE_CODE_USE_OPENAI=1                       # 启用 OpenAI 兼容提供商
-OPENAI_API_KEY=sk-or-v1-...
-OPENAI_BASE_URL=https://openrouter.ai/api/v1
-OPENAI_MODEL=anthropic/claude-sonnet-4.5
-
-# 方案 B · DeepSeek（支持思维模式）
-# CLAUDE_CODE_USE_OPENAI=1
-# OPENAI_API_KEY=sk-...
-# OPENAI_BASE_URL=https://api.deepseek.com
-# OPENAI_MODEL=deepseek-chat
-
-# 方案 C · Anthropic 直连（不设置 CLAUDE_CODE_USE_OPENAI）
-# ANTHROPIC_API_KEY=sk-ant-...
+# 示例：
+#   OpenAI    → LLM_PROVIDER=openai     LLM_MODEL=gpt-5.5
+#   Anthropic → LLM_PROVIDER=anthropic  LLM_MODEL=claude-sonnet-4-6
+#   Custom    → LLM_PROVIDER=custom     LLM_BASE_URL=http://localhost:1234/v1  LLM_MODEL=...
 
 # ── 智能体行为 ───────────────────────────────────────────
 SKIP_PERMISSIONS=1                             # 非交互 / 自动化运行时必需
 ```
+
+> [!TIP]
+> `LLM_*` 是推荐的统一入口。底层会映射到旧的 `CLAUDE_CODE_USE_OPENAI` / `OPENAI_*` /
+> `ANTHROPIC_*` 变量——这些变量对老配置仍然有效，且**显式设置的旧变量始终优先**。
+> DeepSeek、OpenAI、OpenRouter 及一切 OpenAI 兼容端点在内部共用同一套 `OPENAI_*`
+> 命名空间；具体是哪家由 base URL + 模型决定，而非变量名。
 
 > [!NOTE]
 > `SKIP_PERMISSIONS=1` 会让 `stubs/globals.ts` 向 argv 注入 `--dangerously-skip-permissions`，使自动化 / headless 运行不会卡在权限确认上。
@@ -194,7 +194,11 @@ LocoAgent 通过内置的转换层（`src/services/api/openaiShim.ts`）与任�
 | ☁️ **AWS Bedrock** | *(原生 SDK)* | AWS 凭证 |
 | 🌥️ **Google Vertex AI** | *(原生 SDK)* | GCP 凭证 |
 
-用 `CLAUDE_CODE_USE_OPENAI=1` 启用转换层；不设置则走原生 Anthropic SDK 路径。
+用 `LLM_PROVIDER` + `LLM_BASE_URL` 选择以上任意一家（例如 `LLM_PROVIDER=custom`、`LLM_BASE_URL=https://openrouter.ai/api/v1`）。中立入口会自动映射到转换层；高级用户仍可直接设置 `CLAUDE_CODE_USE_OPENAI=1` 与 `OPENAI_*` 变量。
+
+### 处于 TLS 拦截代理之后（公司 VPN / 校园 FortiGate / Zscaler）
+
+如果请求报 `unable to get local issuer certificate` 或 `untrusted root`，说明你的网络在用自己的 CA 重签 TLS。把该网关的根证书导出为 `.pem` 文件，并在 `.env` 中将 `NODE_EXTRA_CA_CERTS` 指向它——LocoAgent 会在**所有**提供商路径（含 DeepSeek/OpenAI 转换层）上信任它。若该网络直接封锁了提供商域名，请切换网络（如手机热点）或改用未被封锁的提供商。
 
 ---
 

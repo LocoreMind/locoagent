@@ -150,29 +150,31 @@ bun start --model anthropic/claude-sonnet-4.5
 
 ## ⚙️ Configuration
 
-Create a `.env` file in the project root — it is **auto-loaded at startup** (via the preloaded `stubs/globals.ts`):
+Create a `.env` file in the project root — it is **auto-loaded at startup** (via the preloaded `stubs/globals.ts`). Configure your provider through the four neutral `LLM_*` variables; they are translated to the right internal settings at startup, so you never juggle provider-specific variable names:
 
 ```env
 # ── LLM Provider — pick ONE ──────────────────────────────
+LLM_PROVIDER=deepseek        # deepseek | openai | anthropic | custom
+LLM_API_KEY=sk-...
+LLM_MODEL=deepseek-chat      # blank = provider default
+LLM_BASE_URL=                # only for `custom` / self-hosted OpenAI-compatible APIs
 
-# Option A · OpenRouter (access 200+ models)
-CLAUDE_CODE_USE_OPENAI=1                       # enable OpenAI-compatible provider
-OPENAI_API_KEY=sk-or-v1-...
-OPENAI_BASE_URL=https://openrouter.ai/api/v1
-OPENAI_MODEL=anthropic/claude-sonnet-4.5
-
-# Option B · DeepSeek (thinking mode supported)
-# CLAUDE_CODE_USE_OPENAI=1
-# OPENAI_API_KEY=sk-...
-# OPENAI_BASE_URL=https://api.deepseek.com
-# OPENAI_MODEL=deepseek-chat
-
-# Option C · Anthropic direct (omit CLAUDE_CODE_USE_OPENAI)
-# ANTHROPIC_API_KEY=sk-ant-...
+# Examples:
+#   OpenAI    → LLM_PROVIDER=openai     LLM_MODEL=gpt-5.5
+#   Anthropic → LLM_PROVIDER=anthropic  LLM_MODEL=claude-sonnet-4-6
+#   Custom    → LLM_PROVIDER=custom     LLM_BASE_URL=http://localhost:1234/v1  LLM_MODEL=...
 
 # ── Agent behavior ───────────────────────────────────────
 SKIP_PERMISSIONS=1                             # required for non-interactive / automated runs
 ```
+
+> [!TIP]
+> The `LLM_*` block is the recommended front door. Under the hood it maps to the
+> legacy `CLAUDE_CODE_USE_OPENAI` / `OPENAI_*` / `ANTHROPIC_*` variables, which
+> still work directly for existing setups — an explicitly-set legacy value always
+> wins. DeepSeek, OpenAI, OpenRouter, and every OpenAI-compatible endpoint share
+> the same `OPENAI_*` namespace internally; the provider is decided by the base
+> URL + model, not by the variable name.
 
 > [!NOTE]
 > `SKIP_PERMISSIONS=1` makes `stubs/globals.ts` inject `--dangerously-skip-permissions` into argv so automated/headless runs don't stop on permission prompts.
@@ -194,7 +196,11 @@ LocoAgent talks to any **OpenAI-compatible API** through a built-in translation 
 | ☁️ **AWS Bedrock** | *(native SDK)* | AWS credentials |
 | 🌥️ **Google Vertex AI** | *(native SDK)* | GCP credentials |
 
-Enable the shim with `CLAUDE_CODE_USE_OPENAI=1`; omit it to use the native Anthropic SDK path.
+Pick any of these with `LLM_PROVIDER` + `LLM_BASE_URL` (e.g. `LLM_PROVIDER=custom`, `LLM_BASE_URL=https://openrouter.ai/api/v1`). The neutral front door maps to the shim automatically; advanced users can still set `CLAUDE_CODE_USE_OPENAI=1` and the `OPENAI_*` vars directly.
+
+### Behind a TLS-intercepting proxy (corporate VPN / campus FortiGate / Zscaler)
+
+If a request fails with `unable to get local issuer certificate` or `untrusted root`, your network is re-signing TLS with its own CA. Export that gateway's root certificate to a `.pem` file and point `NODE_EXTRA_CA_CERTS` at it in `.env` — LocoAgent then trusts it on **every** provider path, including the DeepSeek/OpenAI shim. If the provider host is outright blocked on that network, switch networks (e.g. a phone hotspot) or pick a provider that is allowed.
 
 ---
 
