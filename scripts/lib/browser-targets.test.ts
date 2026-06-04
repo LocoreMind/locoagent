@@ -58,3 +58,8 @@ test('resolveTarget throws a clear error for an unknown platform', () => {
   const path = fixture(REGISTRY)
   expect(() => resolveTarget('tiktok', path, {}, 'linux')).toThrow(/Unknown platform "tiktok"/)
 })
+
+test('loadTargets rejects a non-numeric cdpPort', () => {
+  const path = fixture({ version: 1, targets: { x: { cdpPort: 'oops' } } })
+  expect(() => loadTargets(path, {}, 'linux')).toThrow(/invalid cdpPort/)
+})

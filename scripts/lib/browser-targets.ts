@@ -103,6 +103,9 @@ function resolveEntry(
   env: NodeJS.ProcessEnv,
   host: HostOS,
 ): ResolvedTarget {
+  if (typeof entry.cdpPort !== 'number' || !Number.isFinite(entry.cdpPort)) {
+    throw new Error(`browser-targets: platform "${platform}" has an invalid cdpPort: ${entry.cdpPort}`)
+  }
   const explicit = entry.profile?.trim()
   const base = defaultWorkProfile(host, env)
   const profile = explicit
@@ -132,7 +135,9 @@ export async function cdpUp(port: number): Promise<boolean> {
 export async function healthCheck(
   platform: string,
   registryPath: string = defaultRegistryPath(),
+  env: NodeJS.ProcessEnv = process.env,
+  host: HostOS = detectHost(),
 ): Promise<{ platform: string; port: number; profile: string; up: boolean }> {
-  const t = resolveTarget(platform, registryPath)
+  const t = resolveTarget(platform, registryPath, env, host)
   return { platform, port: t.cdpPort, profile: t.profile, up: await cdpUp(t.cdpPort) }
 }
