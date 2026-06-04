@@ -31,6 +31,7 @@
 - [🧠 Model Providers](#-model-providers)
 - [🌐 Browser Automation](#-browser-automation)
 - [🎯 Platform Skills](#-platform-skills)
+- [🌍 Multi-Platform Targets](#-multi-platform-targets)
 - [🔁 Workflow Engine](#-workflow-engine)
 - [📒 Operation Log](#-operation-log)
 - [🗓️ Task Scheduling](#️-task-scheduling)
@@ -58,7 +59,8 @@ Under the hood it is a fork of the **Claude Code CLI** source tree, re-purposed 
 | 🔁 | **Workflow engine** | Deterministic, LLM-free browser pipelines that the agent supervises — start, stop, schedule as a daemon |
 | 📒 | **Operation log** | Persistent cross-session deduplication so the agent never repeats a like, follow, or reply |
 | 🧠 | **Multi-provider LLM** | Any OpenAI-compatible API — OpenRouter, DeepSeek (thinking mode), OpenAI, Ollama, LM Studio, plus native Anthropic / Bedrock / Vertex |
-| 🌍 | **Cross-platform** | One codebase runs on Windows, macOS, and Linux via a host/device abstraction layer |
+| 🌍 | **Multi-platform, concurrently** | Drive X, LinkedIn, and Reddit at the same time — one isolated Chrome per platform, same-platform serial, cross-platform parallel |
+| 🖥️ | **Cross-OS** | One codebase runs on Windows, macOS, and Linux via a host/device abstraction layer |
 
 ---
 
@@ -222,6 +224,10 @@ bun run setup-chrome
 # First run only: log into X / your socials in the window that opens — it persists.
 # Re-running just reconnects. To wipe the isolated profile and log in fresh:
 bun run setup-chrome --reset
+
+# Multi-platform: launch one target, or every target at once (one Chrome each).
+bun run setup-chrome --target linkedin
+bun run setup-chrome --all
 ```
 
 ### 👀 The Perceive → Act → Verify Loop
@@ -282,6 +288,38 @@ The skill **auto-discovers at startup** and becomes available as `/linkedin`. De
 
 ---
 
+## 🌍 Multi-Platform Targets
+
+Run several social platforms **at the same time** — each in its own isolated Chrome, on its own CDP port, behind its own proxy. A single registry, [`config/browser-targets.json`](config/browser-targets.json), is the source of truth:
+
+```json
+{
+  "targets": {
+    "x":        { "cdpPort": 9222, "proxy": "http://127.0.0.1:6738" },
+    "linkedin": { "cdpPort": 9223, "proxy": null },
+    "reddit":   { "cdpPort": 9224, "proxy": null }
+  }
+}
+```
+
+`setup-chrome --all/--target`, the workflow engine, and `doctor --check-cdp` all read from it — add a platform once and every tool picks it up.
+
+```bash
+bun run setup-chrome --all            # 🚀 one isolated Chrome per platform
+bun run doctor --check-cdp            # 🩺 probe every target's CDP port
+```
+
+### 🔀 Same-platform serial · cross-platform parallel
+
+The engine reads each workflow's `"platform"` field and **injects** the matching target (`cdpPort`, `profile`, `proxy`, `device`) into the executor — you never hard-code a port. A **per-platform file lock** then keeps same-platform runs serial (one active tab per profile) while different platforms run concurrently:
+
+```bash
+# x + x → serialized; linkedin → in parallel with them. Automatically.
+bun run workflow orchestrate --ids hf-papers-to-x,x-search-reply,linkedin-search-reply
+```
+
+---
+
 ## 🔁 Workflow Engine
 
 Workflows are **deterministic browser-automation pipelines** that run **without any LLM in the control flow** (an LLM may still be called as a single *step*). The agent acts as a supervisor — it can inspect status and start/stop runs, while execution stays scripted and reproducible.
@@ -302,6 +340,7 @@ bun run workflow list                          # 📋 List all workflows + statu
 bun run workflow run    --id hf-papers-to-x    # ▶️  Run once (blocking)
 bun run workflow start  --id hf-papers-to-x    # 🚀 Run once (background)
 bun run workflow daemon --id x-search-reply --interval 3   # 🔄 Run every 3 minutes
+bun run workflow orchestrate --ids a,b,c       # 🌍 Multi-platform: same serial, cross parallel
 bun run workflow stop   --id x-search-reply    # 🛑 Stop at next checkpoint
 bun run workflow reset  --id x-search-reply    # ♻️  Clear stopped state → idle
 bun run workflow status                        # 📊 Status of all workflows
@@ -318,10 +357,14 @@ bun run workflow history --id hf-papers-to-x   # 🕘 Execution history
   "name": "My Custom Workflow",
   "description": "What this workflow does",
   "schedule": "daily",
+  "platform": "x",
   "executor": "executors/my-workflow.ts",
-  "config": { "searchQuery": "ai agent", "maxPosts": 5, "cdpPort": 9222 }
+  "config": { "searchQuery": "ai agent", "maxPosts": 5 }
 }
 ```
+
+> [!TIP]
+> Set `"platform"` (e.g. `x` / `linkedin` / `reddit`) — never hard-code `cdpPort`. The engine injects the target's `cdpPort`, `profile`, `proxy`, and `device` from [`config/browser-targets.json`](config/browser-targets.json) into `config` at run time, and locks the platform for the run.
 
 **Step 2 — Executor** (`workflows/executors/my-workflow.ts`):
 
@@ -459,10 +502,10 @@ A cross-platform preflight check and onboarding aid. Run it before your first se
 
 ```bash
 bun run doctor               # Check Bun, agent-browser, Chrome, .env
-bun run doctor --check-cdp   # …also probe the CDP port (:9222)
+bun run doctor --check-cdp   # …also probe every platform target's CDP port
 ```
 
-It detects your host OS (Windows / macOS / Linux), resolves the Chrome binary path, and reports anything missing or misconfigured.
+It detects your host OS (Windows / macOS / Linux), resolves the Chrome binary path, probes each target in `config/browser-targets.json`, and reports anything missing or misconfigured.
 
 ---
 
@@ -486,7 +529,9 @@ locoagent/
 │   ├── run-tasks.ts              #    Task scheduler
 │   ├── tail-agent.ts             #    Live trajectory monitor
 │   ├── workflow-engine.ts        #    Workflow lifecycle manager
-│   └── lib/                      #    Platform layer — host · device · config
+│   └── lib/                      #    Platform layer — host · device · config · target lock
+├── config/
+│   └── browser-targets.json      # 🌍 Per-platform target registry (cdpPort · proxy · profile)
 ├── skills/<platform>/SKILL.md    # 🎯 Platform operation playbooks (→ /<platform>)
 ├── workflows/
 │   ├── <id>.json                 #    Workflow definitions

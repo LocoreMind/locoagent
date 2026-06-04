@@ -5,6 +5,30 @@ All notable changes to LocoAgent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-06-04
+
+Multi-platform concurrency: run X, LinkedIn, and Reddit at the same time, each in its own
+isolated Chrome, with same-platform serial / cross-platform parallel scheduling.
+
+### Added
+
+- **Browser-target registry** (PR #9): `config/browser-targets.json` is the single source of truth for per-platform `cdpPort`, `profile`, `proxy`, and `device`. Consumed by `setup-chrome`, the workflow engine, and `doctor`.
+  - `BrowserTargetManager` parses/resolves the registry and probes CDP connectivity.
+- **Multi-target `setup-chrome`** (PR #9): `--target <platform>` launches one target; `--all` launches every target (one isolated Chrome per platform). `--all` is resilient — one target failing does not abort the rest.
+- **Per-platform cross-process file lock** (PR #9): same-platform workflows run serially (one active tab per profile) while different platforms run concurrently. Age-based stale-lock steal guards against PID reuse.
+- **`workflow orchestrate --ids a,b,c`** (PR #9): runs multiple workflows grouped by platform — serial within a platform, parallel across platforms — with a combined report and interruptible stop signal.
+- **`doctor --check-cdp` probes every target** (PR #9), reporting each platform's CDP port status.
+
+### Changed
+
+- **Workflows declare `"platform"`, not `"cdpPort"`** (PR #9): the engine injects the target's `cdpPort`, `profile`, `proxy`, and `device` into the executor config at run time and locks the platform for the run. Hard-coded `cdpPort` in workflow JSON is no longer needed.
+- `doctor`'s CDP pin check reads the default-target port from the registry instead of `CHROME_DEBUG_PORT`.
+
+### Fixed
+
+- `orchestrate` serializes `state.json` read-modify-write to prevent finalize clobber under cross-platform parallelism.
+- `daemon` wired to `buildConfigJson` + a per-cycle platform lock so a same-platform run/orchestrate cannot collide with it.
+
 ## [1.1.0] - 2026-06-04
 
 Cross-platform support, one-click installation, and provider configuration overhaul.

@@ -31,6 +31,7 @@
 - [🧠 模型提供商](#-模型提供商)
 - [🌐 浏览器自动化](#-浏览器自动化)
 - [🎯 平台技能](#-平台技能)
+- [🌍 多平台目标](#-多平台目标)
 - [🔁 工作流引擎](#-工作流引擎)
 - [📒 操作日志](#-操作日志)
 - [🗓️ 任务调度](#️-任务调度)
@@ -58,7 +59,8 @@
 | 🔁 | **工作流引擎** | 确定性、无 LLM 介入的浏览器流水线，由智能体监督——可启动、停止、作为守护进程调度 |
 | 📒 | **操作日志** | 跨会话的持久化去重，智能体永不重复点赞、关注或回复 |
 | 🧠 | **多提供商 LLM** | 任意 OpenAI 兼容 API——OpenRouter、DeepSeek（思维模式）、OpenAI、Ollama、LM Studio，以及原生 Anthropic / Bedrock / Vertex |
-| 🌍 | **跨平台** | 通过 host/device 抽象层，一套代码运行于 Windows、macOS 和 Linux |
+| 🌍 | **多平台并发** | 同时运营 X、LinkedIn、Reddit——每个平台一个隔离 Chrome，同平台串行、跨平台并行 |
+| 🖥️ | **跨操作系统** | 通过 host/device 抽象层，一套代码运行于 Windows、macOS 和 Linux |
 
 ---
 
@@ -220,6 +222,10 @@ bun run setup-chrome
 # 仅首次：在弹出的窗口中登录 X / 你的社交账号——会话会持久保留。
 # 重复运行只是重新连接。若要清空隔离配置文件并重新登录：
 bun run setup-chrome --reset
+
+# 多平台：启动单个目标，或一次启动全部目标（每个平台一个 Chrome）。
+bun run setup-chrome --target linkedin
+bun run setup-chrome --all
 ```
 
 ### 👀 感知 → 执行 → 验证 循环
@@ -280,6 +286,38 @@ user-invocable: true
 
 ---
 
+## 🌍 多平台目标
+
+**同时**运营多个社交平台——每个平台拥有独立的隔离 Chrome、独立的 CDP 端口、独立的代理。唯一的事实来源是注册表 [`config/browser-targets.json`](config/browser-targets.json)：
+
+```json
+{
+  "targets": {
+    "x":        { "cdpPort": 9222, "proxy": "http://127.0.0.1:6738" },
+    "linkedin": { "cdpPort": 9223, "proxy": null },
+    "reddit":   { "cdpPort": 9224, "proxy": null }
+  }
+}
+```
+
+`setup-chrome --all/--target`、工作流引擎和 `doctor --check-cdp` 都从它读取——新增一个平台后，所有工具自动识别。
+
+```bash
+bun run setup-chrome --all            # 🚀 每个平台一个隔离 Chrome
+bun run doctor --check-cdp            # 🩺 探测每个目标的 CDP 端口
+```
+
+### 🔀 同平台串行 · 跨平台并行
+
+引擎读取每个工作流的 `"platform"` 字段，并把匹配的目标（`cdpPort`、`profile`、`proxy`、`device`）**注入**到执行器——你永远不必硬编码端口。随后**按平台加文件锁**：同平台运行保持串行（每个配置文件同时只有一个活动标签页），不同平台则并发运行：
+
+```bash
+# x + x → 串行；linkedin → 与它们并行。全自动。
+bun run workflow orchestrate --ids hf-papers-to-x,x-search-reply,linkedin-search-reply
+```
+
+---
+
 ## 🔁 工作流引擎
 
 工作流是**确定性的浏览器自动化流水线**，**控制流中不涉及任何 LLM**（LLM 仍可作为单个*步骤*被调用）。智能体充当监督者——它可以查看状态、启动 / 停止运行，而执行本身保持脚本化、可复现。
@@ -300,6 +338,7 @@ bun run workflow list                          # 📋 列出所有工作流 + �
 bun run workflow run    --id hf-papers-to-x    # ▶️  运行一次（阻塞）
 bun run workflow start  --id hf-papers-to-x    # 🚀 运行一次（后台）
 bun run workflow daemon --id x-search-reply --interval 3   # 🔄 每 3 分钟运行一次
+bun run workflow orchestrate --ids a,b,c       # 🌍 多平台：同平台串行、跨平台并行
 bun run workflow stop   --id x-search-reply    # 🛑 在下一个检查点停止
 bun run workflow reset  --id x-search-reply    # ♻️  清除已停止状态 → 空闲
 bun run workflow status                        # 📊 所有工作流状态
@@ -316,10 +355,14 @@ bun run workflow history --id hf-papers-to-x   # 🕘 执行历史
   "name": "My Custom Workflow",
   "description": "这个工作流做什么",
   "schedule": "daily",
+  "platform": "x",
   "executor": "executors/my-workflow.ts",
-  "config": { "searchQuery": "ai agent", "maxPosts": 5, "cdpPort": 9222 }
+  "config": { "searchQuery": "ai agent", "maxPosts": 5 }
 }
 ```
+
+> [!TIP]
+> 设置 `"platform"`（如 `x` / `linkedin` / `reddit`）——切勿硬编码 `cdpPort`。引擎会在运行时从 [`config/browser-targets.json`](config/browser-targets.json) 把该目标的 `cdpPort`、`profile`、`proxy`、`device` 注入到 `config`，并为本次运行锁定该平台。
 
 **第 2 步 —— 执行器** (`workflows/executors/my-workflow.ts`)：
 
@@ -457,10 +500,10 @@ bun run tail <id>        # 🎯 监控指定会话
 
 ```bash
 bun run doctor               # 检查 Bun、agent-browser、Chrome、.env
-bun run doctor --check-cdp   # …同时探测 CDP 端口（:9222）
+bun run doctor --check-cdp   # …同时探测每个平台目标的 CDP 端口
 ```
 
-它会检测你的宿主操作系统（Windows / macOS / Linux），解析 Chrome 可执行文件路径，并报告任何缺失或配置错误。
+它会检测你的宿主操作系统（Windows / macOS / Linux），解析 Chrome 可执行文件路径，探测 `config/browser-targets.json` 中的每个目标，并报告任何缺失或配置错误。
 
 ---
 
@@ -484,7 +527,9 @@ locoagent/
 │   ├── run-tasks.ts              #    任务调度器
 │   ├── tail-agent.ts             #    实时轨迹监控
 │   ├── workflow-engine.ts        #    工作流生命周期管理
-│   └── lib/                      #    平台层 —— host · device · config
+│   └── lib/                      #    平台层 —— host · device · config · 目标锁
+├── config/
+│   └── browser-targets.json      # 🌍 每平台目标注册表（cdpPort · proxy · profile）
 ├── skills/<platform>/SKILL.md    # 🎯 平台操作手册（→ /<platform>）
 ├── workflows/
 │   ├── <id>.json                 #    工作流定义
