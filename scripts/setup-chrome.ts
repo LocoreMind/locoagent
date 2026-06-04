@@ -1,66 +1,114 @@
 #!/usr/bin/env bun
 /**
- * setup-chrome.ts — single cross-platform Chrome+CDP launcher (replaces the
- * old setup-chrome.sh / setup-chrome.ps1). Copies the real Chrome profile into
- * an isolated work dir and launches Chrome with remote debugging so
- * agent-browser can operate logged-in social accounts.
+ * setup-chrome.ts — idempotent launcher for ONE persistent, isolated Chrome
+ * profile with CDP enabled, so agent-browser can drive logged-in social
+ * accounts WITHOUT ever touching the user's normal Chrome.
  *
- * Config is read from .env / env vars via scripts/lib/config.ts.
+ * Design (see docs/superpowers/specs/2026-06-04-isolated-chrome-profile-design.md):
+ *   - No copy of the real profile (Chrome 127+ App-Bound Encryption makes a
+ *     copied profile logged-OUT anyway). Fresh isolated profile, log in once.
+ *   - No kill-all of Chrome — the user's windows are never disturbed.
+ *   - No wipe on every run — the manual login persists across restarts.
+ *   - Idempotent: if CDP is already up, just (re)connect agent-browser.
+ *   - `--reset` kills ONLY the isolated-profile Chrome and wipes it for a clean
+ *     re-login.
+ *
+ * Config (host/device/chrome paths/port) comes from scripts/lib/config.ts.
  */
-import { existsSync, mkdirSync, rmSync, cpSync, copyFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { loadConfig } from './lib/config'
-import { killChrome } from './lib/host'
+import { killChromeForProfile } from './lib/host'
+
+const RESET = process.argv.includes('--reset')
 
 const cfg = loadConfig()
 console.error(`-> host=${cfg.host} device=${cfg.device} port=${cfg.debugPort}`)
+console.error(`   isolated profile: ${cfg.workProfile}`)
 
-if (!existsSync(cfg.sourceProfile)) {
-  console.error(
-    `x Chrome source profile not found: ${cfg.sourceProfile}\n` +
-    `  Set CHROME_SOURCE_PROFILE in .env to your real Chrome profile dir.`,
-  )
-  process.exit(1)
-}
-
-console.error('-> Killing any existing Chrome processes...')
-await killChrome(cfg.host)
-await Bun.sleep(1000)
-
-console.error(`-> Copying Chrome profile to ${cfg.workProfile} ...`)
-console.error(`   (source: ${cfg.sourceProfile})`)
-if (existsSync(cfg.workProfile)) rmSync(cfg.workProfile, { recursive: true, force: true })
-mkdirSync(cfg.workProfile, { recursive: true })
-const destDefault = join(cfg.workProfile, 'Default')
-
-if (cfg.host === 'windows') {
-  // robocopy tolerates Chrome-locked cache files; exit codes 0-7 are success.
-  const r = Bun.spawnSync(
-    ['robocopy', cfg.sourceProfile, destDefault, '/E', '/NFL', '/NDL', '/NJH', '/NJS', '/NP', '/R:1', '/W:1'],
-    { stdout: 'ignore', stderr: 'ignore' },
-  )
-  if ((r.exitCode ?? 0) >= 8) {
-    console.error(`   ! robocopy reported issues (exit ${r.exitCode}) - profile may be partial`)
+/** True if Chrome's CDP endpoint is already serving on the configured port. */
+async function cdpUp(port: number): Promise<boolean> {
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/json/version`)
+    return res.ok
+  } catch {
+    return false
   }
-} else {
-  cpSync(cfg.sourceProfile, destDefault, { recursive: true, force: true })
 }
 
-const localStateSrc = join(dirname(cfg.sourceProfile), 'Local State')
-if (existsSync(localStateSrc)) {
-  copyFileSync(localStateSrc, join(cfg.workProfile, 'Local State'))
-  console.error('   Local State copied')
-} else {
-  console.error(`   ! Local State not found at ${localStateSrc} (may cause profile read errors)`)
+/** Connect agent-browser to the CDP port; exits the process on failure. */
+function connectAgentBrowser(port: number): void {
+  console.error(`-> Connecting agent-browser to CDP port ${port} ...`)
+  const conn = Bun.spawnSync(['agent-browser', 'connect', String(port)], {
+    stdout: 'inherit',
+    stderr: 'inherit',
+  })
+  if ((conn.exitCode ?? 1) !== 0) {
+    console.error('x agent-browser connect failed (is agent-browser on PATH?)')
+    process.exit(1)
+  }
 }
 
-console.error(`-> Launching Chrome on port ${cfg.debugPort} ...`)
+function done(freshProfile: boolean): never {
+  console.error('')
+  console.error('OK Chrome setup complete. agent-browser is ready.')
+  console.error(`   Profile: ${cfg.workProfile}  (isolated, persistent)`)
+  console.error(`   CDP:     http://127.0.0.1:${cfg.debugPort}`)
+  console.error(`   Device:  ${cfg.device} (apply per-command with: agent-browser -p <profile> ...)`)
+  console.error('')
+  if (freshProfile) {
+    console.error('   FIRST RUN: this is a fresh, isolated profile (separate from your normal')
+    console.error('   Chrome). Log into X / your social accounts ONCE in the window that just')
+    console.error('   opened — the session persists across restarts. It will not disturb your')
+    console.error('   everyday Chrome.')
+  } else {
+    console.error('   Reusing your logged-in isolated profile. Your normal Chrome is untouched.')
+    console.error('   (Need a clean slate? run: bun run setup-chrome --reset)')
+  }
+  console.error('')
+  console.error('   Run: bun start')
+  process.exit(0)
+}
+
+// ── Fast path: CDP already up ───────────────────────────────────────────────
+// Reconnect and exit without launching or touching any Chrome. On --reset we
+// fall through to tear down only the isolated instance.
+if (await cdpUp(cfg.debugPort)) {
+  if (!RESET) {
+    console.error(`-> CDP already up on port ${cfg.debugPort}; reconnecting (no relaunch).`)
+    connectAgentBrowser(cfg.debugPort)
+    done(false)
+  }
+  console.error('-> --reset: stopping the existing isolated-profile Chrome ...')
+  await killChromeForProfile(cfg.workProfile, cfg.host)
+  await Bun.sleep(1000)
+}
+
+// ── Reset: wipe ONLY the isolated profile (never the user's real profile) ───
+if (RESET && existsSync(cfg.workProfile)) {
+  console.error(`-> --reset: wiping isolated profile ${cfg.workProfile} ...`)
+  // Make sure no stale isolated Chrome is holding the dir, then remove it.
+  await killChromeForProfile(cfg.workProfile, cfg.host)
+  await Bun.sleep(500)
+  rmSync(cfg.workProfile, { recursive: true, force: true })
+}
+
+// Did the profile exist before this run? Decides the first-run vs reused message.
+const freshProfile = !existsSync(cfg.workProfile)
+if (freshProfile) {
+  console.error('-> Creating fresh isolated profile (you will log in once) ...')
+  mkdirSync(cfg.workProfile, { recursive: true })
+} else {
+  console.error('-> Reusing existing isolated profile (session preserved).')
+}
+
+console.error(`-> Launching isolated Chrome on port ${cfg.debugPort} ...`)
 const chrome = Bun.spawn(
   [
     cfg.chromeBin,
     `--remote-debugging-port=${cfg.debugPort}`,
     `--user-data-dir=${cfg.workProfile}`,
     '--no-first-run',
+    '--no-default-browser-check',
     '--disable-default-apps',
   ],
   { stdout: 'ignore', stderr: 'ignore' },
@@ -71,37 +119,18 @@ console.error(`   Chrome PID: ${chrome.pid}`)
 console.error(`-> Waiting for CDP port ${cfg.debugPort} to be ready...`)
 let ready = false
 for (let i = 1; i <= 15; i++) {
-  try {
-    const res = await fetch(`http://127.0.0.1:${cfg.debugPort}/json/version`)
-    if (res.ok) {
-      console.error(`   Chrome CDP ready (${i}s)`)
-      ready = true
-      break
-    }
-  } catch {
-    /* not up yet */
+  if (await cdpUp(cfg.debugPort)) {
+    console.error(`   Chrome CDP ready (${i}s)`)
+    ready = true
+    break
   }
   await Bun.sleep(1000)
 }
 if (!ready) {
   console.error(`x Chrome CDP port ${cfg.debugPort} did not become ready after 15s`)
+  console.error('  If an old isolated Chrome is stuck, try: bun run setup-chrome --reset')
   process.exit(1)
 }
 
-console.error(`-> Connecting agent-browser to CDP port ${cfg.debugPort} ...`)
-const conn = Bun.spawnSync(['agent-browser', 'connect', String(cfg.debugPort)], {
-  stdout: 'inherit',
-  stderr: 'inherit',
-})
-if ((conn.exitCode ?? 1) !== 0) {
-  console.error('x agent-browser connect failed (is agent-browser on PATH?)')
-  process.exit(1)
-}
-
-console.error('')
-console.error('OK Chrome setup complete. agent-browser is ready.')
-console.error(`   Profile: ${cfg.workProfile}`)
-console.error(`   CDP:     http://127.0.0.1:${cfg.debugPort}`)
-console.error(`   Device:  ${cfg.device} (apply per-command with: agent-browser -p <profile> ...)`)
-console.error('')
-console.error('   Run: bun start')
+connectAgentBrowser(cfg.debugPort)
+done(freshProfile)

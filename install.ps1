@@ -269,5 +269,5 @@ Write-Host "  cd `"$InstallDir`""
 if (-not (Get-EnvVal 'LLM_API_KEY') -and -not (Get-EnvVal 'OPENAI_API_KEY') -and -not (Get-EnvVal 'ANTHROPIC_API_KEY')) {
   Write-Host "  # add LLM_API_KEY to .env first"
 }
-Write-Host "  bun run setup-chrome     # copy Chrome profile + launch Chrome with CDP on :9222"
+Write-Host "  bun run setup-chrome     # launch an isolated Chrome with CDP on :9222 (won't touch your normal Chrome)"
 Write-Host "  bun start                # interactive REPL"

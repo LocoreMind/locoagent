@@ -281,6 +281,6 @@ ok "LocoAgent installed at $INSTALL_DIR"
   if [ -z "$(get_env LLM_API_KEY)" ] && [ -z "$(get_env OPENAI_API_KEY)" ] && [ -z "$(get_env ANTHROPIC_API_KEY)" ]; then
     printf '  # add LLM_API_KEY to .env first\n'
   fi
-  printf '  bun run setup-chrome     # copy Chrome profile + launch Chrome with CDP on :9222\n'
+  printf '  bun run setup-chrome     # launch an isolated Chrome with CDP on :9222 (does not touch your normal Chrome)\n'
   printf '  bun start                # interactive REPL\n'
 } >&2

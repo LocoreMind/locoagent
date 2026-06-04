@@ -208,16 +208,18 @@ LocoAgent 通过 `agent-browser`，使用 CDP（Chrome DevTools Protocol）控�
 
 ### 🔒 为什么用 Chrome CDP？
 
-社交平台会检测并封禁 headless 浏览器和 API 自动化。LocoAgent 运行在你**真实 Chrome 配置文件**的副本之上——相同的 Cookie、相同的登录会话、相同的指纹——因此它的行为与真人无异。
+社交平台会检测并封禁 headless 浏览器和 API 自动化。LocoAgent 运行在**真实、完整的 Chrome** 之上——相同的引擎、相同的指纹——因此它的行为与真人无异。它使用一个**独立、隔离、持久的配置文件**（与你日常的 Chrome 完全分开）：你只需登录一次，会话即长期保留，而你平时的浏览不受任何干扰。
 
 ### 🛠️ 配置
 
 ```bash
-# 一次性：复制 Chrome 配置文件 + 以 CDP 启动（Windows / macOS / Linux 命令一致）
+# 一次性：以 CDP 启动隔离的 Chrome（Windows / macOS / Linux 命令一致）。
+# 它不会杀掉你正常的 Chrome，也不会清除你的会话。
 bun run setup-chrome
 
-# agent-browser 连接到运行中的 Chrome
-agent-browser connect 9222
+# 仅首次：在弹出的窗口中登录 X / 你的社交账号——会话会持久保留。
+# 重复运行只是重新连接。若要清空隔离配置文件并重新登录：
+bun run setup-chrome --reset
 ```
 
 ### 👀 感知 → 执行 → 验证 循环

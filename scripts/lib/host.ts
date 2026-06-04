@@ -1,10 +1,10 @@
 /**
  * Host OS single source of truth. Detects the operating system the agent runs
  * on and supplies all host-specific Chrome / profile / temp / process defaults.
- * Pure (no side effects) except killChrome(), which is only invoked explicitly.
+ * Pure (no side effects) except killChromeForProfile(), invoked explicitly.
  */
 import { existsSync } from 'node:fs'
-import { homedir, tmpdir } from 'node:os'
+import { homedir } from 'node:os'
 import { join } from 'node:path'
 
 export type HostOS = 'windows' | 'macos' | 'linux'
@@ -56,9 +56,25 @@ export function defaultSourceProfile(
   return join(homedir(), '.config', 'google-chrome', 'Default')
 }
 
-/** Cross-platform temp work-profile dir (replaces hardcoded /tmp). */
-export function defaultWorkProfile(): string {
-  return join(tmpdir(), 'locoagent-chrome-profile')
+/**
+ * Stable, persistent, isolated work-profile dir. Lives under a per-user data
+ * location (NOT the temp dir) so a manual social-account login survives reboots
+ * and temp-cleaners. This is the isolated `--user-data-dir` the CDP Chrome runs
+ * on; it is never the user's real Chrome profile.
+ */
+export function defaultWorkProfile(
+  host: HostOS = detectHost(),
+  env: NodeJS.ProcessEnv = process.env,
+): string {
+  if (host === 'windows') {
+    const local = env['LOCALAPPDATA'] ?? join(homedir(), 'AppData', 'Local')
+    return join(local, 'locoagent-chrome-profile')
+  }
+  if (host === 'macos') {
+    return join(homedir(), 'Library', 'Application Support', 'locoagent-chrome-profile')
+  }
+  const dataHome = env['XDG_DATA_HOME'] ?? join(homedir(), '.local', 'share')
+  return join(dataHome, 'locoagent-chrome-profile')
 }
 
 /** explicit (CHROME_BIN) if it exists → first existing candidate → throw. */
@@ -78,16 +94,37 @@ export function resolveChromeBinary(
   )
 }
 
-/** Host-aware best-effort kill of running Chrome. Non-fatal if none running. */
-export async function killChrome(host: HostOS = detectHost()): Promise<void> {
-  const cmd =
-    host === 'windows'
-      ? ['taskkill', '/F', '/IM', 'chrome.exe']
-      : host === 'macos'
-        ? ['killall', 'Google Chrome']
-        : ['pkill', '-f', 'chrome']
+/**
+ * TARGETED kill: terminate ONLY the Chrome instance running on the given
+ * isolated `--user-data-dir`, matched by that path on the process command line.
+ * Never touches the user's normal Chrome. Non-fatal if nothing matches.
+ *
+ * Used by `setup-chrome --reset` (and to clear a stale lock on the isolated
+ * profile) — the kill-all approach is deliberately avoided.
+ */
+export async function killChromeForProfile(
+  workProfile: string,
+  host: HostOS = detectHost(),
+): Promise<void> {
   try {
-    Bun.spawnSync(cmd, { stdout: 'ignore', stderr: 'ignore' })
+    if (host === 'windows') {
+      // CIM lets us filter chrome.exe by its CommandLine (the --user-data-dir
+      // value), so only our isolated instance is stopped.
+      const ps =
+        `Get-CimInstance Win32_Process -Filter "Name='chrome.exe'" | ` +
+        `Where-Object { $_.CommandLine -like '*${workProfile.replace(/'/g, "''")}*' } | ` +
+        `ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`
+      Bun.spawnSync(['powershell', '-NoProfile', '-Command', ps], {
+        stdout: 'ignore',
+        stderr: 'ignore',
+      })
+    } else {
+      // pkill -f matches the full argv; the unique user-data-dir path scopes it.
+      Bun.spawnSync(['pkill', '-f', `--user-data-dir=${workProfile}`], {
+        stdout: 'ignore',
+        stderr: 'ignore',
+      })
+    }
   } catch {
     /* "no matching process" is success */
   }

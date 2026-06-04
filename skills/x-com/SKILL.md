@@ -1114,7 +1114,7 @@ agent-browser press Escape
 **Known Issues**:
 - Multiple types of login prompts exist (bottom bar, full modal, interstitial)
 - When using CDP with a logged-in profile, these should not appear
-- If they do appear, it usually means the session cookies have expired — re-run `bun run setup-chrome`
+- If they do appear, it usually means the session cookies have expired — log back into X in the isolated Chrome window (`bun run setup-chrome` reconnects to it without wiping). For a clean slate, run `bun run setup-chrome --reset` and log in again.
 
 ---
 

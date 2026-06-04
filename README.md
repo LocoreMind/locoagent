@@ -210,16 +210,18 @@ LocoAgent controls a **real Chrome browser** over CDP (Chrome DevTools Protocol)
 
 ### 🔒 Why Chrome CDP?
 
-Social platforms detect and block headless browsers and API automation. LocoAgent runs through a copy of your **real Chrome profile** — same cookies, same login sessions, same fingerprint — so it behaves like you actually do.
+Social platforms detect and block headless browsers and API automation. LocoAgent runs through a **real, full Chrome** — same engine, same fingerprint — so it behaves like you actually do. It uses a **dedicated, isolated, persistent profile** (separate from your everyday Chrome): you log into your accounts once and the session sticks, while your normal browsing is never disturbed.
 
 ### 🛠️ Setup
 
 ```bash
-# One-time: copy Chrome profile + launch with CDP (same command on Windows / macOS / Linux)
+# One-time: launch the isolated Chrome with CDP (same command on Windows / macOS / Linux).
+# It never kills your normal Chrome and never wipes your session.
 bun run setup-chrome
 
-# agent-browser connects to the running Chrome
-agent-browser connect 9222
+# First run only: log into X / your socials in the window that opens — it persists.
+# Re-running just reconnects. To wipe the isolated profile and log in fresh:
+bun run setup-chrome --reset
 ```
 
 ### 👀 The Perceive → Act → Verify Loop
