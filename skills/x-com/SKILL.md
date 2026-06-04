@@ -1114,7 +1114,13 @@ agent-browser press Escape
 **Known Issues**:
 - Multiple types of login prompts exist (bottom bar, full modal, interstitial)
 - When using CDP with a logged-in profile, these should not appear
-- If they do appear, it usually means the session cookies have expired — log back into X in the isolated Chrome window (`bun run setup-chrome` reconnects to it without wiping). For a clean slate, run `bun run setup-chrome --reset` and log in again.
+- **A full login wall ("Sign in", "Email or username", "Continue with…") means the isolated
+  CDP profile is LOGGED OUT — NOT something to dismiss or work around.** Do not try to log in,
+  do not type credentials, do not open a fresh session. STOP and tell the user to log into X
+  in the isolated Chrome window (`bun run setup-chrome` reconnects without wiping; `--reset`
+  for a clean re-login). Resume only after they confirm they are logged in.
+- A small periodic in-app prompt (not a full wall) on an otherwise logged-in timeline can be
+  dismissed with `agent-browser press Escape`.
 
 ---
 
@@ -1463,7 +1469,7 @@ agent-browser get url
 
 For each operation above:
 
-1. Start with `agent-browser connect 9222` (attach to CDP Chrome with login session)
+1. Preflight (`bun run doctor --check-cdp`; if down, `bun run setup-chrome`), then `agent-browser connect 9222` (attach to the isolated CDP Chrome with the login session). Never open a fresh `--session-name`/`--headed` browser to log in.
 2. Run `agent-browser snapshot -i` to see current interactive elements
 3. Execute each step, taking snapshots between steps to verify state changes
 4. Record the working command sequence
@@ -1480,13 +1486,20 @@ Do NOT hardcode `@ref` numbers (e.g. `@e3`). Refs change between page loads. Ins
 
 ### Session Management
 
-All commands should use `--session-name twitter` for cookie/state persistence:
+**There is exactly ONE authorized way to reach a logged-in X session: the isolated
+CDP Chrome on port 9222** (launched by `bun run setup-chrome`). See the
+"Browser Connection Contract" in the system prompt — it is binding for every operation here.
+
+Preflight, then connect:
 ```bash
-agent-browser --session-name twitter open https://x.com
+bun run doctor --check-cdp        # if DOWN: bun run setup-chrome  (idempotent, never touches your normal Chrome)
+agent-browser connect 9222
+agent-browser open https://x.com/home
+agent-browser snapshot -i -c      # confirm you are logged in (timeline visible, not a login wall)
 ```
 
-Or rely on CDP connection which already has the login session:
-```bash
-agent-browser connect 9222
-agent-browser open https://x.com
-```
+**Do NOT** use `--session-name`, `--headed`, or `--profile` to open a fresh browser and
+log in — a fresh session has no cookies and pulls you into an automated login, which gets
+the account rate-limited ("We've temporarily limited your login"). **Never type credentials
+or attempt a login.** If the CDP profile is logged out, STOP and ask the user to log in once
+in the isolated Chrome window (`bun run setup-chrome --reset` for a clean slate), then resume.
