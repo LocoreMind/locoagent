@@ -1,0 +1,93 @@
+name: Issue Guard
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check issue author
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const author = issue.user.login;
+            const flags = [];
+
+            // 1. Check account age (< 7 days is suspicious)
+            const user = await github.rest.users.getByUsername({ username: author });
+            const created = new Date(user.data.created_at);
+            const ageDays = (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24);
+            if (ageDays < 7) {
+              flags.push(`Account is ${Math.floor(ageDays)} day(s) old`);
+            }
+
+            // 2. Check for empty or very short body
+            const body = (issue.body || '').trim();
+            if (body.length < 20) {
+              flags.push(`Issue body is very short (${body.length} chars)`);
+            }
+
+            // 3. Check for rapid-fire issues from same author (> 3 in last hour)
+            const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+            const recentIssues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              creator: author,
+              since: since,
+              state: 'all',
+              per_page: 10,
+            });
+            const recentCount = recentIssues.data.filter(
+              i => new Date(i.created_at) >= new Date(since)
+            ).length;
+            if (recentCount > 3) {
+              flags.push(`${recentCount} issues from this author in the last hour`);
+            }
+
+            // If 2+ flags, label + close + lock
+            if (flags.length >= 2) {
+              console.log(`Flagged issue #${issue.number}: ${flags.join('; ')}`);
+
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: ['spam'],
+              });
+
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed',
+                state_reason: 'not_planned',
+              });
+
+              await github.rest.issues.lock({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                lock_reason: 'spam',
+              });
+
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: 'This issue was automatically closed by our anti-spam system. If this is a legitimate issue, please re-open it using one of the issue templates and provide sufficient detail.',
+              });
+            } else if (flags.length === 1) {
+              console.log(`Warning on issue #${issue.number}: ${flags[0]}`);
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: ['needs-triage'],
+              });
+            }

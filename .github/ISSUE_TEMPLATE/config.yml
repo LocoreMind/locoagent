@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & Discussions
+    url: https://github.com/LocoreMind/locoagent/discussions
+    about: For general questions, ideas, or show-and-tell — please use Discussions instead of opening an issue.

@@ -1,0 +1,50 @@
+name: Feature Request
+description: Suggest a new feature or improvement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the suggestion! Please describe what you'd like to see.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of LocoAgent does this relate to?
+      options:
+        - Platform skill (X.com, LinkedIn, etc.)
+        - Workflow engine
+        - Browser automation
+        - LLM / provider support
+        - Installation / setup
+        - CLI / terminal UI
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or motivation
+      description: What problem does this solve, or why is it useful?
+      placeholder: "I'm always frustrated when ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How do you think this should work?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any other approaches you've thought about.
+    validations:
+      required: false
