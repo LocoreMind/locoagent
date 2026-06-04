@@ -1,6 +1,6 @@
 {
   "name": "locoagent",
-  "version": "1.0.0-clean",
+  "version": "1.1.0",
   "description": "LocoAgent - AI-powered social media agent by LocoreMind",
   "type": "module",
   "bin": {
