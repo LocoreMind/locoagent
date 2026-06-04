@@ -517,7 +517,8 @@ if (command === 'daemon') {
     process.exit(1)
   }
 
-  const configJson = JSON.stringify(def.config)
+  const configJson = buildConfigJson(def)
+  const platform = def.platform
 
   console.log(`[daemon] Starting daemon for: ${def.name}`)
   console.log(`[daemon] Interval: ${intervalMinutes} minutes`)
@@ -552,48 +553,60 @@ if (command === 'daemon') {
       const now = new Date().toISOString()
       console.log(`\n[daemon] ═══ Cycle ${cycleCount} at ${now} ═══`)
 
-      // Run the executor asynchronously (spawnSync blocks event loop, breaking setTimeout)
-      const startedAt = new Date().toISOString()
-      let execStdout = ''
-      let execExitCode: number | null = null
-      try {
-        const proc = Bun.spawn(['bun', 'run', executorPath, '--config', configJson], {
-          cwd: ROOT,
-          stdin: 'inherit',
-          stdout: 'pipe',
-          stderr: 'inherit',
-        })
-        // Set a 10-minute timeout
-        const timeoutId = setTimeout(() => { proc.kill() }, 10 * 60 * 1000)
-        execStdout = await new Response(proc.stdout).text()
-        execExitCode = await proc.exited
-        clearTimeout(timeoutId)
-      } catch (e: any) {
-        console.error(`[daemon] Executor error: ${e.message}`)
-        execExitCode = 1
+      // Acquire the platform lock for THIS cycle so a same-platform run/orchestrate
+      // (or another daemon) won't drive the same profile concurrently. The lock is
+      // released between cycles (during the wait), so the platform is free while idle.
+      // If busy, skip this cycle and retry next interval.
+      if (platform && !acquireLock(platform, id!)) {
+        console.log(`[daemon] Platform "${platform}" busy; skipping cycle ${cycleCount}.`)
+      } else {
+        try {
+          // Run the executor asynchronously (spawnSync blocks event loop, breaking setTimeout)
+          const startedAt = new Date().toISOString()
+          let execStdout = ''
+          let execExitCode: number | null = null
+          try {
+            const proc = Bun.spawn(['bun', 'run', executorPath, '--config', configJson], {
+              cwd: ROOT,
+              stdin: 'inherit',
+              stdout: 'pipe',
+              stderr: 'inherit',
+            })
+            // Set a 10-minute timeout
+            const timeoutId = setTimeout(() => { proc.kill() }, 10 * 60 * 1000)
+            execStdout = await new Response(proc.stdout).text()
+            execExitCode = await proc.exited
+            clearTimeout(timeoutId)
+          } catch (e: any) {
+            console.error(`[daemon] Executor error: ${e.message}`)
+            execExitCode = 1
+          }
+
+          // Finalize this run in state
+          const freshState = loadState()
+          const freshWs = freshState.workflows[id!] ?? getDefaultWorkflowState()
+
+          // If stopped during execution, finalize and exit
+          if (freshWs.status === 'stopped') {
+            console.log(`[daemon] Stopped during execution. Finalizing and exiting.`)
+            finalizeRun(freshState, freshWs, execStdout, execExitCode)
+            break
+          }
+
+          // Save run result but keep status as 'running' for daemon mode
+          const run = finalizeRun(freshState, freshWs, execStdout, execExitCode)
+          // Re-mark as running (finalizeRun sets it to idle)
+          freshWs.status = 'running'
+          ;(freshWs as any).pid = process.pid
+          ;(freshWs as any).mode = 'daemon'
+          saveState(freshState)
+
+          console.log(`[daemon] Cycle ${cycleCount} done: ${run.status} (${run.stepsCompleted}/${run.stepsTotal} steps)`)
+          console.log(`[daemon] Next cycle in ${intervalMinutes} minutes...`)
+        } finally {
+          if (platform) releaseLock(platform, id!)
+        }
       }
-
-      // Finalize this run in state
-      const freshState = loadState()
-      const freshWs = freshState.workflows[id!] ?? getDefaultWorkflowState()
-
-      // If stopped during execution, finalize and exit
-      if (freshWs.status === 'stopped') {
-        console.log(`[daemon] Stopped during execution. Finalizing and exiting.`)
-        finalizeRun(freshState, freshWs, execStdout, execExitCode)
-        break
-      }
-
-      // Save run result but keep status as 'running' for daemon mode
-      const run = finalizeRun(freshState, freshWs, execStdout, execExitCode)
-      // Re-mark as running (finalizeRun sets it to idle)
-      freshWs.status = 'running'
-      ;(freshWs as any).pid = process.pid
-      ;(freshWs as any).mode = 'daemon'
-      saveState(freshState)
-
-      console.log(`[daemon] Cycle ${cycleCount} done: ${run.status} (${run.stepsCompleted}/${run.stepsTotal} steps)`)
-      console.log(`[daemon] Next cycle in ${intervalMinutes} minutes...`)
 
       // Wait for interval, checking stop signal every 10 seconds
       const intervalMs = intervalMinutes * 60 * 1000
