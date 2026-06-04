@@ -84,7 +84,8 @@ add('persona/ dir', existsSync(join(root, 'persona')), false,
 
 // Optional CDP reachability
 if (process.argv.includes('--check-cdp')) {
-  const port = parseInt(process.env.CHROME_DEBUG_PORT ?? '9222', 10)
+  // Blank/whitespace (empty placeholder or exported-empty var) → default, not NaN.
+  const port = parseInt(process.env.CHROME_DEBUG_PORT?.trim() || '9222', 10)
   let ok = false
   let detail = `port ${port} unreachable (run: bun run setup-chrome)`
   try {

@@ -19,6 +19,13 @@ test('resolveDevice rejects unknown values', () => {
   expect(() => resolveDevice({ DEVICE_PROFILE: 'tablet' })).toThrow()
 })
 
+// A blank `DEVICE_PROFILE=` placeholder from .env must mean "use the default",
+// not crash with "Invalid DEVICE_PROFILE \"\"".
+test('resolveDevice treats a blank DEVICE_PROFILE as desktop', () => {
+  expect(resolveDevice({ DEVICE_PROFILE: '' })).toBe('desktop')
+  expect(resolveDevice({ DEVICE_PROFILE: '   ' })).toBe('desktop')
+})
+
 test('agentBrowserProfileArgs returns -p flags', () => {
   expect(agentBrowserProfileArgs('desktop')).toEqual([])
   expect(agentBrowserProfileArgs('ios')).toEqual(['-p', 'ios'])

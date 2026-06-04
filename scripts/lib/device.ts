@@ -24,7 +24,9 @@ export function isDeviceTarget(v: string): v is DeviceTarget {
 
 /** Resolve the active device target from env (DEVICE_PROFILE), default desktop. */
 export function resolveDevice(env: NodeJS.ProcessEnv = process.env): DeviceTarget {
-  const raw = (env.DEVICE_PROFILE ?? 'desktop').trim().toLowerCase()
+  // A blank/whitespace DEVICE_PROFILE (e.g. an empty `.env` placeholder) means
+  // "use the default", not an invalid target — fall back to desktop.
+  const raw = (env.DEVICE_PROFILE ?? '').trim().toLowerCase() || 'desktop'
   if (!isDeviceTarget(raw)) {
     throw new Error(
       `Invalid DEVICE_PROFILE "${raw}". Valid values: desktop, ios, android.`,
