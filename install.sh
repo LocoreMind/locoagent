@@ -204,47 +204,68 @@ set_env() { # set_env KEY VALUE — pure-bash line rewrite (no sed escaping pitf
   [ "$found" = 0 ] && out="${out}${key}=${val}"$'\n'
   printf '%s' "$out" > "$ENV_FILE"
 }
-ask_key() { # ask_key KEY — prompt for an API key; warn only if none ends up set
-  local k="$1" v
-  v="$(ask_secret "$k (Enter to keep existing)")"
-  if [ -n "$v" ]; then set_env "$k" "$v"
-  elif [ -z "$(get_env "$k")" ]; then warn "No API key entered — add $k to .env before running."; fi
+clear_env() { # clear_env KEY — blank a var only if it already exists (never append)
+  local key="$1" line out="" found=0
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      "${key}="*) out="${out}${key}="$'\n'; found=1 ;;
+      *)          out="${out}${line}"$'\n' ;;
+    esac
+  done < "$ENV_FILE"
+  [ "$found" = 1 ] && printf '%s' "$out" > "$ENV_FILE"
+}
+clear_legacy_provider_vars() {
+  clear_env CLAUDE_CODE_USE_OPENAI; clear_env OPENAI_API_KEY; clear_env OPENAI_BASE_URL
+  clear_env OPENAI_MODEL; clear_env ANTHROPIC_API_KEY; clear_env ANTHROPIC_MODEL
+}
+ask_llm_key() { # ask_llm_key LABEL — prompt for the provider key → neutral LLM_API_KEY
+  local label="$1" v
+  v="$(ask_secret "$label (Enter to keep existing)")"
+  if [ -n "$v" ]; then set_env LLM_API_KEY "$v"
+  elif [ -z "$(get_env LLM_API_KEY)" ]; then warn "No API key entered — add LLM_API_KEY to .env before running."; fi
 }
 if [ -n "$TTY" ]; then
   info "Configure your LLM provider."
-  # Flow per provider: pick provider -> enter API key -> pick model.
-  # base_url is fixed per provider (no prompt); model has a menu + custom option.
-  prov="$(ask 'Provider — 1) DeepSeek  2) Anthropic  3) OpenAI' '1')"
+  # One neutral front door: pick provider -> enter that provider's key -> pick model.
+  # We write LLM_PROVIDER/LLM_API_KEY/LLM_MODEL (+LLM_BASE_URL for custom) and clear
+  # any legacy OPENAI_*/ANTHROPIC_* so the .env has a single, unambiguous source.
+  prov="$(ask 'Provider — 1) DeepSeek  2) Anthropic  3) OpenAI  4) Custom (OpenAI-compatible)' '1')"
+  clear_legacy_provider_vars
+  set_env LLM_BASE_URL ""
   case "$prov" in
     2)
-      set_env CLAUDE_CODE_USE_OPENAI ""
-      ask_key ANTHROPIC_API_KEY
-      set_env ANTHROPIC_MODEL "$(choose_model 'Anthropic' \
+      set_env LLM_PROVIDER "anthropic"
+      ask_llm_key 'Anthropic API key'
+      set_env LLM_MODEL "$(choose_model 'Anthropic' \
         claude-sonnet-4-6 'balanced (recommended)' \
         claude-opus-4-8 'most capable' \
         claude-haiku-4-5-20251001 'fast')"
       ;;
     3)
-      set_env CLAUDE_CODE_USE_OPENAI "1"
-      set_env OPENAI_BASE_URL "https://api.openai.com/v1"
-      ask_key OPENAI_API_KEY
-      set_env OPENAI_MODEL "$(choose_model 'OpenAI' \
+      set_env LLM_PROVIDER "openai"
+      ask_llm_key 'OpenAI API key'
+      set_env LLM_MODEL "$(choose_model 'OpenAI' \
         gpt-5.5 'latest' \
         gpt-4o 'multimodal' \
         gpt-4.1 'general')"
       ;;
+    4)
+      set_env LLM_PROVIDER "custom"
+      set_env LLM_BASE_URL "$(ask 'Base URL (OpenAI-compatible endpoint)' 'http://localhost:1234/v1')"
+      ask_llm_key 'API key (Enter if your endpoint needs none)'
+      set_env LLM_MODEL "$(ask 'Model id' '')"
+      ;;
     *)
-      set_env CLAUDE_CODE_USE_OPENAI "1"
-      set_env OPENAI_BASE_URL "https://api.deepseek.com"
-      ask_key OPENAI_API_KEY
-      set_env OPENAI_MODEL "$(choose_model 'DeepSeek' \
+      set_env LLM_PROVIDER "deepseek"
+      ask_llm_key 'DeepSeek API key'
+      set_env LLM_MODEL "$(choose_model 'DeepSeek' \
         deepseek-chat 'V3 general' \
         deepseek-reasoner 'R1 reasoning')"
       ;;
   esac
   ok ".env configured"
 else
-  warn "Non-interactive install — edit $ENV_FILE and set your API key before running."
+  warn "Non-interactive install — edit $ENV_FILE and set LLM_PROVIDER + LLM_API_KEY before running."
 fi
 
 # 8. Health check
@@ -257,9 +278,9 @@ ok "LocoAgent installed at $INSTALL_DIR"
 {
   printf '\nNext steps:\n'
   printf '  cd "%s"\n' "$INSTALL_DIR"
-  if [ -z "$(get_env OPENAI_API_KEY)" ] && [ -z "$(get_env ANTHROPIC_API_KEY)" ]; then
-    printf '  # add your API key to .env first\n'
+  if [ -z "$(get_env LLM_API_KEY)" ] && [ -z "$(get_env OPENAI_API_KEY)" ] && [ -z "$(get_env ANTHROPIC_API_KEY)" ]; then
+    printf '  # add LLM_API_KEY to .env first\n'
   fi
-  printf '  bun run setup-chrome     # copy Chrome profile + launch Chrome with CDP on :9222\n'
+  printf '  bun run setup-chrome     # launch an isolated Chrome with CDP on :9222 (does not touch your normal Chrome)\n'
   printf '  bun start                # interactive REPL\n'
 } >&2

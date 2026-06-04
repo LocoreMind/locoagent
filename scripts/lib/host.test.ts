@@ -30,8 +30,21 @@ test('defaultSourceProfile differs per host', () => {
   expect(defaultSourceProfile('linux')).toContain('.config')
 })
 
-test('defaultWorkProfile lives under a temp dir', () => {
+test('defaultWorkProfile lives under a stable per-user dir, not temp', () => {
+  // no-arg still works (detects host + process.env)
   expect(defaultWorkProfile()).toContain('locoagent-chrome-profile')
+  // windows → under LOCALAPPDATA
+  expect(defaultWorkProfile('windows', { LOCALAPPDATA: 'C:\\LA' })).toBe(
+    join('C:\\LA', 'locoagent-chrome-profile'),
+  )
+  // macos → under Application Support
+  expect(defaultWorkProfile('macos')).toContain('Application Support')
+  // linux → honours XDG_DATA_HOME
+  expect(defaultWorkProfile('linux', { XDG_DATA_HOME: '/data' })).toBe(
+    join('/data', 'locoagent-chrome-profile'),
+  )
+  // none of them live under the OS temp dir
+  expect(defaultWorkProfile('windows', { LOCALAPPDATA: 'C:\\LA' })).not.toContain('Temp')
 })
 
 test('resolveChromeBinary returns an existing explicit path', () => {

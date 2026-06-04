@@ -133,6 +133,19 @@ function Set-EnvVal($key,$val){
   else { $new = $content + "$key=$val" }
   Set-Content -Path $EnvFile -Value $new -Encoding UTF8
 }
+# Blank out a legacy var IF it already exists in .env (never append it). Keeps the
+# neutral LLM_* front door the single source of truth when migrating an old .env.
+function Clear-EnvVal($key){
+  $rx = "^$([regex]::Escape($key))="
+  $content = @(Get-Content $EnvFile -ErrorAction SilentlyContinue)
+  if ($content -match $rx) {
+    $new = $content | ForEach-Object { if ($_ -match $rx) { "$key=" } else { $_ } }
+    Set-Content -Path $EnvFile -Value $new -Encoding UTF8
+  }
+}
+function Clear-LegacyProviderVars {
+  foreach ($k in @('CLAUDE_CODE_USE_OPENAI','OPENAI_API_KEY','OPENAI_BASE_URL','OPENAI_MODEL','ANTHROPIC_API_KEY','ANTHROPIC_MODEL')) { Clear-EnvVal $k }
+}
 function Read-Default($prompt,$def){
   $label = if ($def) { "$prompt [$def]" } else { $prompt }
   try { $a = Read-Host $label } catch { $a = '' }
@@ -171,53 +184,62 @@ function Choose-Model($desc, $opts, $def){
   }
   return $ans.Trim()   # non-numeric free-form → literal model id
 }
-function Ask-ApiKey($key){
-  $existing = Get-EnvVal $key
-  $v = Read-Secret "$key (Enter to keep existing)"
-  if ($v) { Set-EnvVal $key $v }
-  elseif (-not $existing) { Warn "No API key entered - add $key to .env before running." }
+# Prompt for the provider key and write it to the neutral LLM_API_KEY. The label
+# is provider-correct (e.g. "DeepSeek API key") so the user never sees OPENAI_*.
+function Ask-LlmKey($label){
+  $existing = Get-EnvVal 'LLM_API_KEY'
+  $v = Read-Secret "$label (Enter to keep existing)"
+  if ($v) { Set-EnvVal 'LLM_API_KEY' $v }
+  elseif (-not $existing) { Warn "No API key entered - add LLM_API_KEY to .env before running." }
 }
 if ($Interactive) {
   Info "Configure your LLM provider."
-  # Flow per provider: pick provider -> enter API key -> pick model.
-  # base_url is fixed per provider (no prompt); model has a menu + custom option.
-  $prov = Read-Default 'Provider - 1) DeepSeek  2) Anthropic  3) OpenAI' '1'
+  # One neutral front door: pick provider -> enter that provider's key -> pick model.
+  # We write LLM_PROVIDER/LLM_API_KEY/LLM_MODEL (+LLM_BASE_URL for custom) and clear
+  # any legacy OPENAI_*/ANTHROPIC_* so the .env has a single, unambiguous source.
+  $prov = Read-Default 'Provider - 1) DeepSeek  2) Anthropic  3) OpenAI  4) Custom (OpenAI-compatible)' '1'
+  Clear-LegacyProviderVars
+  Set-EnvVal 'LLM_BASE_URL' ''
   switch ($prov) {
     '2' {
-      Set-EnvVal 'CLAUDE_CODE_USE_OPENAI' ''
-      Ask-ApiKey 'ANTHROPIC_API_KEY'
+      Set-EnvVal 'LLM_PROVIDER' 'anthropic'
+      Ask-LlmKey 'Anthropic API key'
       $opts = @(
         @{ Val = 'claude-sonnet-4-6';           Label = 'balanced (recommended)' },
         @{ Val = 'claude-opus-4-8';             Label = 'most capable' },
         @{ Val = 'claude-haiku-4-5-20251001';   Label = 'fast' }
       )
-      Set-EnvVal 'ANTHROPIC_MODEL' (Choose-Model 'Anthropic' $opts 'claude-sonnet-4-6')
+      Set-EnvVal 'LLM_MODEL' (Choose-Model 'Anthropic' $opts 'claude-sonnet-4-6')
     }
     '3' {
-      Set-EnvVal 'CLAUDE_CODE_USE_OPENAI' '1'
-      Set-EnvVal 'OPENAI_BASE_URL' 'https://api.openai.com/v1'
-      Ask-ApiKey 'OPENAI_API_KEY'
+      Set-EnvVal 'LLM_PROVIDER' 'openai'
+      Ask-LlmKey 'OpenAI API key'
       $opts = @(
         @{ Val = 'gpt-5.5';  Label = 'latest' },
         @{ Val = 'gpt-4o';   Label = 'multimodal' },
         @{ Val = 'gpt-4.1';  Label = 'general' }
       )
-      Set-EnvVal 'OPENAI_MODEL' (Choose-Model 'OpenAI' $opts 'gpt-5.5')
+      Set-EnvVal 'LLM_MODEL' (Choose-Model 'OpenAI' $opts 'gpt-5.5')
+    }
+    '4' {
+      Set-EnvVal 'LLM_PROVIDER' 'custom'
+      Set-EnvVal 'LLM_BASE_URL' (Read-Default 'Base URL (OpenAI-compatible endpoint)' 'http://localhost:1234/v1')
+      Ask-LlmKey 'API key (Enter if your endpoint needs none)'
+      Set-EnvVal 'LLM_MODEL' (Read-Default 'Model id' '')
     }
     default {
-      Set-EnvVal 'CLAUDE_CODE_USE_OPENAI' '1'
-      Set-EnvVal 'OPENAI_BASE_URL' 'https://api.deepseek.com'
-      Ask-ApiKey 'OPENAI_API_KEY'
+      Set-EnvVal 'LLM_PROVIDER' 'deepseek'
+      Ask-LlmKey 'DeepSeek API key'
       $opts = @(
         @{ Val = 'deepseek-chat';     Label = 'V3 general' },
         @{ Val = 'deepseek-reasoner'; Label = 'R1 reasoning' }
       )
-      Set-EnvVal 'OPENAI_MODEL' (Choose-Model 'DeepSeek' $opts 'deepseek-chat')
+      Set-EnvVal 'LLM_MODEL' (Choose-Model 'DeepSeek' $opts 'deepseek-chat')
     }
   }
   Ok ".env configured"
 } else {
-  Warn "Non-interactive install - edit $EnvFile and set your API key before running."
+  Warn "Non-interactive install - edit $EnvFile and set LLM_PROVIDER + LLM_API_KEY before running."
 }
 
 # 6b. git-bash auto-detect (Windows runtime needs CLAUDE_CODE_GIT_BASH_PATH)
@@ -244,8 +266,8 @@ Ok "LocoAgent installed at $InstallDir"
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Cyan
 Write-Host "  cd `"$InstallDir`""
-if (-not (Get-EnvVal 'OPENAI_API_KEY') -and -not (Get-EnvVal 'ANTHROPIC_API_KEY')) {
-  Write-Host "  # add your API key to .env first"
+if (-not (Get-EnvVal 'LLM_API_KEY') -and -not (Get-EnvVal 'OPENAI_API_KEY') -and -not (Get-EnvVal 'ANTHROPIC_API_KEY')) {
+  Write-Host "  # add LLM_API_KEY to .env first"
 }
-Write-Host "  bun run setup-chrome     # copy Chrome profile + launch Chrome with CDP on :9222"
+Write-Host "  bun run setup-chrome     # launch an isolated Chrome with CDP on :9222 (won't touch your normal Chrome)"
 Write-Host "  bun start                # interactive REPL"

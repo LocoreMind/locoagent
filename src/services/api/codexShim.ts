@@ -2,6 +2,7 @@ import type {
   ResolvedCodexCredentials,
   ResolvedProviderRequest,
 } from './providerConfig.js'
+import { shimFetch } from './shimFetch.js'
 
 export interface AnthropicUsage {
   input_tokens: number
@@ -480,7 +481,7 @@ export async function performCodexRequest(options: {
   }
   headers.originator ??= 'openclaude'
 
-  const response = await fetch(`${options.request.baseUrl}/responses`, {
+  const response = await shimFetch(`${options.request.baseUrl}/responses`, {
     method: 'POST',
     headers,
     body: JSON.stringify(body),

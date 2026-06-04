@@ -19,20 +19,23 @@ and is shared by `setup-chrome.ts` and `doctor.ts`.
 ```bash
 bun install
 bun run doctor            # verify bun, agent-browser, Chrome, env
-bun run setup-chrome      # copy profile + launch Chrome with CDP on :9222
+bun run setup-chrome      # launch isolated Chrome with CDP on :9222 (no conflict with your normal Chrome)
 bun start                 # interactive REPL
 ```
 
 `bun run setup-chrome` is the same command on every OS. `setup-chrome:win` is a
-retained alias.
+retained alias. It launches a **fresh, isolated, persistent** profile (never your
+real Chrome) and connects agent-browser; log into your socials once in that
+window and the session persists. Re-running just reconnects — it never kills your
+everyday Chrome or wipes the session. Use `bun run setup-chrome --reset` to wipe
+the isolated profile and log in fresh.
 
 ## Configuration (`.env`)
 
 | Var | Default (Windows) | Default (macOS) |
 |-----|-------------------|-----------------|
 | `CHROME_BIN` | `C:\Program Files\Google\Chrome\Application\chrome.exe` | `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` |
-| `CHROME_SOURCE_PROFILE` | `%LOCALAPPDATA%\Google\Chrome\User Data\Default` | `~/Library/Application Support/Google/Chrome/Default` |
-| `CHROME_WORK_PROFILE` | `%TEMP%\locoagent-chrome-profile` | `$TMPDIR/locoagent-chrome-profile` |
+| `CHROME_WORK_PROFILE` (isolated, persistent) | `%LOCALAPPDATA%\locoagent-chrome-profile` | `~/Library/Application Support/locoagent-chrome-profile` |
 | `CHROME_DEBUG_PORT` | `9222` | `9222` |
 | `DEVICE_PROFILE` | `desktop` | `desktop` |
 

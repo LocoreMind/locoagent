@@ -29,6 +29,7 @@ import {
   resolveCodexApiCredentials,
   resolveProviderRequest,
 } from './providerConfig.js'
+import { shimFetch } from './shimFetch.js'
 
 // ---------------------------------------------------------------------------
 // Types — minimal subset of Anthropic SDK types we need to produce
@@ -785,7 +786,7 @@ class OpenAIShimMessages {
       chatCompletionsUrl = `${request.baseUrl}/chat/completions`
     }
 
-    const response = await fetch(chatCompletionsUrl, {
+    const response = await shimFetch(chatCompletionsUrl, {
       method: 'POST',
       headers,
       body: JSON.stringify(body),
