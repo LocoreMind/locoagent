@@ -38,7 +38,7 @@ die()  { err "$*"; exit 1; }
 have() { command -v "$1" >/dev/null 2>&1; }
 
 TTY=""
-[ -r /dev/tty ] && TTY=/dev/tty
+if (exec < /dev/tty) 2>/dev/null; then TTY=/dev/tty; fi
 ask() { # ask <prompt> <default>
   local prompt="$1" def="$2" ans=""
   if [ -n "$TTY" ]; then
