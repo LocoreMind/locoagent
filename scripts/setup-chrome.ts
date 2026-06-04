@@ -35,7 +35,17 @@ const targetFlag = (() => {
 
 const PROJECT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const cfg = loadConfig()
-const targets = loadTargets()
+let targets: Record<string, ResolvedTarget>
+try {
+  targets = loadTargets()
+} catch (e) {
+  console.error(`x ${(e as Error).message}`)
+  process.exit(1)
+}
+
+if (ALL && targetFlag) {
+  console.error('   note: --target is ignored when --all is specified')
+}
 
 // Decide which targets to bring up.
 let selected: ResolvedTarget[]
@@ -77,6 +87,10 @@ function clearStaleDaemon(): void {
 function connectAgentBrowser(port: number): void {
   clearStaleDaemon()
   console.error(`-> Connecting agent-browser daemon to CDP ${port} ...`)
+  // stdout/stderr MUST be ignored, not inherited: `connect` forks a persistent
+  // daemon that would inherit our stdout and hold it open forever, hanging any
+  // caller that reads our output to EOF (a shell pipe, or the agent's own tool
+  // runner). We only need the exit code here.
   const conn = Bun.spawnSync(['agent-browser', 'connect', String(port)], {
     stdout: 'ignore',
     stderr: 'ignore',
@@ -87,23 +101,30 @@ function connectAgentBrowser(port: number): void {
   }
 }
 
-/** Bring up one target: fast-path reconnect, reset wipe, launch, wait for CDP. */
-async function setupTarget(t: ResolvedTarget): Promise<{ fresh: boolean }> {
+/** Bring up one target: fast-path reconnect, reset wipe, launch, wait for CDP.
+ *  Returns ok:false on CDP timeout (caller decides whether to abort). */
+async function setupTarget(t: ResolvedTarget): Promise<{ fresh: boolean; ok: boolean }> {
+  let killed = false
   // Fast path: already up and not resetting → leave it running.
   if (await cdpUp(t.cdpPort)) {
     if (!RESET) {
       console.error(`-> [${t.platform}] CDP already up on ${t.cdpPort}; leaving as-is.`)
-      return { fresh: false }
+      return { fresh: false, ok: true }
     }
     console.error(`-> [${t.platform}] --reset: stopping existing instance ...`)
     await killChromeForProfile(t.profile, cfg.host)
+    killed = true
     await Bun.sleep(1000)
   }
 
   if (RESET && existsSync(t.profile)) {
     console.error(`-> [${t.platform}] --reset: wiping profile ${t.profile} ...`)
-    await killChromeForProfile(t.profile, cfg.host)
-    await Bun.sleep(500)
+    if (!killed) {
+      // Not already killed above (instance wasn't running) — ensure no stale
+      // process holds the profile dir before we remove it.
+      await killChromeForProfile(t.profile, cfg.host)
+      await Bun.sleep(500)
+    }
     rmSync(t.profile, { recursive: true, force: true })
   }
 
@@ -114,6 +135,9 @@ async function setupTarget(t: ResolvedTarget): Promise<{ fresh: boolean }> {
   }
 
   console.error(`-> [${t.platform}] launching Chrome on ${t.cdpPort} ...`)
+  // Must be DETACHED — on Windows a Bun-spawned child dies when this script
+  // exits, tearing down the CDP endpoint the moment setup finishes (which sends
+  // agent-browser back to its bundled Chrome for Testing). See launchChromeDetached.
   launchChromeDetached(
     cfg.chromeBin,
     [
@@ -130,29 +154,38 @@ async function setupTarget(t: ResolvedTarget): Promise<{ fresh: boolean }> {
   for (let i = 1; i <= 15; i++) {
     if (await cdpUp(t.cdpPort)) {
       console.error(`   [${t.platform}] CDP ready (${i}s)`)
-      return { fresh }
+      return { fresh, ok: true }
     }
     await Bun.sleep(1000)
   }
   console.error(`x [${t.platform}] CDP ${t.cdpPort} not ready after 15s`)
   console.error('  If an old instance is stuck, try: bun run setup-chrome --target ' + t.platform + ' --reset')
-  process.exit(1)
+  return { fresh, ok: false }
 }
 
+// Launch every selected target. --all is RESILIENT: one target failing does not
+// abort the others; failures are collected and reported, and we exit non-zero.
 let anyFresh = false
+const failed: string[] = []
 for (const t of selected) {
-  const { fresh } = await setupTarget(t)
+  const { fresh, ok } = await setupTarget(t)
   anyFresh = anyFresh || fresh
+  if (!ok) failed.push(t.platform)
 }
 
-// Connect the daemon only to the default target if we launched it.
+// Connect the daemon only to the default target, and only if it launched OK.
 const defaultTarget = selected.find(t => t.platform === DEFAULT_PLATFORM)
-if (defaultTarget) connectAgentBrowser(defaultTarget.cdpPort)
+if (defaultTarget && !failed.includes(DEFAULT_PLATFORM)) {
+  connectAgentBrowser(defaultTarget.cdpPort)
+} else if (!defaultTarget) {
+  console.error(`   note: agent-browser daemon left as-is ('${DEFAULT_PLATFORM}' not in this run); executors reach these targets via --cdp <port>.`)
+}
 
 console.error('')
-console.error('OK Chrome setup complete.')
+console.error(failed.length ? `x setup-chrome: ${failed.length} target(s) failed: ${failed.join(', ')}` : 'OK Chrome setup complete.')
 for (const t of selected) {
-  console.error(`   ${t.platform}: CDP http://127.0.0.1:${t.cdpPort}  profile ${t.profile}`)
+  const mark = failed.includes(t.platform) ? 'FAILED' : 'ok'
+  console.error(`   ${t.platform} [${mark}]: CDP http://127.0.0.1:${t.cdpPort}  profile ${t.profile}`)
 }
 if (anyFresh) {
   console.error('')
@@ -161,4 +194,4 @@ if (anyFresh) {
 }
 console.error('')
 console.error('   Run: bun start')
-process.exit(0)
+process.exit(failed.length ? 1 : 0)
