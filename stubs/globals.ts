@@ -17,7 +17,12 @@ if (existsSync(envPath)) {
     if (eqIdx === -1) continue
     const key = trimmed.slice(0, eqIdx).trim()
     const val = trimmed.slice(eqIdx + 1).trim()
-    if (key && !(key in process.env)) {
+    // A blank value (e.g. `CHROME_WORK_PROFILE=`) is a "leave for the default"
+    // placeholder, not a real setting. Injecting it as an empty string defeats
+    // every `env.X ?? default` downstream (??/|| treat '' as set), which is how
+    // a blank CHROME_WORK_PROFILE crashed setup-chrome with `mkdirSync('')`.
+    // Skip blanks so the key stays absent and defaults apply.
+    if (key && val && !(key in process.env)) {
       process.env[key] = val
     }
   }
