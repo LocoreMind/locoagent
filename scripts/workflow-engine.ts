@@ -245,6 +245,21 @@ function finalizeRun(state: StateFile, ws: WorkflowState, stdout: string, exitCo
   return run
 }
 
+// In-process serialization for state.json read-modify-write. `orchestrate` runs
+// executeWorkflow concurrently across platforms; since saveState rewrites the
+// WHOLE file, two concurrent loadState→finalizeRun→saveState sequences would
+// clobber each other's workflow entry. This mutex makes each such sequence atomic
+// within the process. (run/daemon are single-workflow per process and don't need it.)
+// NOTE: this does NOT guard against two SEPARATE processes — e.g. `start` for two
+// different platforms at once — racing on the file; that pre-existing edge is
+// uncommon (same-platform concurrency is already prevented by the platform lock).
+let stateMutex: Promise<unknown> = Promise.resolve()
+function withStateMutex<T>(fn: () => T): Promise<T> {
+  const result = stateMutex.then(fn)
+  stateMutex = result.then(() => {}, () => {})
+  return result
+}
+
 /**
  * Run one workflow to completion (async, lock-guarded). Used by `orchestrate`.
  * Acquires the platform lock, spawns the executor, finalizes state, releases.
@@ -260,10 +275,12 @@ async function executeWorkflow(def: WorkflowDefinition): Promise<{ id: string; p
     if (!existsSync(executorPath)) {
       return { id: def.id, platform, run: null, skipped: `executor not found: ${executorPath}` }
     }
-    const state = loadState()
-    if (!state.workflows[def.id]) state.workflows[def.id] = getDefaultWorkflowState()
-    state.workflows[def.id]!.status = 'running'
-    saveState(state)
+    await withStateMutex(() => {
+      const state = loadState()
+      if (!state.workflows[def.id]) state.workflows[def.id] = getDefaultWorkflowState()
+      state.workflows[def.id]!.status = 'running'
+      saveState(state)
+    })
 
     let stdout = ''
     let exitCode: number | null = null
@@ -283,11 +300,14 @@ async function executeWorkflow(def: WorkflowDefinition): Promise<{ id: string; p
       exitCode = 1
     }
 
-    const freshState = loadState()
-    const freshWs = freshState.workflows[def.id] ?? getDefaultWorkflowState()
-    const run = finalizeRun(freshState, freshWs, stdout, exitCode)
-    delete (freshWs as any).pid
-    saveState(freshState)
+    const run = await withStateMutex(() => {
+      const freshState = loadState()
+      const freshWs = freshState.workflows[def.id] ?? getDefaultWorkflowState()
+      const r = finalizeRun(freshState, freshWs, stdout, exitCode)
+      delete (freshWs as any).pid
+      saveState(freshState)
+      return r
+    })
     return { id: def.id, platform, run }
   } finally {
     if (platform) releaseLock(platform, def.id)
