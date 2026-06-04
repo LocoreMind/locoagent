@@ -61,6 +61,7 @@ Desktop.ini
 # Runtime state (contains absolute paths, PIDs, execution history)
 workflows/state.json
 workflows/.tmp/
+workflows/.locks/
 
 # Persona (private identity and runtime data)
 persona/

@@ -8,6 +8,7 @@ A guide for LocoAgent developers on creating, testing, and deploying custom Work
 
 - [1. What is a Workflow](#1-what-is-a-workflow)
 - [2. Architecture](#2-architecture)
+- [Browser Targets (Multi-Platform)](#browser-targets-multi-platform)
 - [3. Creating a Workflow Step by Step](#3-creating-a-workflow-step-by-step)
   - [3.1 Step 1: Write the Workflow Definition](#31-step-1-write-the-workflow-definition)
   - [3.2 Step 2: Write the Executor Script](#32-step-2-write-the-executor-script)
@@ -82,6 +83,16 @@ workflows/
 
 ---
 
+## Browser Targets (Multi-Platform)
+
+`config/browser-targets.json` maps each platform to its browser instance: `{cdpPort, profile, proxy, device}`. This is the single source of truth for `setup-chrome`, the workflow engine's target injection, and `doctor --check-cdp`.
+
+- **Launching instances:** `bun run setup-chrome --all` starts every registered target; `bun run setup-chrome --target <platform>` starts one. Each platform gets its own port and isolated profile, giving full cookie isolation between accounts.
+- **Binding a workflow to a target:** set `"platform": "<name>"` in the workflow JSON. The engine reads the registry and injects `cdpPort`, `profile`, `proxy`, and `device` into the executor's config automatically. Do **not** hard-code `cdpPort` in the workflow JSON.
+- **Running multiple platforms together:** `bun run workflow orchestrate --ids x-search-reply,linkedin-search-reply` groups workflows by platform — same-platform workflows run serially (one active tab per profile); different platforms run in parallel. Per-platform file locks in `workflows/.locks/<platform>.lock` coordinate `run`, `start`, `daemon`, and `orchestrate` across processes.
+
+---
+
 ## 3. Creating a Workflow Step by Step
 
 ### 3.1 Step 1: Write the Workflow Definition
@@ -94,11 +105,11 @@ Create `<your-id>.json` in `workflows/`:
   "name": "My Custom Workflow",
   "description": "Describe what this workflow does",
   "schedule": "daily",
+  "platform": "x",
   "executor": "executors/my-workflow.ts",
   "config": {
     "param1": "value1",
-    "param2": 42,
-    "cdpPort": 9222
+    "param2": 42
   }
 }
 ```
@@ -259,12 +270,11 @@ Each Workflow definition is a JSON file in `workflows/` (excluding `state.json`)
   "name": "HuggingFace Daily Papers",
   "description": "Fetch today's top papers from HuggingFace...",
   "schedule": "daily",
+  "platform": "x",
   "executor": "executors/hf-daily-papers.ts",
   "config": {
     "maxPapers": 3,
     "minUpvotes": 5,
-    "cdpPort": 9222,
-    "proxy": "http://127.0.0.1:6738",
     "abstractMaxChars": 200,
     "downloadThumbnails": true,
     "saveDataJson": true,
@@ -280,11 +290,11 @@ Each Workflow definition is a JSON file in `workflows/` (excluding `state.json`)
   "name": "X.com Search & AI Reply",
   "description": "Search X.com for a keyword..., generate a reply using DeepSeek...",
   "schedule": "hourly",
+  "platform": "x",
   "executor": "executors/x-search-reply.ts",
   "config": {
     "searchQuery": "ai agent",
     "maxPosts": 5,
-    "cdpPort": 9222,
     "xUsername": "mashijiann",
     "outputDir": ".tmp",
     "replySystemPrompt": "You are a knowledgeable AI enthusiast..."
@@ -306,6 +316,7 @@ Executor scripts must satisfy the following contract:
 | **Log to stderr** | Use `console.error()` for logs (visible during execution) |
 | **JSON summary to stdout** | Last line must be a JSON object via `console.log()` |
 | **Include step counts in JSON** | Must contain `stepsCompleted` and `stepsTotal` fields |
+| **Use `--cdp <config.cdpPort>`** | `cdpPort` (plus `profile`, `proxy`, `device`) is injected by the engine from `config/browser-targets.json` based on the workflow's `platform` field. Always call agent-browser with `--cdp <config.cdpPort>` — never a bare `agent-browser` command, which would hit the global default port and grab the wrong tab during concurrent multi-platform runs. Do **not** hard-code `cdpPort` in the workflow JSON; set `"platform"` instead. |
 
 **JSON summary format:**
 

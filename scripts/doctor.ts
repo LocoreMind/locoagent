@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url'
 import { detectHost, resolveChromeBinary } from './lib/host'
 import { resolveDevice } from './lib/device'
 import { agentBrowserConfigPath } from './lib/agent-browser-config'
+import { loadTargets } from './lib/browser-targets'
 
 interface Check { name: string; ok: boolean; critical: boolean; detail: string }
 const checks: Check[] = []
@@ -55,9 +56,20 @@ try {
 }
 
 // agent-browser CDP pin — without it agent-browser launches its own bundled
-// Chrome for Testing instead of attaching to the isolated CDP profile.
+// Chrome for Testing instead of attaching to the isolated CDP profile. The pin
+// must match the DEFAULT platform's registry port (what setup-chrome pins to),
+// not CHROME_DEBUG_PORT — the registry is the single source of truth.
 {
-  const port = parseInt(process.env.CHROME_DEBUG_PORT?.trim() || '9222', 10)
+  // Default-platform port from the registry (x), falling back to 9222 if the
+  // registry is missing/unreadable so doctor still gives a sane answer.
+  let port = 9222
+  try {
+    const targets = loadTargets()
+    const def = targets['x'] ?? Object.values(targets)[0]
+    if (def) port = def.cdpPort
+  } catch {
+    /* no registry → keep 9222 default */
+  }
   const pinPath = agentBrowserConfigPath(root)
   let ok = false
   let detail = `missing ${pinPath} (run: bun run setup-chrome)`
@@ -67,7 +79,7 @@ try {
       ok = true
       detail = `cdp pinned to ${port}`
     } else {
-      detail = `cdp="${cfg.cdp}" but CHROME_DEBUG_PORT=${port} (run: bun run setup-chrome)`
+      detail = `cdp="${cfg.cdp}" but default target port=${port} (run: bun run setup-chrome)`
     }
   } catch {
     /* missing/malformed → not ok */
@@ -104,20 +116,23 @@ add('persona/ dir', existsSync(join(root, 'persona')), false,
   add('Operation-log round-trip', ok, true, ok ? 'write+check OK' : 'failed')
 }
 
-// Optional CDP reachability
+// Optional CDP reachability — probe every registered platform target.
 if (process.argv.includes('--check-cdp')) {
-  // Blank/whitespace (empty placeholder or exported-empty var) → default, not NaN.
-  const port = parseInt(process.env.CHROME_DEBUG_PORT?.trim() || '9222', 10)
-  let ok = false
-  let detail = `port ${port} unreachable (run: bun run setup-chrome)`
+  const { loadTargets, cdpUp } = await import('./lib/browser-targets')
   try {
-    const res = await fetch(`http://127.0.0.1:${port}/json/version`)
-    ok = res.ok
-    if (ok) detail = `CDP up on ${port}`
-  } catch {
-    /* unreachable */
+    const targets = loadTargets()
+    for (const t of Object.values(targets)) {
+      const up = await cdpUp(t.cdpPort)
+      add(
+        `CDP ${t.platform}`,
+        up,
+        false,
+        up ? `up on ${t.cdpPort}` : `port ${t.cdpPort} unreachable (run: bun run setup-chrome --target ${t.platform})`,
+      )
+    }
+  } catch (e) {
+    add('CDP targets', false, false, `registry error: ${(e as Error).message}`)
   }
-  add('CDP reachable', ok, false, detail)
 }
 
 // Report

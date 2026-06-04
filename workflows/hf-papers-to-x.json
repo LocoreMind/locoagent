@@ -3,12 +3,11 @@
   "name": "HuggingFace Daily Papers → X.com Post",
   "description": "Fetch top papers from HuggingFace, download thumbnails, and post each as an image+text tweet to X.com",
   "schedule": "daily",
+  "platform": "x",
   "executor": "executors/hf-papers-to-x.ts",
   "config": {
     "maxPapers": 5,
     "minUpvotes": 5,
-    "cdpPort": 9222,
-    "proxy": "http://127.0.0.1:6738",
     "abstractMaxChars": 150,
     "outputDir": ".tmp",
     "xUsername": "mashijiann"

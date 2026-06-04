@@ -21,6 +21,8 @@ import { existsSync, readFileSync, writeFileSync, readdirSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawn, spawnSync } from 'node:child_process'
+import { resolveTarget } from './lib/browser-targets'
+import { acquireLock, releaseLock } from './lib/platform-lock'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
@@ -34,6 +36,7 @@ interface WorkflowDefinition {
   name: string
   description: string
   schedule: string
+  platform?: string
   executor: string
   config: Record<string, unknown>
 }
@@ -90,6 +93,25 @@ function loadWorkflowDefinitions(): WorkflowDefinition[] {
 function getWorkflowDef(id: string): WorkflowDefinition | null {
   const defs = loadWorkflowDefinitions()
   return defs.find(d => d.id === id) ?? null
+}
+
+/**
+ * Build the --config JSON for an executor. When the workflow declares a platform,
+ * the resolved target's cdpPort/profile/proxy/device are injected so the port
+ * lives in exactly one place (the registry). Workflows without a platform fall
+ * back to their own config (back-compat).
+ */
+function buildConfigJson(def: WorkflowDefinition): string {
+  if (!def.platform) return JSON.stringify(def.config)
+  const t = resolveTarget(def.platform)
+  const merged: Record<string, unknown> = {
+    ...def.config,
+    cdpPort: t.cdpPort,
+    profile: t.profile,
+    device: t.device,
+  }
+  if (t.proxy) merged['proxy'] = t.proxy
+  return JSON.stringify(merged)
 }
 
 // ── Arg parsing ──────────────────────────────────────────────────────────────
@@ -182,7 +204,7 @@ function prepareRun(id: string): { def: WorkflowDefinition; ws: WorkflowState; s
   ws.status = 'running'
   saveState(state)
 
-  return { def, ws, state, executorPath, configJson: JSON.stringify(def.config) }
+  return { def, ws, state, executorPath, configJson: buildConfigJson(def) }
 }
 
 function finalizeRun(state: StateFile, ws: WorkflowState, stdout: string, exitCode: number | null, stderr?: string): WorkflowRun {
@@ -223,6 +245,75 @@ function finalizeRun(state: StateFile, ws: WorkflowState, stdout: string, exitCo
   return run
 }
 
+// In-process serialization for state.json read-modify-write. `orchestrate` runs
+// executeWorkflow concurrently across platforms; since saveState rewrites the
+// WHOLE file, two concurrent loadState→finalizeRun→saveState sequences would
+// clobber each other's workflow entry. This mutex makes each such sequence atomic
+// within the process. (run/daemon are single-workflow per process and don't need it.)
+// NOTE: this does NOT guard against two SEPARATE processes — e.g. `start` for two
+// different platforms at once — racing on the file; that pre-existing edge is
+// uncommon (same-platform concurrency is already prevented by the platform lock).
+let stateMutex: Promise<unknown> = Promise.resolve()
+function withStateMutex<T>(fn: () => T): Promise<T> {
+  const result = stateMutex.then(fn)
+  stateMutex = result.then(() => {}, () => {})
+  return result
+}
+
+/**
+ * Run one workflow to completion (async, lock-guarded). Used by `orchestrate`.
+ * Acquires the platform lock, spawns the executor, finalizes state, releases.
+ * Returns a labelled result for aggregation.
+ */
+async function executeWorkflow(def: WorkflowDefinition): Promise<{ id: string; platform: string | null; run: WorkflowRun | null; skipped?: string }> {
+  const platform = def.platform ?? null
+  if (platform && !acquireLock(platform, def.id)) {
+    return { id: def.id, platform, run: null, skipped: 'platform busy' }
+  }
+  try {
+    const executorPath = resolve(WORKFLOWS_DIR, def.executor)
+    if (!existsSync(executorPath)) {
+      return { id: def.id, platform, run: null, skipped: `executor not found: ${executorPath}` }
+    }
+    await withStateMutex(() => {
+      const state = loadState()
+      if (!state.workflows[def.id]) state.workflows[def.id] = getDefaultWorkflowState()
+      state.workflows[def.id]!.status = 'running'
+      saveState(state)
+    })
+
+    let stdout = ''
+    let exitCode: number | null = null
+    try {
+      const proc = Bun.spawn(['bun', 'run', executorPath, '--config', buildConfigJson(def)], {
+        cwd: ROOT,
+        stdin: 'inherit',
+        stdout: 'pipe',
+        stderr: 'inherit',
+      })
+      const timeoutId = setTimeout(() => { proc.kill() }, 10 * 60 * 1000)
+      stdout = await new Response(proc.stdout).text()
+      exitCode = await proc.exited
+      clearTimeout(timeoutId)
+    } catch (e: any) {
+      console.error(`[orchestrate] ${def.id} executor error: ${e.message}`)
+      exitCode = 1
+    }
+
+    const run = await withStateMutex(() => {
+      const freshState = loadState()
+      const freshWs = freshState.workflows[def.id] ?? getDefaultWorkflowState()
+      const r = finalizeRun(freshState, freshWs, stdout, exitCode)
+      delete (freshWs as any).pid
+      saveState(freshState)
+      return r
+    })
+    return { id: def.id, platform, run }
+  } finally {
+    if (platform) releaseLock(platform, def.id)
+  }
+}
+
 // ── run (synchronous, blocking) ──────────────────────────────────────────────
 
 if (command === 'run') {
@@ -232,26 +323,35 @@ if (command === 'run') {
     process.exit(2)
   }
 
-  const { def, ws, state, executorPath, configJson } = prepareRun(id)
-  console.log(`[workflow] Starting: ${def.name}`)
+  const peek = getWorkflowDef(id)
+  const platform = peek?.platform
+  if (platform && !acquireLock(platform, id)) {
+    console.error(`[workflow] Platform "${platform}" is busy (another workflow holds the lock). Try later.`)
+    process.exit(1)
+  }
+  try {
+    const { def, ws, state, executorPath, configJson } = prepareRun(id)
+    console.log(`[workflow] Starting: ${def.name}`)
 
-  const result = spawnSync('bun', ['run', executorPath, '--config', configJson], {
-    stdio: ['inherit', 'pipe', 'inherit'],
-    encoding: 'utf-8',
-    cwd: ROOT,
-    timeout: 10 * 60 * 1000, // 10 min max
-  })
+    const result = spawnSync('bun', ['run', executorPath, '--config', configJson], {
+      stdio: ['inherit', 'pipe', 'inherit'],
+      encoding: 'utf-8',
+      cwd: ROOT,
+      timeout: 10 * 60 * 1000, // 10 min max
+    })
 
-  // Re-read state (may have been modified by `stop` during execution)
-  const freshState = loadState()
-  const freshWs = freshState.workflows[id] ?? getDefaultWorkflowState()
-  const run = finalizeRun(freshState, freshWs, result.stdout ?? '', result.status, result.stderr ?? '')
-  // Clean up background-start metadata if present
-  delete (freshWs as any).pid
-  delete (freshWs as any).startedAt
-  saveState(freshState)
-  console.log(`[workflow] Finished: ${run.status} (${run.stepsCompleted}/${run.stepsTotal} steps)`)
-  process.exit(run.status === 'failed' ? 1 : 0)
+    // Re-read state (may have been modified by `stop` during execution)
+    const freshState = loadState()
+    const freshWs = freshState.workflows[id] ?? getDefaultWorkflowState()
+    const run = finalizeRun(freshState, freshWs, result.stdout ?? '', result.status, result.stderr ?? '')
+    delete (freshWs as any).pid
+    delete (freshWs as any).startedAt
+    saveState(freshState)
+    console.log(`[workflow] Finished: ${run.status} (${run.stepsCompleted}/${run.stepsTotal} steps)`)
+    process.exit(run.status === 'failed' ? 1 : 0)
+  } finally {
+    if (platform) releaseLock(platform, id)
+  }
 }
 
 // ── start (background, non-blocking) ────────────────────────────────────────
@@ -486,7 +586,8 @@ if (command === 'daemon') {
     process.exit(1)
   }
 
-  const configJson = JSON.stringify(def.config)
+  const configJson = buildConfigJson(def)
+  const platform = def.platform
 
   console.log(`[daemon] Starting daemon for: ${def.name}`)
   console.log(`[daemon] Interval: ${intervalMinutes} minutes`)
@@ -521,48 +622,60 @@ if (command === 'daemon') {
       const now = new Date().toISOString()
       console.log(`\n[daemon] ═══ Cycle ${cycleCount} at ${now} ═══`)
 
-      // Run the executor asynchronously (spawnSync blocks event loop, breaking setTimeout)
-      const startedAt = new Date().toISOString()
-      let execStdout = ''
-      let execExitCode: number | null = null
-      try {
-        const proc = Bun.spawn(['bun', 'run', executorPath, '--config', configJson], {
-          cwd: ROOT,
-          stdin: 'inherit',
-          stdout: 'pipe',
-          stderr: 'inherit',
-        })
-        // Set a 10-minute timeout
-        const timeoutId = setTimeout(() => { proc.kill() }, 10 * 60 * 1000)
-        execStdout = await new Response(proc.stdout).text()
-        execExitCode = await proc.exited
-        clearTimeout(timeoutId)
-      } catch (e: any) {
-        console.error(`[daemon] Executor error: ${e.message}`)
-        execExitCode = 1
+      // Acquire the platform lock for THIS cycle so a same-platform run/orchestrate
+      // (or another daemon) won't drive the same profile concurrently. The lock is
+      // released between cycles (during the wait), so the platform is free while idle.
+      // If busy, skip this cycle and retry next interval.
+      if (platform && !acquireLock(platform, id!)) {
+        console.log(`[daemon] Platform "${platform}" busy; skipping cycle ${cycleCount}.`)
+      } else {
+        try {
+          // Run the executor asynchronously (spawnSync blocks event loop, breaking setTimeout)
+          const startedAt = new Date().toISOString()
+          let execStdout = ''
+          let execExitCode: number | null = null
+          try {
+            const proc = Bun.spawn(['bun', 'run', executorPath, '--config', configJson], {
+              cwd: ROOT,
+              stdin: 'inherit',
+              stdout: 'pipe',
+              stderr: 'inherit',
+            })
+            // Set a 10-minute timeout
+            const timeoutId = setTimeout(() => { proc.kill() }, 10 * 60 * 1000)
+            execStdout = await new Response(proc.stdout).text()
+            execExitCode = await proc.exited
+            clearTimeout(timeoutId)
+          } catch (e: any) {
+            console.error(`[daemon] Executor error: ${e.message}`)
+            execExitCode = 1
+          }
+
+          // Finalize this run in state
+          const freshState = loadState()
+          const freshWs = freshState.workflows[id!] ?? getDefaultWorkflowState()
+
+          // If stopped during execution, finalize and exit
+          if (freshWs.status === 'stopped') {
+            console.log(`[daemon] Stopped during execution. Finalizing and exiting.`)
+            finalizeRun(freshState, freshWs, execStdout, execExitCode)
+            break
+          }
+
+          // Save run result but keep status as 'running' for daemon mode
+          const run = finalizeRun(freshState, freshWs, execStdout, execExitCode)
+          // Re-mark as running (finalizeRun sets it to idle)
+          freshWs.status = 'running'
+          ;(freshWs as any).pid = process.pid
+          ;(freshWs as any).mode = 'daemon'
+          saveState(freshState)
+
+          console.log(`[daemon] Cycle ${cycleCount} done: ${run.status} (${run.stepsCompleted}/${run.stepsTotal} steps)`)
+          console.log(`[daemon] Next cycle in ${intervalMinutes} minutes...`)
+        } finally {
+          if (platform) releaseLock(platform, id!)
+        }
       }
-
-      // Finalize this run in state
-      const freshState = loadState()
-      const freshWs = freshState.workflows[id!] ?? getDefaultWorkflowState()
-
-      // If stopped during execution, finalize and exit
-      if (freshWs.status === 'stopped') {
-        console.log(`[daemon] Stopped during execution. Finalizing and exiting.`)
-        finalizeRun(freshState, freshWs, execStdout, execExitCode)
-        break
-      }
-
-      // Save run result but keep status as 'running' for daemon mode
-      const run = finalizeRun(freshState, freshWs, execStdout, execExitCode)
-      // Re-mark as running (finalizeRun sets it to idle)
-      freshWs.status = 'running'
-      ;(freshWs as any).pid = process.pid
-      ;(freshWs as any).mode = 'daemon'
-      saveState(freshState)
-
-      console.log(`[daemon] Cycle ${cycleCount} done: ${run.status} (${run.stepsCompleted}/${run.stepsTotal} steps)`)
-      console.log(`[daemon] Next cycle in ${intervalMinutes} minutes...`)
 
       // Wait for interval, checking stop signal every 10 seconds
       const intervalMs = intervalMinutes * 60 * 1000
@@ -617,9 +730,77 @@ if (command === 'daemon') {
   // The process will exit when daemonLoop() returns or throws
 }
 
+// ── orchestrate ──────────────────────────────────────────────────────────────
+// Run multiple workflows grouped by platform: SERIAL within a platform (one
+// active tab per profile), PARALLEL across platforms. Aggregates a combined
+// report. Interruptible: each platform queue checks the stop signal between runs.
+//
+// Usage: bun run workflow orchestrate --ids id1,id2,id3
+
+if (command === 'orchestrate') {
+  const idsArg = flags['ids']
+  if (!idsArg) {
+    console.error('Usage: workflow-engine.ts orchestrate --ids <id1,id2,...>')
+    process.exit(2)
+  }
+  const ids = idsArg.split(',').map(s => s.trim()).filter(Boolean)
+  const defs = loadWorkflowDefinitions()
+  const byId = new Map(defs.map(d => [d.id, d]))
+
+  // Group requested workflows by platform (unknown ids reported, not fatal).
+  const groups = new Map<string, WorkflowDefinition[]>()
+  const missing: string[] = []
+  for (const id of ids) {
+    const def = byId.get(id)
+    if (!def) { missing.push(id); continue }
+    const key = def.platform ?? '_none'
+    if (!groups.has(key)) groups.set(key, [])
+    groups.get(key)!.push(def)
+  }
+  for (const m of missing) console.error(`[orchestrate] Unknown workflow id: ${m}`)
+
+  console.error(`[orchestrate] platforms: ${[...groups.keys()].join(', ')}`)
+
+  // One serial queue per platform; run all queues in parallel.
+  const results: Array<{ id: string; platform: string | null; run: WorkflowRun | null; skipped?: string }> = []
+  await Promise.all(
+    [...groups.entries()].map(async ([platform, list]) => {
+      for (const def of list) {
+        // Stop signal: a `stop --id <thisId>` flips status to 'stopped'.
+        const st = loadState().workflows[def.id]
+        if (st?.status === 'stopped') {
+          results.push({ id: def.id, platform: def.platform ?? null, run: null, skipped: 'stopped' })
+          continue
+        }
+        console.error(`[orchestrate] [${platform}] running ${def.id} ...`)
+        results.push(await executeWorkflow(def))
+      }
+    }),
+  )
+
+  // Aggregate report — last stdout line is JSON for callers.
+  const summary = {
+    requested: ids.length,
+    missing,
+    results: results.map(r => ({
+      id: r.id,
+      platform: r.platform,
+      status: r.run?.status ?? 'skipped',
+      stepsCompleted: r.run?.stepsCompleted ?? 0,
+      stepsTotal: r.run?.stepsTotal ?? 0,
+      skipped: r.skipped,
+    })),
+  }
+  for (const r of summary.results) {
+    console.error(`[orchestrate] ${r.id} (${r.platform ?? '-'}): ${r.status}${r.skipped ? ` (${r.skipped})` : ''} ${r.stepsCompleted}/${r.stepsTotal}`)
+  }
+  console.log(JSON.stringify(summary))
+  process.exit(summary.results.some(r => r.status === 'failed') ? 1 : 0)
+}
+
 // ── unknown ──────────────────────────────────────────────────────────────────
 
-if (command !== 'daemon') {
-  console.error(`Unknown command: ${command}. Use: list | status | start | stop | reset | run | history | summary | daemon`)
+if (command !== 'daemon' && command !== 'orchestrate') {
+  console.error(`Unknown command: ${command}. Use: list | status | start | stop | reset | run | history | summary | daemon | orchestrate`)
   process.exit(2)
 }
