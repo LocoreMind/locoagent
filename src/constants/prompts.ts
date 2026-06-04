@@ -352,6 +352,67 @@ function getWorkflowStatusSection(): string {
   }
 }
 
+function getBrowserConnectionSection(): string {
+  // Only inject for the LocoAgent fork (detected by the isolated-Chrome
+  // launcher). Upstream Claude Code clones without it get nothing.
+  try {
+    const { existsSync } = require('node:fs')
+    const { join, dirname } = require('node:path')
+    const { fileURLToPath } = require('node:url')
+    const __dirname = dirname(fileURLToPath(import.meta.url))
+    if (!existsSync(join(__dirname, '../../scripts/setup-chrome.ts'))) return ''
+  } catch (_) {
+    return ''
+  }
+  return [
+    `# Browser Connection Contract (READ BEFORE ANY BROWSER ACTION)`,
+    ``,
+    `All social-media automation runs against ONE dedicated browser: an isolated,`,
+    `persistent Chrome with CDP enabled on port 9222, launched by \`bun run setup-chrome\`.`,
+    `It is SEPARATE from the user's everyday Chrome and is the ONLY place the social`,
+    `accounts are logged in. The user logs in there once, by hand; the session persists.`,
+    ``,
+    `## Preflight — run this at the start of EVERY browser task, before \`agent-browser open\``,
+    ``,
+    `1. Check the CDP endpoint is up:`,
+    `   \`\`\`bash`,
+    `   bun run doctor --check-cdp        # prints "CDP up on 9222" or tells you to run setup-chrome`,
+    `   \`\`\``,
+    `2. If CDP is DOWN, bring up the isolated Chrome (idempotent — reconnects if already up,`,
+    `   launches it if not; it NEVER touches the user's normal Chrome):`,
+    `   \`\`\`bash`,
+    `   bun run setup-chrome`,
+    `   \`\`\``,
+    `3. Connect and confirm you are LOGGED IN before doing anything else:`,
+    `   \`\`\`bash`,
+    `   agent-browser connect 9222 && agent-browser open https://x.com/home && agent-browser snapshot -i -c`,
+    `   \`\`\``,
+    `   A logged-in snapshot shows the timeline / account menu. A snapshot showing`,
+    `   "Sign in", "Email or username", "Continue with…" or a login wall means the`,
+    `   isolated profile is LOGGED OUT.`,
+    ``,
+    `## Hard rules — never violate these`,
+    ``,
+    `- **NEVER attempt an automated login.** Do not type usernames, emails, passwords,`,
+    `  or verification codes; do not click "Log in" / "Sign in" to authenticate; do not`,
+    `  retry a failed login. Automated login attempts get the real account rate-limited`,
+    `  or flagged ("We've temporarily limited your login"). This is the single worst`,
+    `  failure mode — avoid it absolutely.`,
+    `- **NEVER spin up a fresh \`--session-name\` / \`--headed\` / \`--profile\` browser to log`,
+    `  in.** A fresh session has no cookies and will drag you into the forbidden login flow.`,
+    `  Only the isolated CDP Chrome on 9222 is authorized.`,
+    `- **If the isolated profile is logged out, STOP and ask the user.** Tell them to log`,
+    `  into X in the isolated Chrome window that \`setup-chrome\` opened (it persists across`,
+    `  restarts), or to run \`bun run setup-chrome --reset\` for a clean re-login. Then resume.`,
+    `  Do not improvise, do not loop, do not try other ports or sessions.`,
+    `- Do not kill, close (\`close --all\`), or relaunch the browser to "fix" a login problem —`,
+    `  that destroys the very session you need. Re-running \`bun run setup-chrome\` reconnects`,
+    `  safely without wiping anything.`,
+    ``,
+    `The per-platform playbooks (e.g. \`/x-com\`) assume this contract is already satisfied.`,
+  ].join('\n')
+}
+
 function getAgentBrowserSection(): string {
   return `# agent-browser CLI
 
@@ -943,6 +1004,7 @@ ${CYBER_RISK_INSTRUCTION}`,
     getTasksSection(),
     getOperationLogSection(),
     getWorkflowStatusSection(),
+    getBrowserConnectionSection(),
     getAgentBrowserSection(),
     getSimpleToneAndStyleSection(),
     getOutputEfficiencySection(),
