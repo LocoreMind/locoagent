@@ -4,12 +4,13 @@
  * Run: bun run doctor [--check-cdp]
  * Exits non-zero if any CRITICAL check fails.
  */
-import { existsSync, mkdtempSync, rmSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { detectHost, resolveChromeBinary } from './lib/host'
 import { resolveDevice } from './lib/device'
+import { agentBrowserConfigPath } from './lib/agent-browser-config'
 
 interface Check { name: string; ok: boolean; critical: boolean; detail: string }
 const checks: Check[] = []
@@ -51,6 +52,27 @@ try {
   const ok = (r.exitCode ?? 1) === 0
   add('agent-browser CLI', ok, true,
     ok ? new TextDecoder().decode(r.stdout).trim() : 'not on PATH (npm i -g agent-browser)')
+}
+
+// agent-browser CDP pin — without it agent-browser launches its own bundled
+// Chrome for Testing instead of attaching to the isolated CDP profile.
+{
+  const port = parseInt(process.env.CHROME_DEBUG_PORT?.trim() || '9222', 10)
+  const pinPath = agentBrowserConfigPath(root)
+  let ok = false
+  let detail = `missing ${pinPath} (run: bun run setup-chrome)`
+  try {
+    const cfg = JSON.parse(readFileSync(pinPath, 'utf-8'))
+    if (String(cfg.cdp) === String(port)) {
+      ok = true
+      detail = `cdp pinned to ${port}`
+    } else {
+      detail = `cdp="${cfg.cdp}" but CHROME_DEBUG_PORT=${port} (run: bun run setup-chrome)`
+    }
+  } catch {
+    /* missing/malformed → not ok */
+  }
+  add('agent-browser CDP pin', ok, false, detail)
 }
 
 // .env

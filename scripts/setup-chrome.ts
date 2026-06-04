@@ -16,14 +16,25 @@
  * Config (host/device/chrome paths/port) comes from scripts/lib/config.ts.
  */
 import { existsSync, mkdirSync, rmSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { loadConfig } from './lib/config'
-import { killChromeForProfile } from './lib/host'
+import { killChromeForProfile, launchChromeDetached } from './lib/host'
+import { syncAgentBrowserConfig } from './lib/agent-browser-config'
 
 const RESET = process.argv.includes('--reset')
+
+const PROJECT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
 const cfg = loadConfig()
 console.error(`-> host=${cfg.host} device=${cfg.device} port=${cfg.debugPort}`)
 console.error(`   isolated profile: ${cfg.workProfile}`)
+
+// Pin agent-browser to this CDP port so every command attaches to the isolated
+// Chrome instead of launching its own bundled Chrome for Testing. Done first so
+// the pin is in place even if Chrome launch/connect below fails.
+const pinPath = syncAgentBrowserConfig(PROJECT_ROOT, cfg.debugPort)
+console.error(`   agent-browser pinned to CDP ${cfg.debugPort} via ${pinPath}`)
 
 /** True if Chrome's CDP endpoint is already serving on the configured port. */
 async function cdpUp(port: number): Promise<boolean> {
@@ -35,12 +46,30 @@ async function cdpUp(port: number): Promise<boolean> {
   }
 }
 
+/**
+ * Drop any stale agent-browser session/daemon. A daemon that previously launched
+ * its own Chrome for Testing is STICKY — `connect` won't migrate it — so we close
+ * it first, letting the next command spawn a fresh daemon that honours the CDP
+ * pin. Best-effort: a missing daemon is success.
+ */
+function clearStaleDaemon(): void {
+  Bun.spawnSync(['agent-browser', 'close', '--all'], {
+    stdout: 'ignore',
+    stderr: 'ignore',
+  })
+}
+
 /** Connect agent-browser to the CDP port; exits the process on failure. */
 function connectAgentBrowser(port: number): void {
+  clearStaleDaemon()
   console.error(`-> Connecting agent-browser to CDP port ${port} ...`)
+  // stdout/stderr MUST be ignored, not inherited: `connect` forks a persistent
+  // daemon that would inherit our stdout and hold it open forever, hanging any
+  // caller that reads our output to EOF (a shell pipe, or the agent's own tool
+  // runner). We only need the exit code here.
   const conn = Bun.spawnSync(['agent-browser', 'connect', String(port)], {
-    stdout: 'inherit',
-    stderr: 'inherit',
+    stdout: 'ignore',
+    stderr: 'ignore',
   })
   if ((conn.exitCode ?? 1) !== 0) {
     console.error('x agent-browser connect failed (is agent-browser on PATH?)')
@@ -102,19 +131,20 @@ if (freshProfile) {
 }
 
 console.error(`-> Launching isolated Chrome on port ${cfg.debugPort} ...`)
-const chrome = Bun.spawn(
+// Launch DETACHED — on Windows a Bun-spawned child dies when this script exits,
+// which would tear down the CDP endpoint the moment setup finishes (and send
+// agent-browser back to its bundled Chrome for Testing). See launchChromeDetached.
+launchChromeDetached(
+  cfg.chromeBin,
   [
-    cfg.chromeBin,
     `--remote-debugging-port=${cfg.debugPort}`,
     `--user-data-dir=${cfg.workProfile}`,
     '--no-first-run',
     '--no-default-browser-check',
     '--disable-default-apps',
   ],
-  { stdout: 'ignore', stderr: 'ignore' },
+  cfg.host,
 )
-chrome.unref()
-console.error(`   Chrome PID: ${chrome.pid}`)
 
 console.error(`-> Waiting for CDP port ${cfg.debugPort} to be ready...`)
 let ready = false

@@ -5,6 +5,17 @@ All notable changes to LocoAgent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **agent-browser opened "Chrome for Testing" instead of the isolated CDP profile**, so social logins never persisted and platforms like X/Twitter could not be used. Two root causes:
+  - `setup-chrome` launched Chrome via `Bun.spawn().unref()`, which on Windows ties the child to a job object killed when the launcher exits — so the CDP endpoint on :9222 died the instant setup finished. Now launched fully detached (`launchChromeDetached` → PowerShell `Start-Process` on Windows; detached spawn on POSIX), so the isolated Chrome persists.
+  - agent-browser was never pinned to the CDP port, so it fell back to launching its own bundled Chrome for Testing on a random port. A committed `agent-browser.json` (`{"cdp":"9222"}`, kept in sync with `CHROME_DEBUG_PORT` by `setup-chrome`, also wired via `AGENT_BROWSER_CONFIG` in `stubs/globals.ts`) now pins every agent-browser command to the isolated profile. When the isolated Chrome is down, commands fail fast with a clear "Timeout connecting to CDP" error instead of silently spawning Chrome for Testing.
+- `setup-chrome` no longer hangs callers: the persistent daemon spawned by `agent-browser connect` previously inherited the script's stdout and held it open (hanging shell pipes and the agent's tool runner). Its stdio is now ignored.
+- `setup-chrome` clears any stale agent-browser daemon (a daemon bound to Chrome for Testing is sticky and `connect` won't migrate it) before connecting.
+- `bun run doctor` now checks the `agent-browser.json` CDP pin; the installers offer to launch the isolated Chrome at the end so you can log in once.
+
 ## [1.1.0] - 2026-06-04
 
 Cross-platform support, one-click installation, and provider configuration overhaul.

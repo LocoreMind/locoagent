@@ -95,6 +95,59 @@ export function resolveChromeBinary(
 }
 
 /**
+ * Launch Chrome FULLY DETACHED so it survives the launcher process exiting.
+ *
+ * On Windows, `Bun.spawn(...).unref()` is NOT enough: Bun assigns the child to
+ * a Job Object that is killed when the launching bun process exits, so the
+ * CDP Chrome would die the instant `setup-chrome` returns (leaving port 9222
+ * dead — which is what made agent-browser silently fall back to its own bundled
+ * Chrome for Testing). `Start-Process` launches a process that is not part of
+ * our job and therefore persists. On POSIX a detached spawn + unref survives a
+ * parent exit normally, so we keep the lightweight path there.
+ */
+export function launchChromeDetached(
+  chromeBin: string,
+  args: string[],
+  host: HostOS = detectHost(),
+): void {
+  if (host === 'windows') {
+    Bun.spawnSync(
+      ['powershell', '-NoProfile', '-Command', windowsStartProcessCommand(chromeBin, args)],
+      { stdout: 'ignore', stderr: 'ignore' },
+    )
+    return
+  }
+  const child = Bun.spawn([chromeBin, ...args], {
+    stdout: 'ignore',
+    stderr: 'ignore',
+    stdin: 'ignore',
+  })
+  child.unref()
+}
+
+/**
+ * Build the PowerShell `Start-Process` command that launches Chrome detached.
+ * Each argument becomes a single-quoted PS string (literal — no $ / backtick
+ * expansion); a value that contains spaces is additionally double-quoted so
+ * Chrome receives it as one token instead of Start-Process re-splitting it
+ * (e.g. a `--user-data-dir` under a username with a space). Pure, so the
+ * quoting is unit-tested without spawning anything.
+ */
+export function windowsStartProcessCommand(chromeBin: string, args: string[]): string {
+  const psQuote = (s: string) => `'${s.replace(/'/g, "''")}'`
+  const argList = args
+    .map(a => {
+      const eq = a.indexOf('=')
+      if (eq !== -1 && a.slice(eq + 1).includes(' ')) {
+        return psQuote(`${a.slice(0, eq)}="${a.slice(eq + 1)}"`)
+      }
+      return a.includes(' ') ? psQuote(`"${a}"`) : psQuote(a)
+    })
+    .join(',')
+  return `Start-Process -FilePath ${psQuote(chromeBin)} -ArgumentList ${argList}`
+}
+
+/**
  * TARGETED kill: terminate ONLY the Chrome instance running on the given
  * isolated `--user-data-dir`, matched by that path on the process command line.
  * Never touches the user's normal Chrome. Non-fatal if nothing matches.

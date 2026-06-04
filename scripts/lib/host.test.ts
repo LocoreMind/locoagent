@@ -8,6 +8,7 @@ import {
   defaultSourceProfile,
   defaultWorkProfile,
   resolveChromeBinary,
+  windowsStartProcessCommand,
 } from './host'
 
 test('detectHost maps node platforms', () => {
@@ -56,4 +57,25 @@ test('resolveChromeBinary returns an existing explicit path', () => {
 
 test('resolveChromeBinary throws when explicit path is missing', () => {
   expect(() => resolveChromeBinary(join(tmpdir(), 'no-such-chrome-xyz'), 'linux')).toThrow()
+})
+
+test('windowsStartProcessCommand single-quotes the binary and each arg', () => {
+  const cmd = windowsStartProcessCommand('C:\\Chrome\\chrome.exe', [
+    '--remote-debugging-port=9222',
+    '--no-first-run',
+  ])
+  expect(cmd).toBe(
+    "Start-Process -FilePath 'C:\\Chrome\\chrome.exe' -ArgumentList " +
+      "'--remote-debugging-port=9222','--no-first-run'",
+  )
+})
+
+test('windowsStartProcessCommand double-quotes a --key=value whose value has spaces', () => {
+  const cmd = windowsStartProcessCommand('C:\\Chrome\\chrome.exe', [
+    '--user-data-dir=C:\\Users\\Jane Doe\\AppData\\Local\\locoagent-chrome-profile',
+  ])
+  // value gets an inner "..." so Chrome treats the spaced path as one token
+  expect(cmd).toContain(
+    `'--user-data-dir="C:\\Users\\Jane Doe\\AppData\\Local\\locoagent-chrome-profile"'`,
+  )
 })

@@ -1469,7 +1469,7 @@ agent-browser get url
 
 For each operation above:
 
-1. Preflight (`bun run doctor --check-cdp`; if down, `bun run setup-chrome`), then `agent-browser connect 9222` (attach to the isolated CDP Chrome with the login session). Never open a fresh `--session-name`/`--headed` browser to log in.
+1. Preflight (`bun run doctor --check-cdp`; if down, `bun run setup-chrome`). agent-browser is pinned to the isolated CDP Chrome via `agent-browser.json`, so commands auto-attach — no `connect`/`--cdp` needed. Never open a fresh `--session-name`/`--headed` browser to log in.
 2. Run `agent-browser snapshot -i` to see current interactive elements
 3. Execute each step, taking snapshots between steps to verify state changes
 4. Record the working command sequence
@@ -1490,13 +1490,15 @@ Do NOT hardcode `@ref` numbers (e.g. `@e3`). Refs change between page loads. Ins
 CDP Chrome on port 9222** (launched by `bun run setup-chrome`). See the
 "Browser Connection Contract" in the system prompt — it is binding for every operation here.
 
-Preflight, then connect:
+agent-browser is pinned to that CDP port via `agent-browser.json`, so every command
+auto-attaches — no `connect`/`--cdp` needed. Preflight, then just open:
 ```bash
 bun run doctor --check-cdp        # if DOWN: bun run setup-chrome  (idempotent, never touches your normal Chrome)
-agent-browser connect 9222
 agent-browser open https://x.com/home
 agent-browser snapshot -i -c      # confirm you are logged in (timeline visible, not a login wall)
 ```
+A `Timeout connecting to CDP at 127.0.0.1:9222` error means the isolated Chrome is not
+running (run `bun run setup-chrome`) — it is NOT a login problem.
 
 **Do NOT** use `--session-name`, `--headed`, or `--profile` to open a fresh browser and
 log in — a fresh session has no cookies and pulls you into an automated login, which gets

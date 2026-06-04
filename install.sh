@@ -272,6 +272,18 @@ fi
 info "Running health check (bun run doctor)..."
 ( cd "$INSTALL_DIR" && bun run doctor ) || warn "doctor reported issues — usually just a missing API key or Chrome."
 
+# 8b. Offer to launch the isolated CDP Chrome now, so the user can log into their
+# accounts once before starting. This is the step that creates the persistent,
+# isolated profile; skipping it is why automation can fall back to a throwaway
+# browser. Interactive only.
+if [ -n "$TTY" ]; then
+  ans="$(ask 'Launch the isolated CDP Chrome now to log into your accounts? (Y/n)' 'Y')"
+  case "$ans" in
+    [Nn]*) : ;;
+    *) ( cd "$INSTALL_DIR" && bun run setup-chrome ) || warn "setup-chrome reported issues; run it later with: bun run setup-chrome" ;;
+  esac
+fi
+
 # 9. Next steps
 printf '\n' >&2
 ok "LocoAgent installed at $INSTALL_DIR"
