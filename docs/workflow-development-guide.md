@@ -105,11 +105,11 @@ Create `<your-id>.json` in `workflows/`:
   "name": "My Custom Workflow",
   "description": "Describe what this workflow does",
   "schedule": "daily",
+  "platform": "x",
   "executor": "executors/my-workflow.ts",
   "config": {
     "param1": "value1",
-    "param2": 42,
-    "cdpPort": 9222
+    "param2": 42
   }
 }
 ```
@@ -270,12 +270,11 @@ Each Workflow definition is a JSON file in `workflows/` (excluding `state.json`)
   "name": "HuggingFace Daily Papers",
   "description": "Fetch today's top papers from HuggingFace...",
   "schedule": "daily",
+  "platform": "x",
   "executor": "executors/hf-daily-papers.ts",
   "config": {
     "maxPapers": 3,
     "minUpvotes": 5,
-    "cdpPort": 9222,
-    "proxy": "http://127.0.0.1:6738",
     "abstractMaxChars": 200,
     "downloadThumbnails": true,
     "saveDataJson": true,
@@ -291,11 +290,11 @@ Each Workflow definition is a JSON file in `workflows/` (excluding `state.json`)
   "name": "X.com Search & AI Reply",
   "description": "Search X.com for a keyword..., generate a reply using DeepSeek...",
   "schedule": "hourly",
+  "platform": "x",
   "executor": "executors/x-search-reply.ts",
   "config": {
     "searchQuery": "ai agent",
     "maxPosts": 5,
-    "cdpPort": 9222,
     "xUsername": "mashijiann",
     "outputDir": ".tmp",
     "replySystemPrompt": "You are a knowledgeable AI enthusiast..."
