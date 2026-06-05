@@ -14,6 +14,10 @@
     "reddit": {
       "cdpPort": 9224,
       "proxy": null
+    },
+    "google": {
+      "cdpPort": 9225,
+      "proxy": null
     }
   }
 }

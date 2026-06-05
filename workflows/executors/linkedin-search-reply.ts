@@ -37,6 +37,7 @@ interface Config {
   searchQuery: string
   maxPosts: number
   cdpPort: number
+  platform?: string
   outputDir?: string
   commentSystemPrompt?: string
 }
@@ -47,6 +48,7 @@ if (!configArg) {
   process.exit(2)
 }
 const config: Config = JSON.parse(configArg)
+const sessionFlag = config.platform && config.platform !== 'x' ? ` --session ${config.platform}` : ''
 
 // ── Load .env for DeepSeek API ──────────────────────────────────────────────
 
@@ -123,7 +125,7 @@ function checkWorkflowStopped(): boolean {
 
 function ab(cmd: string, timeout = 30000): string {
   try {
-    return execSync(`agent-browser --cdp ${config.cdpPort} ${cmd}`, {
+    return execSync(`agent-browser --cdp ${config.cdpPort}${sessionFlag} ${cmd}`, {
       encoding: 'utf-8',
       timeout,
       cwd: ROOT,
@@ -141,7 +143,7 @@ function abEval(js: string, tmpDir: string): string {
   writeFileSync(tmpJs, js, 'utf-8')
   try {
     let result = execSync(
-      `agent-browser --cdp ${config.cdpPort} eval "$(cat '${tmpJs}')"`,
+      `agent-browser --cdp ${config.cdpPort}${sessionFlag} eval "$(cat '${tmpJs}')"`,
       { encoding: 'utf-8', timeout: 30000, cwd: ROOT }
     ).trim()
     if (result.startsWith('"') && result.endsWith('"')) {

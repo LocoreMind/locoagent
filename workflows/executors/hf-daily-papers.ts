@@ -30,6 +30,7 @@ interface Config {
   maxPapers: number
   minUpvotes: number
   cdpPort: number
+  platform?: string
   proxy?: string
   abstractMaxChars: number
   downloadThumbnails: boolean
@@ -45,6 +46,7 @@ if (!configArg) {
 const config: Config = JSON.parse(configArg)
 
 const proxyFlag = config.proxy ? `--proxy ${config.proxy}` : ''
+const sessionFlag = config.platform && config.platform !== 'x' ? ` --session ${config.platform}` : ''
 // OUTPUT_DIR is set after we detect the actual HF date from redirect URL
 let OUTPUT_DIR = ''
 
@@ -52,7 +54,7 @@ let OUTPUT_DIR = ''
 
 function ab(cmd: string): string {
   try {
-    return execSync(`agent-browser --cdp ${config.cdpPort} ${cmd}`, {
+    return execSync(`agent-browser --cdp ${config.cdpPort}${sessionFlag} ${cmd}`, {
       encoding: 'utf-8',
       timeout: 30000,
       cwd: ROOT,
@@ -71,7 +73,7 @@ function abEval(js: string): string {
   writeFileSync(tmpJs, js, 'utf-8')
   try {
     let result = execSync(
-      `agent-browser --cdp ${config.cdpPort} eval "$(cat '${tmpJs}')"`,
+      `agent-browser --cdp ${config.cdpPort}${sessionFlag} eval "$(cat '${tmpJs}')"`,
       { encoding: 'utf-8', timeout: 30000, cwd: ROOT }
     ).trim()
     // agent-browser eval wraps output in quotes — strip them for JSON parsing

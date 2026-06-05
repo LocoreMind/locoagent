@@ -33,6 +33,7 @@ interface Config {
   maxPapers: number
   minUpvotes: number
   cdpPort: number
+  platform?: string
   proxy?: string
   abstractMaxChars: number
   outputDir?: string
@@ -48,6 +49,7 @@ if (!configArg) {
 const config: Config = JSON.parse(configArg)
 
 const proxyFlag = config.proxy ? `--proxy ${config.proxy}` : ''
+const sessionFlag = config.platform && config.platform !== 'x' ? ` --session ${config.platform}` : ''
 const xUsername = config.xUsername ?? 'mashijiann'
 
 // ── Posted-papers dedup store ────────────────────────────────────────────────
@@ -103,7 +105,7 @@ function checkWorkflowStopped(): boolean {
 
 function ab(cmd: string): string {
   try {
-    return execSync(`agent-browser --cdp ${config.cdpPort} ${cmd}`, {
+    return execSync(`agent-browser --cdp ${config.cdpPort}${sessionFlag} ${cmd}`, {
       encoding: 'utf-8',
       timeout: 30000,
       cwd: ROOT,
@@ -121,7 +123,7 @@ function abEval(js: string, tmpDir: string): string {
   writeFileSync(tmpJs, js, 'utf-8')
   try {
     let result = execSync(
-      `agent-browser --cdp ${config.cdpPort} eval "$(cat '${tmpJs}')"`,
+      `agent-browser --cdp ${config.cdpPort}${sessionFlag} eval "$(cat '${tmpJs}')"`,
       { encoding: 'utf-8', timeout: 30000, cwd: ROOT }
     ).trim()
     if (result.startsWith('"') && result.endsWith('"')) {
