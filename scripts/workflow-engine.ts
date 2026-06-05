@@ -106,6 +106,7 @@ function buildConfigJson(def: WorkflowDefinition): string {
   const t = resolveTarget(def.platform)
   const merged: Record<string, unknown> = {
     ...def.config,
+    platform: def.platform,
     cdpPort: t.cdpPort,
     profile: t.profile,
     device: t.device,

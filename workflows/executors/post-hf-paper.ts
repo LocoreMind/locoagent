@@ -30,6 +30,8 @@ function getArg(name: string): string {
 }
 
 const cdpPort = getArg('cdp') || '9222'
+const platform = getArg('platform')
+const sessionFlag = platform && platform !== 'x' ? ` --session ${platform}` : ''
 const title = getArg('title')
 const abstract = getArg('abstract')
 const upvotes = getArg('upvotes')
@@ -46,7 +48,7 @@ if (!title || !paperUrl) {
 
 function ab(cmd: string): string {
   try {
-    return execSync(`agent-browser --cdp ${cdpPort} ${cmd}`, {
+    return execSync(`agent-browser --cdp ${cdpPort}${sessionFlag} ${cmd}`, {
       encoding: 'utf-8',
       timeout: 30000,
     }).trim()
@@ -64,7 +66,7 @@ function abEval(js: string): string {
   writeFileSync(tmpJs, js, 'utf-8')
   try {
     let result = execSync(
-      `agent-browser --cdp ${cdpPort} eval "$(cat '${tmpJs}')"`,
+      `agent-browser --cdp ${cdpPort}${sessionFlag} eval "$(cat '${tmpJs}')"`,
       { encoding: 'utf-8', timeout: 30000 }
     ).trim()
     if (result.startsWith('"') && result.endsWith('"')) {

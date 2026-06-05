@@ -15,11 +15,11 @@
  *
  * Targets come from config/browser-targets.json; host/chrome paths from config.ts.
  */
-import { existsSync, mkdirSync, rmSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, rmSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { loadConfig } from './lib/config'
-import { killChromeForProfile, launchChromeDetached } from './lib/host'
+import { defaultSourceProfile, killChromeForProfile, launchChromeDetached } from './lib/host'
 import { syncAgentBrowserConfig } from './lib/agent-browser-config'
 import { cdpUp, loadTargets, type ResolvedTarget } from './lib/browser-targets'
 
@@ -130,8 +130,17 @@ async function setupTarget(t: ResolvedTarget): Promise<{ fresh: boolean; ok: boo
 
   const fresh = !existsSync(t.profile)
   if (fresh) {
-    console.error(`-> [${t.platform}] creating fresh isolated profile ...`)
-    mkdirSync(t.profile, { recursive: true })
+    // Copy the user's real Chrome profile (User Data dir) so all platforms
+    // start with existing cookies / login sessions. Falls back to an empty
+    // dir when the source profile does not exist.
+    const sourceUserData = resolve(defaultSourceProfile(cfg.host), '..')
+    if (existsSync(sourceUserData)) {
+      console.error(`-> [${t.platform}] copying real Chrome profile → ${t.profile} ...`)
+      cpSync(sourceUserData, t.profile, { recursive: true })
+    } else {
+      console.error(`-> [${t.platform}] creating fresh isolated profile (no source profile found) ...`)
+      mkdirSync(t.profile, { recursive: true })
+    }
   }
 
   console.error(`-> [${t.platform}] launching Chrome on ${t.cdpPort} ...`)
