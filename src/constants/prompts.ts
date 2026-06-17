@@ -960,6 +960,20 @@ ${CYBER_RISK_INSTRUCTION}`,
           : getMcpInstructionsSection(mcpClients),
       'MCP servers connect/disconnect between turns',
     ),
+    // Operation log summarizes a Date.now()-based 30-day window and workflow
+    // status reflects live runtime state; both change per turn. They must stay
+    // after SYSTEM_PROMPT_DYNAMIC_BOUNDARY so they don't bust the cacheable
+    // global-scope prefix.
+    DANGEROUS_uncachedSystemPromptSection(
+      'operation_log',
+      () => getOperationLogSection(),
+      'Operation-log summary covers a rolling Date.now()-based 30-day window',
+    ),
+    DANGEROUS_uncachedSystemPromptSection(
+      'workflow_status',
+      () => getWorkflowStatusSection(),
+      'Workflow status reflects live runtime state that changes between turns',
+    ),
     systemPromptSection('scratchpad', () => getScratchpadInstructions()),
     systemPromptSection('frc', () => getFunctionResultClearingSection(model)),
     systemPromptSection(
@@ -1011,8 +1025,6 @@ ${CYBER_RISK_INSTRUCTION}`,
     getUsingYourToolsSection(enabledTools),
     getPersonaSection(),
     getTasksSection(),
-    getOperationLogSection(),
-    getWorkflowStatusSection(),
     getBrowserConnectionSection(),
     getAgentBrowserSection(),
     getSimpleToneAndStyleSection(),

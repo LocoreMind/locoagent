@@ -5,6 +5,12 @@ All notable changes to LocoAgent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Move the operation-log and workflow-status sections after `SYSTEM_PROMPT_DYNAMIC_BOUNDARY` so their per-turn output no longer invalidates the cacheable global-scope system prompt prefix (PR #12).
+
 ## [1.2.0] - 2026-06-04
 
 Multi-platform concurrency: run X, LinkedIn, and Reddit at the same time, each in its own
