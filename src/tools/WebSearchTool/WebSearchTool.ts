@@ -5,6 +5,8 @@ import type {
 import { getAPIProvider } from 'src/utils/model/providers.js'
 import type { PermissionResult } from 'src/utils/permissions/PermissionResult.js'
 import { z } from 'zod/v4'
+import { createHash } from 'node:crypto'
+import { getSessionId } from '../../bootstrap/state.js'
 import { getFeatureValue_CACHED_MAY_BE_STALE } from '../../services/analytics-stub.js'
 import { queryModelWithStreaming } from '../../services/api/claude.js'
 import { buildTool, type ToolDef } from '../../Tool.js'
@@ -15,6 +17,8 @@ import { getMainLoopModel, getSmallFastModel } from '../../utils/model/model.js'
 import { jsonParse, jsonStringify } from '../../utils/slowOperations.js'
 import { asSystemPrompt } from '../../utils/systemPromptType.js'
 import { getWebSearchPrompt, WEB_SEARCH_TOOL_NAME } from './prompt.js'
+import { getWebSearchProvider } from './provider.js'
+import { parallelSearch } from './parallelSearch.js'
 import {
   getToolUseSummary,
   renderToolResultMessage,
@@ -166,8 +170,10 @@ export const WebSearchTool = buildTool({
     return summary ? `Searching for ${summary}` : 'Searching the web'
   },
   isEnabled() {
+    const searchProvider = getWebSearchProvider()
+    if (searchProvider === 'disabled') return false
+    if (searchProvider === 'parallel') return true
     const provider = getAPIProvider()
-    const model = getMainLoopModel()
 
     // Enable for firstParty
     if (provider === 'firstParty') {
@@ -176,6 +182,7 @@ export const WebSearchTool = buildTool({
 
     // Enable for Vertex AI with supported models (Claude 4.0+)
     if (provider === 'vertex') {
+      const model = getMainLoopModel()
       const supportsWebSearch =
         model.includes('claude-opus-4') ||
         model.includes('claude-sonnet-4') ||
@@ -221,7 +228,7 @@ export const WebSearchTool = buildTool({
     }
   },
   async prompt() {
-    return getWebSearchPrompt()
+    return getWebSearchPrompt(getWebSearchProvider() === 'parallel')
   },
   renderToolUseMessage,
   renderToolUseProgressMessage,
@@ -254,6 +261,24 @@ export const WebSearchTool = buildTool({
   async call(input, context, _canUseTool, _parentMessage, onProgress) {
     const startTime = performance.now()
     const { query } = input
+    const searchProvider = getWebSearchProvider()
+    if (searchProvider === 'disabled') throw new Error('Web search is disabled')
+    if (searchProvider === 'parallel') {
+      // Snapshot the conversation before awaiting. Subagents share the parent's
+      // session but own separate research runs; resets change the session UUID.
+      const sessionId = createHash('sha256')
+        .update(getSessionId()).update('/').update(context.agentId ?? '').digest('hex')
+      const hits = await parallelSearch(input, sessionId, context.abortController.signal)
+      const data: Output = {
+        query,
+        results: [
+          { tool_use_id: 'parallel-search', content: hits.map(({ title, url }) => ({ title, url })) },
+          ...hits.map(hit => `${hit.title} (${hit.url})\n${hit.excerpts.join('\n')}`),
+        ],
+        durationSeconds: (performance.now() - startTime) / 1000,
+      }
+      return { data }
+    }
     const userMessage = createUserMessage({
       content: 'Perform a web search for the query: ' + query,
     })
