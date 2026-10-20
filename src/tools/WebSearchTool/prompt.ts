@@ -2,7 +2,7 @@ import { getLocalMonthYear } from 'src/constants/common.js'
 
 export const WEB_SEARCH_TOOL_NAME = 'WebSearch'
 
-export function getWebSearchPrompt(): string {
+export function getWebSearchPrompt(parallel = false): string {
   const currentMonthYear = getLocalMonthYear()
   return `
 - Allows Claude to search the web and use the results to inform responses
@@ -24,8 +24,9 @@ CRITICAL REQUIREMENT - You MUST follow this:
     - [Source Title 2](https://example.com/2)
 
 Usage notes:
-  - Domain filtering is supported to include or block specific websites
-  - Web search is only available in the US
+  - Domain filtering is supported to include or block specific websites${parallel
+    ? '\n  - Parallel Search MCP returns source links and excerpts. Domain filters apply to returned results; use native search for provider-side filtering.'
+    : '\n  - Web search is only available in the US'}
 
 IMPORTANT - Use the correct year in search queries:
   - The current month is ${currentMonthYear}. You MUST use this year when searching for recent information, documentation, or current events.

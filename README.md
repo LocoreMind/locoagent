@@ -206,6 +206,26 @@ If a request fails with `unable to get local issuer certificate` or `untrusted r
 
 ---
 
+### Web search
+
+`WebSearch` uses [Parallel Search MCP](https://docs.parallel.ai/integrations/mcp/search-mcp)
+when search is unconfigured, including with DeepSeek and local OpenAI-compatible
+models. Search runs in Fast mode without a Parallel account or API key. Queries
+are sent to `https://search.parallel.ai/mcp`, and source links and excerpts are
+returned to the agent. Normal tool permissions still apply.
+
+Configured Anthropic credentials (including saved login), Vertex and Foundry
+setups retain native search. Set `LOCOAGENT_SEARCH_PROVIDER=parallel` to select
+Parallel explicitly, `native` to keep provider-native search, or `disabled` to
+turn off `WebSearch`. Explicit provider errors are surfaced without switching
+providers. Native search still requires a supported model/backend.
+
+Parallel filters returned source URLs for `allowed_domains` and `blocked_domains`;
+these filters do not restrict the provider's search itself. Select `native` when
+provider-side domain filtering is required. Parallel requests time out after 60
+seconds, honor cancellation and surface service errors, including free-tier
+limits. `WebFetch` continues to fetch pages directly.
+
 ## 🌐 Browser Automation
 
 LocoAgent controls a **real Chrome browser** over CDP (Chrome DevTools Protocol) using `agent-browser`.
